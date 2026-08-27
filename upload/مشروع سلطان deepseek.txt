@@ -1,0 +1,1046 @@
+# MASTER PROMPT — BUILD "SULTAN" FROM ZERO  
+**الإصدار 1.0 — SULTAN 2027: المنصة العالمية المتكاملة**  
+**السوق المغربي + الجالية + الأسواق العالمية**  
+**Arabic RTL / French / English / Darija**
+
+---
+
+## 0. مهمة المشروع
+
+أنت تعمل كفريق تنفيذي كامل يضم نخبة من الخبراء العالميين في:
+
+Product Strategy, UX Research, Information Architecture, UI Design, Brand Identity, Frontend Architecture, Backend Architecture, Database Design, AI/ML Engineering, Marketplace Systems, E-commerce, Food Delivery, CRM, Analytics, Enterprise Admin Systems, Arabic RTL Design, Motion Design, Accessibility, Performance Engineering, Security Engineering, DevOps, Supabase, Cloudflare, Payment Integration, Web3, AR/VR, Voice Commerce, Recommendation Systems, Fraud Prevention, Compliance, Multi‑language Systems.
+
+مهمتك هي **ابتكار وبناء منصة رقمية جديدة بالكامل من الصفر** باسم **سلطان | SULTAN**.
+
+لا يوجد موقع سابق. لا توجد واجهة سابقة. لا توجد ملفات يجب تعديلها. لا توجد هوية بصرية يجب الحفاظ عليها.
+
+ابدأ من صفحة بيضاء تمامًا.
+
+أنت مسؤول عن اتخاذ جميع القرارات الإبداعية والهندسية اللازمة لبناء أفضل منتج ممكن.
+
+---
+
+## 1. التقنية المعتمدة — الجيل القادم 2027
+
+يجب بناء المشروع من الصفر باستخدام:
+
+- **Frontend:** Next.js 15+ (App Router) + React 19 + TypeScript + TailwindCSS 4 + Shadcn/ui (مخصص)  
+  أو يمكن استخدام Remix / SvelteKit حسب التفضيل، لكن يجب أن يكون SPA/SSR/ISR متكامل.
+- **Backend:** Supabase  
+  - PostgreSQL 16+  
+  - Supabase Auth (Email, Phone, OTP, OAuth, Magic Link)  
+  - Supabase Realtime  
+  - Supabase Storage (مع CDN)  
+  - Supabase Edge Functions (Deno)  
+  - Supabase Vector (pgvector) للبحث الدلالي والتوصيات  
+  - Supabase AI (للـ RAG والتحليلات)  
+- **الاستضافة:** Cloudflare Pages / Workers + Cloudflare CDN + Cloudflare R2 (لتخزين الوسائط)  
+- **التحكم بالنسخ:** GitHub + GitHub Actions للـ CI/CD  
+- **الذكاء الاصطناعي:**  
+  - OpenAI / Anthropic / Mistral / Gemini APIs (حسب التكلفة والخصوصية)  
+  - نماذج لغوية عربية مخصصة (مثل Jais, AraBERT) للمهام المحلية  
+  - نظام RAG للرد على الاستفسارات من قاعدة البيانات  
+  - AutoML بسيط للتنبؤ بالطلب والتسعير  
+- **الويب 3 (اختياري):**  
+  - محفظة رقمية تدعم NFTs كشهادات ملكية أو شارات  
+  - استخدام Blockchain للتتبع الشفاف للمعاملات الخيرية (Donation Transparency)  
+  - لا تفرض Web3 على المستخدم، بل كخيار إضافي  
+- **اللغات:** i18n كامل مع دعم RTL/LTR، وتخزين الترجمات في ملفات JSON أو قاعدة بيانات، مع تبديل فوري.
+
+**مبدأ أساسي:** لا تعتمد على أي خدمة خارجية لا يمكن استبدالها. أنشئ طبقات تجريد لكل مزود خدمة (AI, Payment, SMS, Email, etc.) لضمان قابلية التوسع والاستبدال.
+
+---
+
+## 2. الرؤية الكبرى
+
+ابتكر **SULTAN** كأكبر منصة رقمية مغربية شاملة من الجيل الجديد، تعمل بالعربية والفرنسية والإنجليزية والدارجة، وتجمع في نظام موحد كل الخدمات التي يحتاجها المستخدم يوميًا، مع التركيز على الذكاء الاصطناعي والتخصيص والتجربة الغامرة.
+
+فكر فيها كمنظومة رقمية متكاملة تشمل:
+
+- **Commerce Hub**: Marketplace + Classifieds + Cars + Real Estate + Food + Services
+- **Opportunity Hub**: Jobs + Tasks + Bounties + Challenges + Grants + Freelance
+- **Social & Community**: Messaging + News + Zawaj & Taaruf (زواج وتعارف) + Community Forums
+- **Entertainment & Engagement**: Live Auctions + Live Streaming + Short Videos
+- **Financial & Economy**: Wallet + Coins + Rewards + Cashout + Crowdfunding
+- **Business Suite**: CRM + Analytics + Marketing + Point of Sale (POS)
+- **AI Layer**: Search Assistant + Recommendation Engine + Automation + Virtual Assistant
+- **Admin & Control**: Super Admin Command Center + No‑Code Builder + RBAC + Audit
+- **Global Reach**: Morocco + Diaspora + Francophone Africa + Middle East + Europe
+
+الهدف: إنشاء منصة تنافس أفضل المنصات العالمية (Amazon, Alibaba, Meesho, TikTok Shop, LinkedIn, Upwork, Tinder, Muzz, Airbnb, Uber Eats) مع هوية مغربية أصيلة وحديثة، وقابلة للتوسع عالميًا.
+
+---
+
+## 3. فلسفة التصميم — 2027
+
+لا تنسخ أي موقع معروف. استلهم أفضل الممارسات ثم أنشئ لغة تصميم أصلية خاصة بـ Sultan.
+
+الهوية البصرية يجب أن تكون:
+
+- **راقية، مستقبلية، بسيطة، واثقة، دافئة**
+- **مغربية معاصرة** – استلهم من الزليج والهندسة المغربية بأسلوب تجريدي
+- **مناسبة لعام 2027** – Glassmorphism، Neumorphism خفيف، Micro‑interactions، Dark Mode افتراضي
+- **Accessible** – WCAG 2.2 AA، دعم قارئات الشاشة، تباين عالي
+- **سريعة** – Core Web Vitals ممتازة، Lazy loading، Skeleton screens
+
+اجمع بين:
+
+- Luxury
+- Technology
+- Trust
+- Simplicity
+- Human‑centered design
+- Immersive experiences
+
+تجنب:
+
+- القوالب الجاهزة
+- Bootstrap look
+- الواجهات المزدحمة
+- الألوان الصارخة
+- الظلال الثقيلة
+- الـ Gradients المبالغ فيها
+- الـ Emojis كعناصر واجهة
+- أي مظهر يوحي بأن الموقع مولد آليًا
+
+---
+
+## 4. ابتكار الهوية
+
+أنشئ من الصفر:
+
+- **شعار Sultan** – بسيط، فاخر، تجريدي، يمثل الحرف "S" أو تاجًا مبسطًا مع لمسة مغربية
+- **رمز بصري مميز** – يمكن استخدامه كأيقونة تطبيق
+- **نظام ألوان** – أساسي: أزرق ملكي داكن (#0A1628) وذهبي مغربي (#D4AF37) + أبيض + رمادي فاتح
+- **Typography** – الخط العربي: "IBM Plex Sans Arabic" أو "Noto Kufi Arabic"؛ الخط اللاتيني: "Inter" أو "Plus Jakarta Sans"
+- **Iconography** – مجموعة أيقونات خطية مخصصة بروح مغربية
+- **Spacing system** – نظام 4px/8px
+- **Design tokens** – قابلة للتخصيص من لوحة الإدارة
+- **Motion language** – حركات ناعمة 200–300ms، Easing curves
+
+**الوضع الداكن** هو الوضع الافتراضي مع إمكانية التبديل إلى الوضع الفاتح.
+
+---
+
+## 5. هندسة المنتج — المتقدمة
+
+قبل بناء الواجهة، صمم:
+
+1. **Product Architecture** – Micro‑frontends أو Modular Monolith حسب الحاجة
+2. **Information Architecture** – تنقل بديهي متعدد الأبعاد
+3. **User Journeys** – خرائط رحلة لكل نوع مستخدم
+4. **Navigation System** – علوي + جانبي + سفلي (موبايل) + Command Palette
+5. **Data Models** – PostgreSQL مع JSONB و Vector columns
+6. **Design System** – Storybook أو ما يعادله
+7. **Responsive Behavior** – Mobile‑first، Tablet، Desktop
+8. **Admin Architecture** – لوحة تحكم منفصلة بواجهة خاصة
+9. **Security Architecture** – RLS، RBAC، Audit، Encryption
+10. **AI Architecture** – خطوط أنابيب للتوصيات والبحث والتحليل
+11. **Realtime Architecture** – Supabase Realtime + WebSockets
+12. **Integration Architecture** – طبقات تجريد لكل خدمة خارجية
+13. **Observability** – Logging، Monitoring، Error Tracking
+
+ثم ابدأ التنفيذ.
+
+---
+
+## 6. المستخدمون
+
+صمم النظام ليستوعب:
+
+- **الزائر** – يستكشف، يبحث، يشاهد
+- **المستخدم المسجل** – يشتري، يبيع، يتفاعل، يدعم
+- **البائع / التاجر** – يدير منتجاته ومبيعاته
+- **مقدم الخدمة** – يعرض خدماته ويستقبل حجوزات
+- **المطعم** – يدير قائمته وطلباته
+- **الشركة** – تدير أعمالها وعملاءها
+- **الصحفي / الناشر** – ينشر محتوى إخباري
+- **مستخدم زواج/تعارف** – يبحث عن شريك بطريقة محترمة
+- **الموظف الداخلي (دعم، مبيعات، محتوى)**
+- **المدير** – يدير قسمًا محددًا
+- **Super Admin** – يتحكم في المنصة بالكامل
+- **AI Agent** – مساعد داخلي للاستعلامات والعمليات
+
+---
+
+## 7. الأقسام الرئيسية — المحدثة
+
+### 7.1 السوق (Marketplace)
+- فئات متعددة: إلكترونيات، أثاث، أزياء، حيوانات، هوايات، معدات، أعمال
+- بحث ذكي (نص + صوت + صورة)
+- فلاتر متقدمة مع حفظ البحث
+- مقارنة المنتجات
+- مفضلة، توصيات شخصية
+- **ميزة جديدة:** "Sultan Try" – تجربة افتراضية للملابس/الأثاث باستخدام AR (على المتصفح)
+
+### 7.2 السيارات (Motors)
+- ماركات، موديلات، سنة، كيلومترات، وقود، ناقل حركة، مدينة
+- وكلاء وبائعين أفراد
+- مقارنة بين السيارات
+- تحليل أسعار تاريخي باستخدام الذكاء الاصطناعي
+- **ميزة جديدة:** "Sultan Drive" – فحص افتراضي بالصور (AI damage detection)
+
+### 7.3 العقارات (Real Estate)
+- شراء، كراء، أراضٍ، محلات، مشاريع جديدة
+- خريطة تفاعلية (Mapbox / Google Maps)
+- عرض قائمة وخريطة
+- محاكي تمويل عقاري
+- **ميزة جديدة:** جولات افتراضية 360 درجة (Virtual Tours)
+
+### 7.4 الطعام (Food Delivery)
+- مطاعم، تصنيفات، قوائم، سلة، إتمام الطلب، تتبع الطلب
+- **ميزة جديدة:** "Sultan Eats" – طلب جماعي (Group Ordering) وتوصية ذكية حسب الذوق
+- **ميزة جديدة:** "Sultan Kitchen" – مطابخ سحابية (Cloud Kitchens) للطهاة المنزليين
+
+### 7.5 الخدمات (Services)
+- فئات: أعراس، تصوير، موسيقى، حرف، إصلاح، تنظيف، تعليم، تقنية، محاسبة، حيوانات، وغيرها
+- لكل مقدم خدمة: ملف، تقييمات، أعمال سابقة، سعر ابتدائي، مناطق الخدمة
+- حجز أو طلب عرض سعر
+- **ميزة جديدة:** "Sultan Pro" – اشتراك شهري لمقدمي الخدمات مع أدوات CRM خاصة
+
+### 7.6 الوظائف (Jobs)
+- وظائف، شركات، مرشحون، تقديم، حفظ، ملف مهني
+- **ميزة جديدة:** "Sultan Hire" – مطابقة تلقائية بالذكاء الاصطناعي بين السيرة الذاتية والوظيفة، مع مقابلات فيديو مسجلة
+
+### 7.7 المزادات (Auctions)
+- مزادات مباشرة مع عد تنازلي، أعلى عرض، سجل مزايدات
+- **ميزة جديدة:** مزادات فيديو حية (Live Streaming Auctions) مع مدير مزاد
+
+### 7.8 التضامن (Charity)
+- حالات موثقة، هدف، محصّل، متبقٍ، مستوى استعجال
+- **ميزة جديدة:** "Sultan Gives" – شفافية كاملة عبر Blockchain (اختياري) لإظهار تتبع التبرعات
+
+### 7.9 الأخبار (News)
+- مصادر، مقالات، تحقق، تصحيحات، Trust Layer
+- **ميزة جديدة:** "Sultan Fact Check" – أداة للتحقق من الأخبار بالتعاون مع مؤسسات تدقيق
+- **ميزة جديدة:** موجز أخبار مخصص حسب الاهتمامات
+
+### 7.10 قسم الزواج والتعارف — Sultan Zawaj & Taaruf
+- **قسم مستقل ومحترم** للزواج والتعارف الجاد
+- البحث عن شريك حياة وفق معايير: العمر، المدينة، المستوى التعليمي، القيم، التوجه الديني، المهنة، الأسرة، التطلعات
+- **خصوصية عالية:** إخفاء الصور حتى الموافقة، إخفاء الاسم الكامل، عدم إظهار رقم الهاتف حتى الموافقة
+- **التحقق من الهوية** (KYC) اختياري لكنه يزيد الثقة
+- **إشراك ولي الأمر** للمرأة بشكل اختياري
+- نظام محادثة خاص مع أمان: حظر، إبلاغ، تجميد
+- نظام توافق (Compatibility Score) مبني على البيانات والسلوك
+- إرسال "إعجاب" و"طلب تعارف جاد"
+- **التكامل مع الاقتصاد الرقمي:** شراء Coins لاستخدام ميزات مميزة (إبراز الملف، فتح قفل بعض التفاصيل بعد الموافقة)، كسب Rewards من إكمال الملف والتحقق
+- **إدارة صارمة:** إدارة المحتوى، الإبلاغ، الحظر الفوري، فلترة الكلمات المسيئة
+- **ميزة جديدة:** "Sultan Match AI" – توصيات ذكية بناءً على التوافق السلوكي والقيمي
+
+### 7.11 المحتوى الاجتماعي — Sultan Social (جديد)
+- موجز قصير (Short Videos) مشابه لـ TikTok لكن بطابع مغربي محترم
+- بث مباشر (Live Streaming) للبائعين والخدمات
+- مجتمعات (Groups) حسب الاهتمامات
+- **التكامل مع Economy:** دعم صناع المحتوى عبر Coins، Rewards للمحتوى الجيد
+
+### 7.12 الألعاب والترفيه — Sultan Play (جديد)
+- ألعاب خفيفة داخل المنصة
+- مسابقات وجوائز رمزية
+- **ميزة جديدة:** "Spin to Win" للحصول على خصومات أو Coins مجانية (محدودة)
+
+---
+
+## 8. الصفحة الرئيسية
+
+صمم صفحة رئيسية استثنائية تعطي فهمًا واضحًا لماهية Sultan خلال ثوانٍ.
+
+تحتوي على:
+
+- **Hero** قوي مع بحث ذكي (نص + صوت + صورة) وشريط تمرير للأقسام
+- **اكتشاف سريع** للخدمات والأقسام عبر بطاقات كبيرة
+- **محتويات مخصصة** للمستخدم المسجل (بناءً على سلوكه)
+- **أقسام مخصصة:** عروض، مزادات حية، مطاعم قريبة، خدمات، عقارات، سيارات، فرص، زواج/تعارف
+- **قسم "Sultan Rising"** – المواهب الصاعدة
+- **أزرار دعم سريعة** للمحتوى
+- **شريط تنقل علوي** مع قائمة جانبية وسفلية (موبايل)
+- **إشعارات ذكية** (مثلاً: "انخفض سعر سيارة كنت تشاهدها")
+
+---
+
+## 9. البحث الذكي — الجيل الجديد
+
+- **بحث متعدد الوسائط:** نص، صوت (بالدارجة)، صورة (بحث بصري)
+- **فهم النية:** تحويل اللغة الطبيعية إلى فلاتر (مثل "شقة في مراكش أقل من 700 ألف" أو "بغيت شي خدمة فالليل")
+- **بحث دلالي** باستخدام pgvector
+- **اقتراحات فورية** أثناء الكتابة
+- **حفظ البحث والتنبيهات**
+- **مساعد ذكي** (Sultan AI Assistant) يمكنه الإجابة على أسئلة المستخدم والتنقل داخل المنصة
+
+---
+
+## 10. تفاصيل الإعلان
+
+- معرض صور مع تكبير
+- السعر، المواصفات، الوصف، الموقع
+- البائع مع مستوى الثقة وشارات التحقق
+- الإعلانات المشابهة
+- حفظ، مشاركة، مقارنة، تواصل، رسائل، واتساب، إبلاغ
+- زر **"ادعم"** إذا كان البائع مؤهلًا
+- مؤشرات ذكية: "سعر جيد مقارنة بالسوق"، "بائع موثوق"
+- **ميزة جديدة:** "Ask AI about this item" – يمكن للمستخدم سؤال المساعد عن تفاصيل المنتج
+- **ميزة جديدة:** جدولة معاينة/مكالمة فيديو مع البائع
+
+---
+
+## 11. النشر
+
+صمم Wizard احترافيًا لنشر إعلان:
+
+المراحل: اختيار الفئة → نوع الإعلان → التفاصيل → الصور → الموقع → السعر → المعاينة → النشر
+
+أضف:
+
+- حفظ تلقائي، مسودات، تحقق فوري
+- إعادة ترتيب الصور
+- ضغط الصور تلقائيًا قبل الرفع (Canvas API)
+- رفع عبر رابط أو Base64
+- شاشة نجاح أنيقة مع خيارات مشاركة
+- **ميزة جديدة:** توليد وصف تلقائي بالذكاء الاصطناعي من الصور
+
+---
+
+## 12. الرسائل
+
+- نظام مراسلة موحد لكل الأقسام
+- محادثات فردية وجماعية
+- بحث، حالات، إشعارات، أرشفة، حظر، إبلاغ
+- **ميزة جديدة:** ترجمة فورية للرسائل (عربي/فرنسي/إنجليزي)
+- **ميزة جديدة:** ملخص المحادثة بالذكاء الاصطناعي
+- تشفير الرسائل الحساسة
+
+---
+
+## 13. الملف الشخصي
+
+- الحساب، التحقق، الإعلانات، الطلبات، المفضلة، عمليات البحث المحفوظة، الرسائل، المزادات، الإحالات، الأمان، الإعدادات
+- **Sultan Wallet** (محفظة)
+- **Sultan Support** (الدعم المقدم والمستقبل)
+- **Sultan Reputation** (السمعة)
+- **Sultan Power** (قوة سلطان)
+- **Cashout Center**
+- **Opportunity Center**
+- **Zawaj Profile** (إذا كان المستخدم مهتمًا)
+- **Sultan Social Profile** (منشورات، متابعون، إلخ)
+
+---
+
+## 14. Business Center
+
+- الملف التجاري
+- المنتجات / الخدمات
+- العملاء، الطلبات
+- الفريق (أدوار)
+- التحليلات
+- الحملات التسويقية
+- الاشتراكات، الفواتير
+- **CRM متكامل** (انظر القسم 15)
+- **POS** (نقاط البيع) للتجار الفعليين (اختياري)
+- **Sultan Ads** – إنشاء إعلانات مدفوعة
+
+---
+
+## 15. CRM
+
+- عملاء، عملاء محتملون، Pipeline (Kanban)
+- Timeline، Notes، Tasks، Tags، Assigned agents
+- Customer value، Activity history
+- **ميزة جديدة:** توقعات العملاء (Lead Scoring) بالذكاء الاصطناعي
+- **ميزة جديدة:** أتمتة المتابعة (Automation Rules)
+
+---
+
+## 16. تحليلات المبيعات
+
+- الإيرادات، GMV، الطلبات، العملاء، العملاء الجدد/العائدون
+- متوسط قيمة الطلب، معدل التحويل
+- الاشتراكات، الإعلانات
+- أداء المدن، الفئات، البائعين
+- الاحتفاظ، Churn
+- **ميزة جديدة:** توقعات المبيعات (Forecasting) باستخدام ML
+- **ميزة جديدة:** تحليل السلة (Market Basket Analysis)
+
+---
+
+## 17. SUPER ADMIN — SULTAN COMMAND CENTER 2027
+
+أقوى لوحة تحكم على الإطلاق. يجب أن يستطيع Super Admin إدارة المنصة بالكامل من الواجهة دون تعديل الكود.
+
+### الأقسام:
+
+- **Executive Dashboard**: نظرة شاملة، KPIs، تنبيهات، توقعات
+- **Marketplace**: الفئات، الإعلانات، البائعون، التحقق، التقارير
+- **Motors**: الماركات، الموديلات، الوكلاء
+- **Real Estate**: العقارات، الوكلاء، المواقع
+- **Food**: المطاعم، القوائم، الطلبات
+- **Services**: مقدمو الخدمات، الحجوزات، التقييمات
+- **Jobs**: الشركات، الوظائف، الطلبات
+- **Auctions**: المزادات، المزايدات
+- **Charity**: الحالات، التبرعات
+- **News**: المصادر، المقالات، التحقق، التصحيحات
+- **Zawaj & Taaruf**: إدارة المستخدمين، الطلبات، المطابقات، البلاغات، الفلاتر، الإعدادات
+- **Social**: المنشورات، البث المباشر، المجتمعات، البلاغات
+- **Users**: المستخدمون، الشركات، الموظفون، الصلاحيات
+- **CRM**: العملاء، Pipeline، الأنشطة
+- **Marketing**: الحملات، الكوبونات، العروض، الإشعارات
+- **Advertising**: المساحات، الحملات، الأداء
+- **Finance**: الإيرادات، المعاملات، الاشتراكات، التقارير
+- **Content**: الصفحة الرئيسية، البنرات، الصفحات، الأسئلة الشائعة، SEO
+- **System**: الوحدات، Feature Flags، الصيانة، الأمان، النسخ الاحتياطي، السجلات
+- **Sultan Economy**: عملات، محافظ، دفتر أستاذ، قواعد، مخاطر
+- **Influence Center**: مستخدمون، حملات نمو، Sultan Supported، Rising، Grants، Badges
+- **AI Management**: إعدادات نماذج الذكاء الاصطناعي، التدريب، المراقبة
+- **Audit Log**: سجل كل عملية إدارية
+- **Command Palette**: بحث سريع بالأوامر
+- **No‑Code Builder**: تخصيص الواجهات والصفحات بدون كود
+- **Notification Center**: إدارة الإشعارات
+
+**كل قسم قابل للتخصيص والتشغيل/الإيقاف.**
+
+---
+
+## 18. إدارة بدون كود
+
+- إضافة/حذف/تعديل/إعادة ترتيب/إخفاء/تشغيل/إيقاف أي قسم
+- تغيير النصوص والصور والبنرات والخطط والأسعار
+- إدارة الصلاحيات (RBAC)
+- إدارة إعدادات النظام
+- إدارة Feature Flags
+- إدارة المحتوى (CMS)
+- إنشاء صفحات جديدة بسحب وإفلات
+- تخصيص الألوان والخطوط والأنماط
+
+---
+
+## 19. Feature Flags
+
+أضف مركز تحكم في الوحدات. لكل خدمة: الحالة، التشغيل، الإيقاف، الصيانة، Coming Soon، الملاحظات، آخر تعديل.
+
+Flags شاملة:
+
+- economy_enabled
+- support_enabled
+- rewards_enabled
+- cashout_enabled
+- grants_enabled
+- tasks_enabled
+- bounties_enabled
+- challenges_enabled
+- growth_campaigns_enabled
+- news_rewards_enabled
+- business_boost_enabled
+- diaspora_enabled
+- zawaj_taaruf_enabled
+- social_enabled
+- live_streaming_enabled
+- ar_vr_enabled
+- ai_assistant_enabled
+- blockchain_enabled
+
+---
+
+## 20. RBAC
+
+نظام صلاحيات متقدم:
+
+الأدوار: Super Admin, Admin, Finance, Marketing, Support, Moderator, Analyst, Operations, Zawaj Moderator, Social Moderator, AI Trainer
+
+مع صلاحيات دقيقة لكل قسم. يمكن إنشاء أدوار مخصصة.
+
+---
+
+## 21. Audit Log
+
+سجل كل عملية إدارية. غير قابل للحذف. يشمل: admin_id, action, target_user, target_transaction, old_value, new_value, reason, timestamp, IP/session, audit_id.
+
+---
+
+## 22. Command Palette
+
+بحث سريع للإدارة بالأوامر النصية. مثال: "افتح المستخدمين"، "ابحث عن إعلان"، "أوقف قسم الطعام"، "افتح تقارير المبيعات"، "أنشئ حملة".
+
+---
+
+## 23. CMS
+
+CMS داخلي يسمح بإدارة الصفحة الرئيسية والنصوص والصور والبنرات والـ CTA والتذييل والصفحات المؤسسية بدون تعديل الكود. يدعم الترجمة متعددة اللغات.
+
+---
+
+## 24. التصميم — Design System
+
+أنشئ Design System كامل يشمل:
+
+- Buttons, Inputs, Selects, Tables, Cards, Modals, Drawers, Toasts, Tabs, Badges, Tooltips, Skeletons, Empty states, Charts, Pagination, Bottom Sheets, Navigation Tabs, Command Palette, Date Pickers, File Uploaders, Rich Text Editors, Kanban Board, Calendar, Map, Video Player, Chat UI, Wallet UI, Verification Badges, Progress Bars, Avatars, Rating Stars, Countdown Timers, QR Code
+
+كل العناصر متناسقة مع RTL/LTR و Dark/Light Mode.
+
+---
+
+## 25. RTL واللغات
+
+- العربية هي اللغة الأساسية (RTL)
+- الفرنسية والإنجليزية (LTR)
+- الدارجة المغربية (كتابة صوتية) كخيار لمساعد الصوت
+- نظام ترجمة منظم (i18n) مع تبديل فوري
+- دعم كامل للأرقام العربية والمغربية
+
+---
+
+## 26. الموبايل
+
+صمم Mobile-first.
+
+- Navigation سفلي بـ 5 أيقونات رئيسية
+- Bottom Sheets
+- أزرار لمس كبيرة
+- Gestures (سحب للخلف، سحب للتحديث)
+- PWA (تثبيت على الشاشة)
+- Offline mode جزئي (عرض البيانات المخزنة مؤقتًا)
+- Push Notifications
+
+---
+
+## 27. الأداء
+
+- Lazy loading, Skeleton loading, Debounced search, Event delegation
+- Pagination و Infinite Scroll
+- Caching (SWR / React Query)
+- IndexedDB للتخزين المحلي
+- Virtualized long lists
+- تحسين الصور: WebP, AVIF, Lazy loading, CDN
+- Code splitting، Tree shaking
+- Core Web Vitals: LCP < 2.5s, CLS < 0.1
+
+---
+
+## 28. البيانات التجريبية
+
+أنشئ بيانات واقعية للمغرب تشمل:
+
+- 1000+ إعلان
+- مدن مغربية حقيقية
+- أسماء مغربية
+- أسعار واقعية
+- سيارات منتشرة
+- عقارات
+- مطاعم
+- أطباق مغربية
+- مقدمي خدمات
+- مزادات
+- حالات تضامن
+- مستخدمين
+- عملاء CRM
+- معاملات وتحليلات
+- بيانات DEMO موسومة بوضوح
+
+لا تستخدم Lorem Ipsum أو بيانات Placeholder واضحة.
+
+---
+
+## 29. SULTAN ECONOMY + REWARDS + INFLUENCE + OPPORTUNITY ENGINE
+
+**هذا القسم مطابق لما ورد في الإصدار السابق مع تحسينات.**
+
+### 29.1 العملات والأرصدة
+
+- **Sultan Coins (SC):** عملة الاستخدام داخل المنصة. مصادرها: شراء، Grants، Promotions. استخدام: Support، Boost، Featured، مزايا، مزايا زواج، إلخ. غير نقدية.
+- **Sultan Rewards (SR):** رصيد المكافآت المؤهل للسحب بعد استيفاء الشروط. لا يُشترى مباشرة.
+- **Sultan Power (SP):** نقاط تأثير غير نقدية. تستخدم للمستويات، الشارات، المزايا.
+- **Pending Rewards:** مكافآت معلقة بانتظار المراجعة.
+
+### 29.2 Wallet Architecture
+
+- Ledger-based transaction architecture.
+- كل حركة تحتوي: transaction_id, user_id, source, destination, currency, amount, type, status, reference_id, campaign_id, created_at, completed_at, created_by, risk_status, metadata, audit_id.
+- أرصدة: balance, pending, available, frozen, lifetime, transaction history.
+
+### 29.3 Sultan Support
+
+- زر "ادعم" في Profiles, Posts, News, Services, Business, Projects, Challenges, Bounties.
+- خيارات: 50, 100, 500, 1000, 5000, 10000 SC, Custom.
+- رسالة اختيارية.
+- عرض واضح للرسوم.
+
+### 29.4 Reward Conversion Engine
+
+- Economy Rules Engine قابل للتعديل من Super Admin.
+- كل قاعدة versioned.
+- كل معاملة تحفظ نسخة القاعدة.
+
+### 29.5 Cashout System
+
+- Cashout Center مع الأهلية.
+- شروط قابلة للتعديل.
+- `cashout_eligibility` يحتوي على eligible, reason, review_status, risk_status, kyc_status, approved_by, approved_at, expires_at.
+
+### 29.6 Admin Cashout Override
+
+- أوامر: Enable/Disable/Review/Approve/Freeze/Unfreeze.
+- مع سبب وAudit Log.
+- لا تعديل مباشر للأرصدة.
+
+### 29.7 Sultan Power
+
+- غير قابل للسحب.
+- للـ Levels, Badges, Visibility.
+
+### 29.8 Sultan Reputation
+
+- Reputation Engine مستقل.
+- إشارات: معاملات ناجحة، مهام مكتملة، تقييمات، إلخ.
+- لا تغيير يدوي بدون Audit.
+
+### 29.9 Sultan Supporter
+
+- Supporter Level, Score.
+- Top Supporters, Rising Supporters.
+
+### 29.10 Sultan Supported
+
+- حالة مستقلة: Sultan Supported.
+- Badge واضح.
+- Super Admin يمنح/يوقف.
+
+### 29.11 Verification
+
+- حالات منفصلة: Identity Verified, Business Verified, Official, Trusted Contributor, Sultan Supported, Featured, Sponsored.
+
+### 29.12 Growth Engine
+
+- حملات: Follower Growth, Engagement, Reach, Profile Visit, Content Discovery.
+- تعمل عبر distribution، وليس شراء followers.
+
+### 29.13 Super Admin Growth Controls
+
+- Boosts, Featured, Discover Placement, Regional/City/Category Promotion.
+
+### 29.14 Sultan Rising
+
+- اختيار المواهب الصاعدة.
+- Badge + discovery boost + optional grant.
+
+### 29.15 Sultan Grants
+
+- Grant Campaign system.
+- Applications, Review, Approval, Payout, Audit.
+
+### 29.16 Sultan Challenges
+
+- أي مستخدم/Business يمكنه إنشاء Challenge.
+- حالات: Draft, Published, Active, Closed, Judging, Winner Selected, Rewarded, Cancelled.
+
+### 29.17 Sultan Bounties
+
+- Bounty system مع multiple submissions، private submission، dispute state.
+
+### 29.18 Sultan Tasks
+
+- Micro Tasks.
+- لا وعد بدخل مضمون.
+- budget, reward, estimated time, skills, location, deadline, verification, completion proof.
+
+### 29.19 Sultan Opportunity Center
+
+- قسم "فرص سلطان" يجمع Jobs, Tasks, Bounties, Challenges, Grants, Services, Business opportunities, Promotions.
+- AI filtering حسب مهارات المستخدم.
+
+### 29.20 Sultan AI Opportunity Assistant
+
+- مساعد ذكي يفهم العربية والدارجة والفرنسية والإنجليزية.
+- يحوّل الطلب إلى فلاتر ويعرض الفرص الموجودة.
+- إذا لا توجد: "لا توجد حاليًا فرصة مطابقة."
+
+### 29.21 Sultan Business Boost
+
+- Local Boost, City Boost, Regional Boost, National Boost, Diaspora Boost.
+- استهداف: city, country, language, category, interest, audience.
+- Sponsored واضح.
+
+### 29.22 Morocco + Diaspora
+
+- Audience segmentation: Morocco, France, Spain, Belgium, Netherlands, Canada, Other.
+- "Mghrib to the World".
+- لا نظام تحويل أموال إلا عبر مزود مرخص.
+
+### 29.23 News Economy
+
+- مقالات مؤهلة يمكن أن تحتوي Support.
+- Contributors مؤهلون يمكن أن يحصلوا على Rewards وفق سياسة مستقلة.
+- Promoted/Sponsored واضحة.
+
+### 29.24 Sultan Fact Layer
+
+- Source, Date, Author, Publisher, Verification state, Correction state, Related coverage.
+
+### 29.25 Super Admin — Sultan Economy
+
+- Dashboard metrics شاملة.
+- Ledger, Risk, Audit.
+
+### 29.26 Super Admin — Influence Center
+
+- User Search, User Command Center, Growth Campaigns, Featured, Trending, Sultan Supported, Rising, Grants, Badges, Announcements.
+
+### 29.27 User Command Center
+
+- عند فتح أي مستخدم:
+  - Header: avatar, name, username, status, trust, reputation, level, risk, verification.
+  - Metrics: followers, following, support given/received, coins, rewards, pending, power, reach, engagement, transactions.
+  - Quick Actions: Grant Support, Grant Coins, Grant Reward, Enable/Freeze Cashout, Verify Identity/Business, Sultan Supported, Featured, Boost Profile, Launch Campaigns, Add Badge, Add to Rising, Grant, Restrict, Freeze Account, **Reset Password**, **Impersonate User**, **View Email**, **Adjust Followers/Likes**, **Adjust Coins/Points**, **Adjust Rewards**.
+- **أمن:** لا يمكن رؤية كلمة المرور، فقط إعادة تعيين. Impersonate بتوكن مؤقت مع Audit. كل تعديلات الرصيد تُسجل كـ Ledger مع سبب.
+
+### 29.28 Admin Bulk Actions
+
+- Bulk selection للمستخدمين.
+- عمليات: Add to campaign, Grant Support, Grant Badge, Add Boost, Verify business, Export, Restrict, Review.
+- لا bulk financial grants إلا بصلاحية Super Admin + confirmation + audit.
+
+### 29.29 Announcements
+
+- Announcement Engine.
+- أنواع: Sultan Supported, Rising, Grant Recipient, Featured Member, New Opportunity, Campaign, News Alert, Business Spotlight.
+- Channels: Home, Notifications, Discover, Profile, News, Opportunity Center.
+
+### 29.30 Monetization
+
+- Revenue streams: Coin Sales, Promotion, Boost, Featured, Advertising, Business subscriptions, Service commissions, Marketplace commissions, Opportunity commissions, Premium tools, Zawaj premium features.
+- Commission engine قابلة للتعديل.
+
+### 29.31 Commission Engine
+
+- commission حسب module, category, seller type, user tier, campaign, payment method, country, currency, promotion type.
+- Versioned.
+
+### 29.32 Economy Rules
+
+- صفحة Economy Rules.
+- كل تغيير: Admin, Reason, Old value, New value, Timestamp, Version.
+
+### 29.33 Anti-Fraud
+
+- Risk Engine يراقب: multiple accounts, device reuse, IP anomalies, circular transfers, self-support, rapid purchase/cashout, chargebacks, fake engagement, bot behavior, referral abuse, grant abuse.
+- Risk Score: 0–30 Low, 31–60 Medium, 61–80 High, 81–100 Critical.
+- حساب عالي المخاطر: لا cashout تلقائيًا، يدخل review.
+
+### 29.34 Withdrawal Safety
+
+- Cashout states: Requested, Pending, Risk Review, KYC Review, Approved, Processing, Paid, Rejected, Cancelled, Frozen.
+- لا تغيير بدون Ledger event.
+
+### 29.35 Notifications
+
+- لكل الأحداث: Support received, Reward earned, Cashout requested, Sultan Supported, Challenge won, Task completed, Zawaj match request, etc.
+
+### 29.36 User Wallet UI
+
+- Cards: Coins, Rewards, Pending, Power.
+- Actions: Buy Coins, Support, Earn, Withdraw, History.
+- الفرق بين usable/pending/withdrawable/non-cashable واضح.
+
+### 29.37 Economy History
+
+- Filters: Support, Purchase, Reward, Grant, Boost, Cashout, Refund, Adjustment.
+
+### 29.38 Support Receipt
+
+- بعد الدعم: "تم دعم @username بـ 1,000 SC" مع reason, timestamp, transaction ID.
+
+### 29.39 Public Transparency
+
+- صفحات مساعدة: How Rewards works, How Support works, How Cashout works, Eligibility, Fees, etc.
+
+### 29.40 Payment Integration
+
+- إذا لا يوجد Payment Gateway حقيقي، أنشئ abstraction: PaymentProvider, PurchaseIntent, PaymentConfirmation, Refund, Webhook.
+- Mock فقط في development.
+- Production يرفض المعاملة إذا لم يوجد provider.
+
+### 29.41 Cashout Integration
+
+- نفس الشيء.
+
+### 29.42 KYC
+
+- إذا لا يوجد KYC provider، أنشئ state machine فقط.
+
+### 29.43 Moroccan-first UX
+
+- Arabic RTL أساسي. دعم Darija, Arabic, French, English.
+- Currency: MAD.
+
+### 29.44 Moroccan Opportunities
+
+- Filters: City, Region, Morocco, Diaspora.
+- Categories: Commerce, Services, Freelance, Tourism, Crafts, Food, Technology, Design, Marketing, Education, Transport, Real Estate, Events, Local Tasks, Zawaj/Taaruf.
+
+### 29.45 Performance
+
+- Pagination, lazy loading, caching, debounced search, virtualized lists.
+
+### 29.46 Security
+
+- Server-side validation, permission check, transaction validation, idempotency, audit logging.
+- لا إرسال SC لنفسك، لا تحويل أكثر من balance، لا negative balances، لا duplicate.
+
+### 29.47 Data Integrity
+
+- Atomic transactions، idempotency keys، لا تعديل ledger history، corrections كـ adjustment.
+
+### 29.48 Feature Flags
+
+- flags شاملة (انظر القسم 19).
+
+### 29.49 Emergency Controls
+
+- Pause Coin Purchases, Pause Support, Pause Transfers, Pause Rewards, Pause Cashouts, Pause Growth Campaigns, Pause Grants.
+
+### 29.50 Audit Log
+
+- غير قابل للحذف.
+
+### 29.51 Admin Dashboard
+
+- Economy Health, Growth, Opportunities, Trust, News, Zawaj, Social.
+
+### 29.52 Business Intelligence
+
+- ARPU, ARPPU, Coin Purchase Conversion, Support Conversion, Supporter Retention, Cashout Rate, Reward Liability, Campaign ROI, Boost ROI, User LTV, Fraud Rate, Chargeback Rate, Average Support, Top Categories, Top Cities, Top Opportunity Types.
+
+### 29.53 الاقتصاد لا يعتمد على Whale واحد
+
+- مراقبة Top 1/10 supporter share, Top 1/10 recipient share. تحذير إذا زاد.
+
+### 29.54 Recommendations
+
+- Discovery balance: Established, Rising, New, Local, Relevant.
+- استخدام engagement quality.
+
+### 29.55 No Fake Economy
+
+- ممنوع fake followers, fake likes, fake transactions, fake cashouts, fake revenue.
+- Demo data موسومة DEMO.
+
+---
+
+## 30. نظام رفع الصور والوسائط
+
+- ضغط الصور قبل الرفع (Canvas API) إلى WebP/JPEG بأبعاد 1200px وحجم أقصى 200KB.
+- إنشاء Thumbnails 300px.
+- السماح بلصق رابط صورة أو Base64.
+- Supabase Storage مع RLS.
+- CDN عبر Cloudflare.
+- حد أقصى 10 صور لكل إعلان.
+- رفض الملفات الكبيرة.
+- معاينة فورية وProgress bar.
+
+---
+
+## 31. قاعدة البيانات — Supabase Schema
+
+الجداول (توسيع النسخة السابقة):
+
+- profiles (مع تفاصيل إضافية للحالة الاجتماعية والاهتمامات)
+- user_roles, user_permissions
+- categories, listings, listing_images
+- cars, real_estate, restaurants, menu_items, orders
+- services, service_bookings
+- jobs, job_applications
+- auctions, auction_bids
+- charity_cases, charity_donations
+- news_articles, news_sources
+- messages, conversations
+- notifications
+- wallets, wallet_transactions
+- economy_rules, reward_campaigns, support_events
+- cashout_requests, cashout_eligibility, risk_scores
+- grants, grant_applications
+- challenges, challenge_submissions
+- bounties, bounty_submissions
+- tasks, task_submissions
+- opportunity_filters, growth_campaigns, featured_items
+- announcements, audit_logs, feature_flags, cms_pages, cms_banners
+- user_follows, user_likes, user_saves, user_blocks, user_reports
+- zawaj_profiles, zawaj_matches, zawaj_requests, zawaj_preferences, zawaj_verifications, zawaj_reports
+- social_posts, social_comments, social_reactions, social_live_streams
+- ai_conversations, ai_suggestions
+- payment_providers, payout_providers
+- blockchain_transactions (اختياري)
+
+**كل جدول يحتوي على RLS Policies مناسبة.**
+
+---
+
+## 32. مرحلة البحث الأولية
+
+قبل كتابة أي كود، يجب إجراء بحث ويب شامل عن المنصات المنافسة والعالمية لاستخلاص أفضل الممارسات وتحديد الفجوات.
+
+المنصات التي يجب دراستها (على سبيل المثال لا الحصر):
+
+- Avito.ma, Jumia.ma, Facebook Marketplace, LinkedIn, Muzz, Half Our Deen, Tinder, Bumble, Upwork, Fiverr, Glovo, Uber Eats, eBay, Catawiki, GoFundMe, Google News, Flipboard, TikTok, Instagram, Clubhouse, YouTube Shorts, Amazon Live
+
+يجب توثيق:
+
+- أفضل عناصر UX
+- أهم الميزات الناقصة في السوق المغربي
+- كيفية تحسين تجربة المستخدم المغربي
+- ما يجب تجنبه
+
+**لا يمكن تنفيذ البحث فعليًا داخل هذه البيئة، لكن يجب تضمين مرحلة بحث إلزامية في خطة التنفيذ.**
+
+---
+
+## 33. التصميم لعام 2027
+
+- تصميم نظيف جدًا مع مساحات بيضاء واسعة
+- Glassmorphism بحذر
+- Dark Mode افتراضي
+- Micro-interactions متطورة
+- Motion Design خفيف وسلس
+- Cards بدون ظلال ثقيلة
+- Typography جريئة وواضحة
+- ألوان هادئة ودرجات ذهبية للفخامة
+- أيقونات خطية بسيطة
+- تأثيرات Hover ناعمة
+- Mobile-first مع Bottom Navigation
+- Voice Search اختياري
+- AI Suggestions في البحث
+- **عناصر ثلاثية الأبعاد خفيفة (WebGL) للعروض المميزة**
+
+---
+
+## 34. التدرج في التنفيذ
+
+نفذ بالترتيب:
+
+**PHASE 1 — Architecture & Foundation**  
+- Product Architecture, Information Architecture, Design System, Supabase Schema, RLS Policies, Auth, Navigation, Responsive Layout, RTL/i18n, CI/CD
+
+**PHASE 2 — Core Marketplace**  
+- Home, Search, Listings, Details, Publish Wizard, Categories, Profile
+
+**PHASE 3 — Verticals**  
+- Motors, Real Estate, Food, Services, Jobs, Auctions, Charity, News, Social
+
+**PHASE 4 — Messaging & Notifications**  
+- Unified Messaging, Notifications, Realtime
+
+**PHASE 5 — Wallet & Economy**  
+- Ledger, Wallet, Support, Rewards, Pending Rewards, Sultan Power, Cashout Eligibility, Cashout Workflow, KYC states, Risk
+
+**PHASE 6 — Super Admin**  
+- Command Center, User Management, RBAC, Feature Flags, Audit Log, CMS, Command Palette
+
+**PHASE 7 — Influence Center**  
+- Boosts, Featured, Growth Campaigns, Sultan Rising, Sultan Supported, Grants, Badges
+
+**PHASE 8 — Opportunity Engine**  
+- Tasks, Bounties, Challenges, Opportunity Center, AI Opportunity Assistant
+
+**PHASE 9 — Zawaj & Taaruf**  
+- إعدادات القسم، الملفات الشخصية، المطابقة، الخصوصية، التكامل مع المحفظة، إدارة المحتوى، إدارة البلاغات
+
+**PHASE 10 — AI Integration**  
+- AI Search Assistant, AI Recommendations, AI Content Moderation, AI Opportunity Assistant
+
+**PHASE 11 — Analytics & BI**  
+- Executive Dashboard, Economy Health, Fraud Dashboard, BI Metrics
+
+**PHASE 12 — Deployment & Testing**  
+- Supabase Edge Functions, Cloudflare Pages, GitHub Actions, End-to-End Testing, Performance Testing, Security Testing
+
+**بعد كل Phase: اختبر النظام قبل الانتقال.**
+
+---
+
+## 35. قواعد صارمة
+
+ممنوع:
+
+- تعديل مشروع سابق
+- نسخ واجهة موجودة
+- استخدام Bootstrap أو تصميم Generic
+- أزرار غير عاملة
+- alert أو prompt أو confirm
+- Lorem Ipsum
+- أخطاء Console
+- صور مكسورة
+- شعارات تقنية داخل الواجهة
+- عبارات مثل "Powered by AI" أو أسماء أدوات التطوير
+- Fake followers/likes/comments/transactions/cashouts/revenue/verification
+- API وهمي يُدَّعى أنه حقيقي
+- كلمات مرور مخزنة كنص واضح
+- تحكم مشرف في أموال المستخدم دون Audit
+
+كل زر يجب أن يؤدي وظيفة حقيقية أو يغير حالة الواجهة أو يفتح Modal أو يعرض Toast.
+
+---
+
+## 36. معيار الجودة
+
+يجب أن تبدو النتيجة وكأنها منتج أطلقته شركة تقنية مغربية عالمية في 2027 بميزانية تصميم وهندسة ضخمة.
+
+يجب أن تجمع بين:
+
+- البساطة الراقية
+- الثقة
+- السرعة
+- الفخامة
+- الهوية المغربية المعاصرة
+- سهولة الاستخدام
+- قابلية التوسع
+- أمان عالي
+- شفافية
+- ذكاء اصطناعي متكامل
+
+لا تبنِ مجرد موقع. ابنِ **منتجًا رقميًا متكاملًا من الصفر** له هوية خاصة، تجربة مستخدم متماسكة، ونظام إدارة مؤسسي قادر على تشغيل المنصة بالكامل من لوحة Super Admin.
+
+---
+
+## 37. FINAL RULE
+
+لا تشرح ما يمكن بناؤه. نفذ.
+
+لا تنشئ Prototype وهميًا.  
+لا تضع UI فقط بدون state/data behavior.  
+لا تنشئ API وهميًا على أنه حقيقي.  
+لا تكسر أي جزء موجود.  
+لا تعيد تصميم Sultan بالكامل.  
+لا تحذف أي ميزة موجودة.  
+لا تنشئ نظامًا ماليًا حقيقيًا بدون integration فعلي.  
+لا تصنع followers/likes مزيفة.  
+كل Promotion يجب أن تكون قابلة للتتبع وموسومة عندما تكون مدفوعة.  
+كل Reward يجب أن يكون له مصدر واضح.  
+كل Cashout يجب أن يكون له status واضح.  
+كل Admin Override يجب أن يكون له سبب وAudit Log.  
+كل Wallet transaction يجب أن تكون Ledger-based.  
+كل Feature يجب أن تعمل فعليًا أو تكون معلّمة بوضوح على أنها تحتاج Integration خارجي.  
+كل كلمة مرور يجب أن تكون مشفرة، ولا يمكن للمشرف رؤيتها كنص واضح، بل يمكنه إعادة تعيينها فقط.
+
+---
+
+**الهدف النهائي:**  
+تحويل SULTAN إلى منصة رقمية مغربية عالمية متكاملة تجمع بين:
+
+- Marketplace
+- Services
+- Jobs
+- Tasks
+- Bounties
+- Challenges
+- Grants
+- News
+- Business
+- Social
+- Entertainment
+- Zawaj & Taaruf
+- Economy + Rewards + Influence + Opportunity Engine
+- AI + AR/VR + Blockchain (اختياري)
+- Morocco + Diaspora + Global
+
+مع لوحة تحكم سوبر أدمن شاملة تسمح بالتحكم الكامل في كل شيء بأمان وشفافية.
+
+---
+
+**ابدأ التنفيذ فورًا.**

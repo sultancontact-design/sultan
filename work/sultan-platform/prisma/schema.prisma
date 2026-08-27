@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  username      String   @unique
+  displayName   String
+  email         String
+  phone         String?
+  avatar        String?
+  bio           String?
+  city          String   @default("الدار البيضاء")
+  region        String?
+  country       String   @default("MA")
+  locale        String   @default("ar")
+  role          String   @default("user")
+  isVerified    Boolean  @default(false)
+  isBusiness    Boolean  @default(false)
+  trustScore    Int      @default(0)
+  reputationScore Int    @default(0)
+  sultanPower   Int      @default(0)
+  coinsBalance  Int      @default(0)
+  rewardsBalance Int     @default(0)
+  pendingRewards Int     @default(0)
+  followerCount Int      @default(0)
+  followingCount Int     @default(0)
+  supportGivenCount Int   @default(0)
+  supportReceivedCount Int @default(0)
+  listingCount  Int      @default(0)
+  saleCount     Int      @default(0)
+  isSultanSupported Boolean @default(false)
+  isRising      Boolean  @default(false)
+  isFeatured    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  listings      Listing[]
+  sentMessages  Message[]  @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  walletTransactions WalletTransaction[]
+  supportGiven  SupportEvent[] @relation("Supporter")
+  supportReceived SupportEvent[] @relation("Recipient")
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  nameAr      String
+  nameFr      String
+  nameEn      String
+  icon        String
+  slug        String     @unique
+  parentId    String?
+  order       Int        @default(0)
+  isActive    Boolean    @default(true)
+  listings    Listing[]
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+}
+
+model Listing {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  price         Float
+  currency      String   @default("MAD")
+  categoryId    String
+  condition     String   @default("new")
+  city          String   @default("الدار البيضاء")
+  region        String?
+  latitude      Float?
+  longitude     Float?
+  images        String   @default("[]")
+  status        String   @default("active")
+  viewsCount    Int      @default(0)
+  likesCount    Int      @default(0)
+  isFeatured    Boolean  @default(false)
+  isPromoted    Boolean  @default(false)
+  isUrgent      Boolean  @default(false)
+  negotiation   Boolean  @default(true)
+  delivery      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  profile       Profile  @relation(fields: [profileId], references: [id])
+  profileId     String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  saves         ListingSave[]
+}
+
+model ListingSave {
+  id        String   @id @default(cuid())
+  listingId String
+  profileId String
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  sender     Profile  @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   Profile  @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  profileId   String
+  type        String
+  amount      Int
+  currency    String   @default("SC")
+  status      String   @default("completed")
+  source      String?
+  destination String?
+  referenceId String?
+  metadata    String   @default("{}")
+  createdAt   DateTime @default(now())
+  profile     Profile  @relation(fields: [profileId], references: [id])
+}
+
+model SupportEvent {
+  id          String   @id @default(cuid())
+  supporterId String
+  recipientId String
+  amount      Int
+  message     String?
+  createdAt   DateTime @default(now())
+  supporter   Profile  @relation("Supporter", fields: [supporterId], references: [id])
+  recipient   Profile  @relation("Recipient", fields: [recipientId], references: [id])
+}
+
+model Auction {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  startPrice  Float
+  currentBid  Float
+  endsAt      DateTime
+  images      String   @default("[]")
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+}
+
+model CharityCase {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  goalAmount  Float
+  collectedAmount Float @default(0)
+  urgency     String   @default("medium")
+  images      String   @default("[]")
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Boolean @default(false)
+  label     String
+  category  String
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  action      String
+  target      String?
+  oldValue    String?
+  newValue    String?
+  reason      String?
+  createdAt   DateTime @default(now())
+}

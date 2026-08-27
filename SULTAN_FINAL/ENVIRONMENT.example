@@ -1,0 +1,78 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# SULTAN Platform — Environment Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# IMPORTANT: Never commit real API keys to GitHub.
+# Copy this file to .env and fill in your values.
+#
+
+# ── Database ─────────────────────────────────────────────────────────────────
+# For production, use Supabase connection string
+DATABASE_URL=file:./dev.db
+
+# ── Supabase (optional — for production backend) ──────────────────────────────
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# ── Authentication ───────────────────────────────────────────────────────────
+NEXTAUTH_SECRET=your-nextauth-secret-here
+NEXTAUTH_URL=http://localhost:3000
+
+# ── Sultan AI OS — Provider API Keys ─────────────────────────────────────────
+# Format: SULTAN_SECRET_PROVIDER_ID (dashes replaced with underscores)
+# Keys are encrypted at rest and never exposed to the frontend.
+
+# OpenAI
+SULTAN_SECRET_PROVIDER_OPENAI=sk-...
+
+# Anthropic
+SULTAN_SECRET_PROVIDER_ANTHROPIC=sk-ant-...
+
+# Google AI
+SULTAN_SECRET_PROVIDER_GOOGLE=AI...
+
+# xAI (Grok)
+SULTAN_SECRET_PROVIDER_XAI=xai-...
+
+# DeepSeek
+SULTAN_SECRET_PROVIDER_DEEPSEEK=sk-...
+
+# Mistral AI
+SULTAN_SECRET_PROVIDER_MISTRAL=...
+
+# Groq
+SULTAN_SECRET_PROVIDER_GROQ=gsk_...
+
+# OpenRouter
+SULTAN_SECRET_PROVIDER_OPENROUTER=sk-or-...
+
+# Cerebras
+SULTAN_SECRET_PROVIDER_CEREBRAS=...
+
+# ── GitHub Integration (optional) ────────────────────────────────────────────
+SULTAN_GITHUB_TOKEN=
+SULTAN_GITHUB_REPO_OWNER=
+SULTAN_GITHUB_REPO_NAME=
+
+# ── Cloudflare Integration (optional) ───────────────────────────────────────
+SULTAN_CLOUDFLARE_API_TOKEN=
+SULTAN_CLOUDFLARE_ACCOUNT_ID=
+SULTAN_CLOUDFLARE_PROJECT_NAME=
+
+# ── Social Media (optional — for Social Agent) ───────────────────────────────
+SULTAN_TWITTER_BEARER_TOKEN=
+SULTAN_INSTAGRAM_ACCESS_TOKEN=
+
+# ── Payment Integration (optional — for Sultan Money architecture) ───────────
+SULTAN_PAYMENT_PROVIDER=
+SULTAN_PAYMENT_API_KEY=
+SULTAN_PAYMENT_MERCHANT_ID=
+
+# ── Encryption ───────────────────────────────────────────────────────────────
+# Used for encrypting stored secrets (generate a strong random string)
+SULTAN_ENCRYPTION_KEY=your-32-char-encryption-key
+
+# ── App Settings ─────────────────────────────────────────────────────────────
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_NAME=سلطان | SULTAN

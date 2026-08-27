@@ -1,0 +1,526 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  username      String   @unique
+  displayName   String
+  email         String
+  phone         String?
+  avatar        String?
+  bio           String?
+  city          String   @default("الدار البيضاء")
+  region        String?
+  country       String   @default("MA")
+  locale        String   @default("ar")
+  role          String   @default("user")
+  isVerified    Boolean  @default(false)
+  isBusiness    Boolean  @default(false)
+  trustScore    Int      @default(0)
+  reputationScore Int    @default(0)
+  sultanPower   Int      @default(0)
+  coinsBalance  Int      @default(0)
+  rewardsBalance Int     @default(0)
+  pendingRewards Int     @default(0)
+  followerCount Int      @default(0)
+  followingCount Int     @default(0)
+  supportGivenCount Int   @default(0)
+  supportReceivedCount Int @default(0)
+  listingCount  Int      @default(0)
+  saleCount     Int      @default(0)
+  isSultanSupported Boolean @default(false)
+  isRising      Boolean  @default(false)
+  isFeatured    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  listings      Listing[]
+  sentMessages  Message[]  @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  walletTransactions WalletTransaction[]
+  supportGiven  SupportEvent[] @relation("Supporter")
+  supportReceived SupportEvent[] @relation("Recipient")
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  nameAr      String
+  nameFr      String
+  nameEn      String
+  icon        String
+  slug        String     @unique
+  parentId    String?
+  order       Int        @default(0)
+  isActive    Boolean    @default(true)
+  listings    Listing[]
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+}
+
+model Listing {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  price         Float
+  currency      String   @default("MAD")
+  categoryId    String
+  condition     String   @default("new")
+  city          String   @default("الدار البيضاء")
+  region        String?
+  latitude      Float?
+  longitude     Float?
+  images        String   @default("[]")
+  status        String   @default("active")
+  viewsCount    Int      @default(0)
+  likesCount    Int      @default(0)
+  isFeatured    Boolean  @default(false)
+  isPromoted    Boolean  @default(false)
+  isUrgent      Boolean  @default(false)
+  negotiation   Boolean  @default(true)
+  delivery      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  profile       Profile  @relation(fields: [profileId], references: [id])
+  profileId     String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  saves         ListingSave[]
+}
+
+model ListingSave {
+  id        String   @id @default(cuid())
+  listingId String
+  profileId String
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  sender     Profile  @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   Profile  @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  profileId   String
+  type        String
+  amount      Int
+  currency    String   @default("SC")
+  status      String   @default("completed")
+  source      String?
+  destination String?
+  referenceId String?
+  metadata    String   @default("{}")
+  createdAt   DateTime @default(now())
+  profile     Profile  @relation(fields: [profileId], references: [id])
+}
+
+model SupportEvent {
+  id          String   @id @default(cuid())
+  supporterId String
+  recipientId String
+  amount      Int
+  message     String?
+  createdAt   DateTime @default(now())
+  supporter   Profile  @relation("Supporter", fields: [supporterId], references: [id])
+  recipient   Profile  @relation("Recipient", fields: [recipientId], references: [id])
+}
+
+model Auction {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  startPrice  Float
+  currentBid  Float
+  endsAt      DateTime
+  images      String   @default("[]")
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+}
+
+model CharityCase {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  goalAmount  Float
+  collectedAmount Float @default(0)
+  urgency     String   @default("medium")
+  images      String   @default("[]")
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Boolean @default(false)
+  label     String
+  category  String
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  action      String
+  target      String?
+  oldValue    String?
+  newValue    String?
+  reason      String?
+  createdAt   DateTime @default(now())
+}
+
+// ===== AI OS EXTENDED MODELS =====
+
+model AiProvider {
+  id                 String   @id @default(cuid())
+  name               String
+  type               String
+  baseUrl            String
+  isActive           Boolean  @default(true)
+  priority           Int      @default(0)
+  isDefault          Boolean
+  supportedFeatures  String   @default("{}")
+  rateLimitRpm       Int
+  rateLimitTpm       Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model AiModel {
+  id                    String    @id @default(cuid())
+  providerId            String
+  providerName          String
+  modelId               String
+  displayName           String
+  description           String
+  capabilities          String    @default("{}")
+  pricing               String    @default("{}")
+  isActive              Boolean   @default(true)
+  isDefaultForCategory  String?
+  healthStatus          String    @default("unknown")
+  avgLatencyMs          Int
+  totalCalls24h         Int
+  errorRate24h          Int
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model ModelRoutingRule {
+  id               String   @id @default(cuid())
+  name             String
+  description      String
+  conditions       String   @default("{}")
+  primaryModelId   String
+  fallbackModelIds String   @default("[]")
+  emergencyModelId String?
+  isActive         Boolean  @default(true)
+  priority         Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model StoredSecret {
+  id              String    @id @default(cuid())
+  name            String
+  providerId      String?
+  scope           String
+  keyPreview      String
+  encryptedValue  String
+  isActive        Boolean   @default(true)
+  lastUsedAt      DateTime?
+  lastRotatedAt   DateTime?
+  permissionScope String    @default("[]")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model AgentInstance {
+  id              String    @id @default(cuid())
+  agentDefId      String
+  status          String    @default("idle")
+  currentTaskId   String?
+  completedTasks  Int       @default(0)
+  failedTasks     Int       @default(0)
+  totalTokensUsed Int       @default(0)
+  lastActiveAt    DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model AiTask {
+  id              String    @id @default(cuid())
+  parentId        String?
+  workflowId      String?
+  agentId         String
+  agentName       String
+  title           String
+  description     String
+  status          String    @default("pending")
+  priority        String    @default("medium")
+  taskInput       String    @default("{}")
+  taskOutput      String?
+  error           String?
+  progress        Int       @default(0)
+  model           String
+  provider        String
+  tokensUsed      Int       @default(0)
+  tokensInput     Int       @default(0)
+  tokensOutput    Int       @default(0)
+  latencyMs       Int       @default(0)
+  costUsd         Float     @default(0)
+  toolsUsed       String    @default("[]")
+  subTaskIds      String    @default("[]")
+  approvalRequired Boolean   @default(false)
+  approvalStatus  String?
+  approvedBy      String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Workflow {
+  id                String    @id @default(cuid())
+  name              String
+  description       String
+  status            String    @default("pending")
+  definition        String    @default("[]")
+  currentStepIndex  Int       @default(0)
+  workflowInput     String    @default("{}")
+  workflowOutput    String?
+  error             String?
+  taskIds           String    @default("[]")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  completedAt       DateTime?
+}
+
+model ObservabilityEvent {
+  id          String   @id @default(cuid())
+  eventType   String
+  agentId     String?
+  taskId      String?
+  workflowId  String?
+  level       String   @default("info")
+  message     String
+  metadata    String   @default("{}")
+  durationMs  Int?
+  tokensUsed  Int?
+  costUsd     Float?
+  createdAt   DateTime @default(now())
+}
+
+model ModelUsageMetric {
+  id            String   @id @default(cuid())
+  modelId       String
+  providerId    String
+  calls         Int      @default(0)
+  tokensInput   Int      @default(0)
+  tokensOutput  Int      @default(0)
+  totalTokens   Int      @default(0)
+  totalCostUsd  Float    @default(0)
+  avgLatencyMs  Int      @default(0)
+  errorCount    Int      @default(0)
+  successRate   Float    @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model MemoryEntry {
+  id           String    @id @default(cuid())
+  agentId      String?
+  sessionId    String?
+  type         String
+  category     String
+  title        String
+  content      String
+  metadata     String    @default("{}")
+  importance   Float     @default(0.5)
+  accessCount  Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  expiresAt    DateTime?
+}
+
+model KnowledgeEntry {
+  id          String   @id @default(cuid())
+  entryType   String
+  title       String
+  content     String
+  source      String
+  tags        String   @default("[]")
+  version     Int      @default(1)
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PermissionPolicy {
+  id          String   @id @default(cuid())
+  agentId     String?
+  action      String
+  level       String
+  conditions  String?
+  description String
+  createdAt   DateTime @default(now())
+}
+
+model ScheduledTask {
+  id              String    @id @default(cuid())
+  name            String
+  description     String
+  cronExpression  String?
+  intervalMs      Int?
+  agentId         String
+  agentName       String
+  taskType        String
+  scheduledInput  String    @default("{}")
+  isActive        Boolean   @default(true)
+  lastRunAt       DateTime?
+  nextRunAt       DateTime?
+  runCount        Int       @default(0)
+  failCount       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model SocialAccount {
+  id              String    @id @default(cuid())
+  platform        String
+  displayName     String
+  username        String
+  isConnected     Boolean   @default(false)
+  followersCount  Int       @default(0)
+  isActive        Boolean   @default(true)
+  lastPostedAt    DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+model SocialPost {
+  id           String    @id @default(cuid())
+  accountId    String
+  platform     String
+  content      String
+  status       String    @default("draft")
+  scheduledAt  DateTime?
+  publishedAt  DateTime?
+  engagement   String    @default("{}")
+  agentId      String?
+  createdAt    DateTime  @default(now())
+}
+
+model MarriageProfile {
+  id               String    @id @default(cuid())
+  profileId        String
+  gender           String
+  birthYear        Int
+  city             String
+  region           String
+  maritalStatus    String
+  about            String
+  lookingFor       String
+  education        String?
+  profession       String?
+  height           Int?
+  prayerFrequency  String    @default("mostly")
+  isVerified       Boolean   @default(false)
+  photos           String    @default("[]")
+  privacyLevel     String    @default("verified_only")
+  isActive         Boolean   @default(true)
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Wallet {
+  id         String   @id @default(cuid())
+  profileId  String
+  balance    Float    @default(0)
+  currency   String   @default("MAD")
+  isFrozen   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Transaction {
+  id              String   @id @default(cuid())
+  walletId        String
+  type            String
+  amount          Float
+  currency        String   @default("MAD")
+  status          String   @default("pending")
+  description     String
+  referenceType   String?
+  referenceId     String?
+  transactionMeta String   @default("{}")
+  createdAt       DateTime @default(now())
+}
+
+model TrustScoreRecord {
+  id                String   @id @default(cuid())
+  profileId         String
+  overallScore      Int      @default(0)
+  verificationScore Int      @default(0)
+  reputationScore   Int      @default(0)
+  activityScore     Int      @default(0)
+  sellerScore       Int      @default(0)
+  providerScore     Int      @default(0)
+  fraudRisk         String   @default("low")
+  lastCalculatedAt  DateTime
+  createdAt         DateTime @default(now())
+}
+
+model TrendItem {
+  id            String   @id @default(cuid())
+  trendType     String
+  title         String
+  titleAr       String
+  score         Int      @default(0)
+  changePercent Float    @default(0)
+  period        String
+  trendMeta     String   @default("{}")
+  createdAt     DateTime @default(now())
+}
+
+model BusinessProfile {
+  id           String   @id @default(cuid())
+  profileId    String
+  name         String
+  nameAr       String
+  description  String
+  descriptionAr String
+  category     String
+  city         String
+  address      String?
+  phone        String?
+  website      String?
+  logo         String?
+  cover        String?
+  isVerified   Boolean  @default(false)
+  rating       Float    @default(0)
+  reviewCount  Int      @default(0)
+  followerCount Int      @default(0)
+  productCount Int      @default(0)
+  serviceCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model CommandCenterSession {
+  id             String   @id @default(cuid())
+  title          String
+  sessionStatus  String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
