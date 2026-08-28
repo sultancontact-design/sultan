@@ -1,0 +1,33 @@
+{
+  // SULTAN Platform — Cloudflare Pages Configuration
+  // This configures the project for deployment on Cloudflare Pages
+  // with optional Cloudflare Workers for edge functions.
+
+  "$schema": "https://json.schemastore.org/wrangler.json",
+  "name": "sultan-platform",
+  "main": ".worker/dist/index.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "pages_build_output_dir": ".vercel/output/static",
+
+  // Environment variables (set via Cloudflare Dashboard or wrangler secret)
+  // NEVER put real secrets here — use Cloudflare Dashboard → Settings → Environment Variables
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://ltdbaylnuivqnlthduhu.supabase.co",
+    "NEXT_PUBLIC_APP_NAME": "سلطان | SULTAN"
+  },
+
+  // Secrets to set via: wrangler secret put <NAME>
+  // - SUPABASE_SERVICE_ROLE_KEY
+  // - SULTAN_GITHUB_TOKEN
+  // - NEXTAUTH_SECRET
+  // - SULTAN_ENCRYPTION_KEY
+  // - AI provider API keys (SULTAN_SECRET_PROVIDER_OPENAI, etc.)
+
+  // Build command for Cloudflare Pages
+  // Set in Cloudflare Dashboard:
+  //   Build command: npx @cloudflare/next-on-pages
+  //   Build output directory: .vercel/output/static
+  //   Node.js version: 20
+}
