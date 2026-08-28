@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 import { processCommand, routeModel } from '@/lib/ai/core/engine';
 import { getActiveProviders, getActiveModels } from '@/lib/ai/providers/provider-registry';

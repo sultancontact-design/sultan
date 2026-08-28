@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 import { listSecrets, storeSecret, deleteSecret } from '@/lib/ai/core/engine';
 

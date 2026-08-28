@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_PROVIDERS, getProvider, getActiveProviders } from '@/lib/ai/providers/provider-registry';
 

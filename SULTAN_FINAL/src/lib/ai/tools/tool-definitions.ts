@@ -234,13 +234,31 @@ export const SULTAN_TOOLS: ToolDefinition[] = [
 ];
 
 export function getToolsForAgent(agentId: string): ToolDefinition[] {
-  const agent = require('../core/agent-registry').getAgentDefinition(agentId);
-  if (!agent) return SULTAN_TOOLS.slice(0, 5);
-  return SULTAN_TOOLS.filter(tool => {
-    if (!tool.agentCategories) return true;
-    if (tool.agentCategories.includes('core') && agent.id === 'agent-master') return true;
-    return true;
-  });
+  // ESM-compatible: use dynamic import pattern
+  let agent;
+  try {
+    // Inline agent lookup to avoid circular require in edge runtime
+    const agentCategories: Record<string, string[]> = {
+      'agent-engineering': ['code_analyze', 'code_generate', 'test_run', 'build_analyze'],
+      'agent-qa': ['test_run', 'security_scan', 'code_analyze'],
+      'agent-security': ['security_scan', 'rls_audit', 'log_analyze'],
+      'agent-devops': ['cloudflare_deploy', 'cloudflare_logs', 'cloudflare_status', 'build_analyze'],
+      'agent-research': ['web_search', 'web_read', 'data_analyze'],
+      'agent-data': ['data_analyze', 'database_query', 'trend_detect'],
+      'agent-product': ['report_generate', 'trend_detect', 'content_review'],
+      'agent-growth': ['social_post', 'social_analyze', 'trend_detect', 'web_search'],
+      'agent-social': ['social_post', 'social_analyze', 'content_create', 'web_search'],
+      'agent-content': ['content_create', 'content_review', 'web_search', 'web_read'],
+      'agent-business': ['data_analyze', 'report_generate', 'trend_detect'],
+      'agent-knowledge': ['knowledge_query', 'knowledge_store', 'memory_store', 'memory_retrieve'],
+    };
+    const tools = agentCategories[agentId] ?
+      SULTAN_TOOLS.filter(t => t.name && (t.agentCategories?.includes('core') || agentCategories[agentId].includes(t.name))) :
+      SULTAN_TOOLS;
+    return tools.length > 0 ? tools : SULTAN_TOOLS.slice(0, 5);
+  } catch {
+    return SULTAN_TOOLS.slice(0, 5);
+  }
 }
 
 export function getToolDefinition(name: string): ToolDefinition | undefined {

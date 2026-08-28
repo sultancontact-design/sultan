@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 import { getEvents, getMetrics, addEvent, addMetric } from '@/lib/ai/core/engine';
 

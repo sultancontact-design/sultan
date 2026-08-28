@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 import { AGENT_DEFINITIONS, getAgentDefinition, getAgentsByCategory } from '@/lib/ai/core/agent-registry';
 
