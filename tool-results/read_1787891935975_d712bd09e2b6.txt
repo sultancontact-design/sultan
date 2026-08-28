@@ -1,0 +1,819 @@
+     1→'use client';
+     2→
+     3→import React, { useState, useCallback } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  Crown,
+     7→  Users,
+     8→  CheckSquare,
+     9→  GitBranch,
+    10→  Cpu,
+    11→  Cloud,
+    12→  Key,
+    13→  Sparkles,
+    14→  Wrench,
+    15→  Brain,
+    16→  BookOpen,
+    17→  Globe,
+    18→  Search,
+    19→  Clock,
+    20→  Zap,
+    21→  Github,
+    22→  Database,
+    23→  CloudOff,
+    24→  Activity,
+    25→  ShieldCheck,
+    26→  Lock,
+    27→  CheckCircle,
+    28→  FileText,
+    29→  DollarSign,
+    30→  Settings,
+    31→  Send,
+    32→  ChevronRight,
+    33→  Terminal,
+    34→  Bot,
+    35→  BarChart3,
+    36→  Layers,
+    37→  MessageSquare,
+    38→  PanelRightClose,
+    39→  PanelRightOpen,
+    40→} from 'lucide-react';
+    41→import { Card } from '@/components/ui/card';
+    42→import { Badge } from '@/components/ui/badge';
+    43→import { Button } from '@/components/ui/button';
+    44→import { ScrollArea } from '@/components/ui/scroll-area';
+    45→import { Separator } from '@/components/ui/separator';
+    46→import {
+    47→  Tooltip,
+    48→  TooltipContent,
+    49→  TooltipProvider,
+    50→  TooltipTrigger,
+    51→} from '@/components/ui/tooltip';
+    52→
+    53→// ────────────────────────────────────────────────────────────────────────────
+    54→// Types
+    55→// ────────────────────────────────────────────────────────────────────────────
+    56→
+    57→type SectionId =
+    58→  | 'command-center'
+    59→  | 'ai-employees'
+    60→  | 'tasks'
+    61→  | 'workflows'
+    62→  | 'models-hub'
+    63→  | 'providers'
+    64→  | 'api-keys'
+    65→  | 'skills'
+    66→  | 'tools'
+    67→  | 'memory'
+    68→  | 'knowledge'
+    69→  | 'browser'
+    70→  | 'web'
+    71→  | 'schedules'
+    72→  | 'automation'
+    73→  | 'github'
+    74→  | 'supabase'
+    75→  | 'cloudflare'
+    76→  | 'observability'
+    77→  | 'security'
+    78→  | 'permissions'
+    79→  | 'approvals'
+    80→  | 'audit-log'
+    81→  | 'costs'
+    82→  | 'system-settings'
+    83→  | 'economy-overview'
+    84→  | 'economy-rules'
+    85→  | 'economy-influence'
+    86→  | 'economy-flags'
+    87→  | 'economy-audit'
+    88→  | 'economy-grants'
+    89→  | 'economy-cashouts'
+    90→  | 'economy-commissions';
+    91→
+    92→interface NavItem {
+    93→  type: 'item';
+    94→  id: SectionId;
+    95→  label: string;
+    96→  icon: React.ElementType;
+    97→  description: string;
+    98→}
+    99→
+   100→interface NavSeparator {
+   101→  type: 'separator';
+   102→  label: string;
+   103→}
+   104→
+   105→type NavEntry = NavItem | NavSeparator;
+   106→
+   107→// ────────────────────────────────────────────────────────────────────────────
+   108→// Navigation Definition
+   109→// ────────────────────────────────────────────────────────────────────────────
+   110→
+   111→const NAV_ENTRIES: NavEntry[] = [
+   112→  { type: 'item', id: 'command-center', label: 'مركز القيادة', icon: Crown, description: 'لوحة التحكم الرئيسية وتنفيذ الأوامر' },
+   113→  { type: 'item', id: 'ai-employees', label: 'الموظفون الذكيون', icon: Users, description: 'إدارة وكلاء الذكاء الاصطناعي' },
+   114→  { type: 'item', id: 'tasks', label: 'المهام', icon: CheckSquare, description: 'تتبع وإدارة المهام' },
+   115→  { type: 'item', id: 'workflows', label: 'سير العمل', icon: GitBranch, description: 'تصميم وأتمتة سير العمل' },
+   116→  { type: 'item', id: 'models-hub', label: 'مركز النماذج', icon: Cpu, description: 'إدارة نماذج الذكاء الاصطناعي' },
+   117→  { type: 'item', id: 'providers', label: 'المزودون', icon: Cloud, description: 'إعدادات مزودي الخدمة' },
+   118→  { type: 'item', id: 'api-keys', label: 'المفاتيح والأسرار', icon: Key, description: 'إدارة مفاتيح API والأسرار' },
+   119→  { type: 'item', id: 'skills', label: 'المهارات', icon: Sparkles, description: 'مهارات وقدرات النظام' },
+   120→  { type: 'item', id: 'tools', label: 'الأدوات', icon: Wrench, description: 'الأدوات المتاحة للوكلاء' },
+   121→  { type: 'item', id: 'memory', label: 'الذاكرة', icon: Brain, description: 'إدارة ذاكرة النظام والسياق' },
+   122→  { type: 'item', id: 'knowledge', label: 'قاعدة المعرفة', icon: BookOpen, description: 'المعارف والمستندات' },
+   123→  { type: 'item', id: 'browser', label: 'المتصفح', icon: Globe, description: 'أتمتة المتصفح والزحف' },
+   124→  { type: 'item', id: 'web', label: 'البحث', icon: Search, description: 'البحث في الويب والاسترجاع' },
+   125→  { type: 'item', id: 'schedules', label: 'الجداول الزمنية', icon: Clock, description: 'المهام المجدولة وال cron jobs' },
+   126→  { type: 'item', id: 'automation', label: 'الأتمتة', icon: Zap, description: 'القواعد والمحفزات الآلية' },
+   127→  { type: 'separator', label: 'تكامل المنصات' },
+   128→  { type: 'item', id: 'github', label: 'GitHub', icon: Github, description: 'التكامل مع مستودعات GitHub' },
+   129→  { type: 'item', id: 'supabase', label: 'Supabase', icon: Database, description: 'قاعدة البيانات والمصادقة' },
+   130→  { type: 'item', id: 'cloudflare', label: 'Cloudflare', icon: CloudOff, description: 'CDN والأمان والشبكة' },
+   131→  { type: 'separator', label: 'النظام' },
+   132→  { type: 'item', id: 'observability', label: 'المراقبة', icon: Activity, description: 'السجلات والمقاييس والتتبع' },
+   133→  { type: 'item', id: 'security', label: 'الأمان', icon: ShieldCheck, description: 'إعدادات الأمان والحماية' },
+   134→  { type: 'item', id: 'permissions', label: 'الصلاحيات', icon: Lock, description: 'التحكم في الوصول والأدوار' },
+   135→  { type: 'item', id: 'approvals', label: 'الموافقات', icon: CheckCircle, description: 'طلبات الموافقة والمراجعة' },
+   136→  { type: 'item', id: 'audit-log', label: 'سجل التدقيق', icon: FileText, description: 'تتبع جميع العمليات' },
+   137→  { type: 'item', id: 'costs', label: 'التكاليف', icon: DollarSign, description: 'مراقبة وتحليل التكاليف' },
+   138→  { type: 'item', id: 'system-settings', label: 'إعدادات النظام', icon: Settings, description: 'الإعدادات العامة والتكوين' },
+   139→  { type: 'separator', label: 'اقتصاد سلطان' },
+   140→  { type: 'item', id: 'economy-overview', label: 'اقتصاد سلطان', icon: DollarSign, description: 'نظرة عامة على الاقتصاد الرقمي' },
+   141→  { type: 'item', id: 'economy-influence', label: 'مركز التأثير', icon: TrendingUp, description: 'إدارة النمو والتعزيز والظهور' },
+   142→  { type: 'item', id: 'economy-rules', label: 'قواعد الاقتصاد', icon: SlidersHorizontal, description: 'إدارة قواعد ونسب الاقتصاد' },
+   143→  { type: 'item', id: 'economy-flags', label: 'ميزات النظام', icon: ToggleLeft, description: 'تفعيل وإيقاف ميزات الاقتصاد' },
+   144→  { type: 'item', id: 'economy-audit', label: 'سجل التدقيق', icon: FileText, description: 'سجل عمليات الاقتصاد' },
+   145→  { type: 'item', id: 'economy-grants', label: 'المنح', icon: Gift, description: 'إدارة حملات المنح' },
+   146→  { type: 'item', id: 'economy-cashouts', label: 'السحوبات', icon: Banknote, description: 'إدارة طلبات السحب' },
+   147→  { type: 'item', id: 'economy-commissions', label: 'العمولات', icon: Percent, description: 'إدارة نسب العمولات' },
+   148→];
+   149→
+   150→// ────────────────────────────────────────────────────────────────────────────
+   151→// Section Descriptions Map
+   152→// ────────────────────────────────────────────────────────────────────────────
+   153→
+   154→const SECTION_META: Record<SectionId, { title: string; description: string; icon: React.ElementType }> = {
+   155→  'command-center':    { title: 'مركز القيادة',       description: 'لوحة التحكم الرئيسية — نفّذ الأوامر وأدر النظام من مكان واحد', icon: Crown },
+   156→  'ai-employees':      { title: 'الموظفون الذكيون',   description: 'إنشاء وإدارة وكلاء الذكاء الاصطناعي المتخصصين', icon: Users },
+   157→  'tasks':             { title: 'المهام',              description: 'عرض وتتبع وإدارة جميع المهام المُنفَّذة والمُجدوَلة', icon: CheckSquare },
+   158→  'workflows':         { title: 'سير العمل',          description: 'تصميم وتنفيذ وأتمتة تدفقات العمل المعقدة', icon: GitBranch },
+   159→  'models-hub':        { title: 'مركز النماذج',       description: 'استكشاف وتكوين وإدارة نماذج اللغة الكبيرة', icon: Cpu },
+   160→  'providers':         { title: 'المزودون',           description: 'إعدادات مزودي الخدمة: OpenAI, Anthropic, Google, وغيرهم', icon: Cloud },
+   161→  'api-keys':          { title: 'المفاتيح والأسرار',  description: 'إدارة آمنة لمفاتيح API والبيانات الحساسة', icon: Key },
+   162→  'skills':            { title: 'المهارات',           description: 'تثبيت وتكوين وتفعيل مهارات النظام المتقدمة', icon: Sparkles },
+   163→  'tools':             { title: 'الأدوات',            description: 'الأدوات المتاحة للوكلاء: بحث، متصفح، حسابات، وغيرها', icon: Wrench },
+   164→  'memory':            { title: 'الذاكرة',            description: 'إدارة الذاكرة قصيرة وطويلة المدى وسياق المحادثات', icon: Brain },
+   165→  'knowledge':         { title: 'قاعدة المعرفة',      description: 'رفع وتنظيم واستعلام المستندات والمعارف', icon: BookOpen },
+   166→  'browser':           { title: 'المتصفح',            description: 'أتمتة المتصفح: زحف، لقطات شاشة، تفاعل مع الصفحات', icon: Globe },
+   167→  'web':               { title: 'البحث',              description: 'بحث في الويب واسترجاع المعلومات في الوقت الفعلي', icon: Search },
+   168→  'schedules':         { title: 'الجداول الزمنية',    description: 'جدولة المهام المتكررة وإدارة cron jobs', icon: Clock },
+   169→  'automation':        { title: 'الأتمتة',            description: 'إنشاء قواعد ومحفزات واستجابات آلية', icon: Zap },
+   170→  'github':            { title: 'GitHub',             description: 'ربط المستودعات وإدارة العمليات والنشر', icon: Github },
+   171→  'supabase':          { title: 'Supabase',           description: 'إدارة الجداول والمصادقة والتخزين', icon: Database },
+   172→  'cloudflare':        { title: 'Cloudflare',         description: 'إعدادات CDN والجدار الناري والنطاقات', icon: CloudOff },
+   173→  'observability':     { title: 'المراقبة',           description: 'سجلات النظام ومقاييس الأداء وتتبع الأخطاء', icon: Activity },
+   174→  'security':          { title: 'الأمان',             description: 'التحقق الثنائي وتشفير البيانات وحماية النقاط', icon: ShieldCheck },
+   175→  'permissions':       { title: 'الصلاحيات',         description: 'نظام التحكم في الوصول القائم على الأدوار RBAC', icon: Lock },
+   176→  'approvals':         { title: 'الموافقات',          description: 'مراجعة والموافقة على العمليات الحساسة', icon: CheckCircle },
+   177→  'audit-log':         { title: 'سجل التدقيق',        description: 'سجل شامل لجميع العمليات والتغييرات في النظام', icon: FileText },
+   178→  'costs':             { title: 'التكاليف',           description: 'تحليل استهلاك API والتنبؤ بالتكاليف الشهرية', icon: DollarSign },
+   179→  'system-settings':   { title: 'إعدادات النظام',     description: 'التكوين العام والتفضيلات ومتغيرات البيئة', icon: Settings },
+   180→  'economy-overview':  { title: 'اقتصاد سلطان',      description: 'نظرة عامة على الاقتصاد الرقمي والإيرادات والمكافآت', icon: DollarSign },
+   181→  'economy-influence': { title: 'مركز التأثير',       description: 'إدارة النمو والتعزيز والظهور والمستخدمين', icon: TrendingUp },
+   182→  'economy-rules':    { title: 'قواعد الاقتصاد',     description: 'إدارة قواعد ونسب الاقتصاد الرقمي', icon: SlidersHorizontal },
+   183→  'economy-flags':    { title: 'ميزات النظام',       description: 'تفعيل وإيقاف ميزات الاقتصاد والتحكم الطارئ', icon: ToggleLeft },
+   184→  'economy-audit':    { title: 'سجل التدقيق',        description: 'سجل عمليات الاقتصاد والتغييرات', icon: FileText },
+   185→  'economy-grants':   { title: 'المنح',              description: 'إدارة حملات المنح والطلبات', icon: Gift },
+   186→  'economy-cashouts': { title: 'السحوبات',           description: 'إدارة طلبات السحب والمراجعة', icon: Banknote },
+   187→  'economy-commissions': { title: 'العمولات',        description: 'إدارة نسب العمولات حسب القسم', icon: Percent },
+   188→};
+   189→
+   190→// ────────────────────────────────────────────────────────────────────────────
+   191→// Command Example Cards (Arabic)
+   192→// ────────────────────────────────────────────────────────────────────────────
+   193→
+   194→const COMMAND_EXAMPLES = [
+   195→  {
+   196→    icon: Bot,
+   197→    title: 'أنشئ موظف ذكي جديد',
+   198→    description: 'وكيل متخصص لخدمة العملاء يجيب بالعربية',
+   199→    command: 'أنشئ موظف ذكي متخصص في خدمة العملاء باللغة العربية',
+   200→    color: 'text-emerald-400',
+   201→    bg: 'bg-emerald-400/10',
+   202→  },
+   203→  {
+   204→    icon: GitBranch,
+   205→    title: 'صمم سير عمل تلقائي',
+   206→    description: 'مراجعة المحتوى ثم النشر تلقائياً',
+   207→    command: 'صمم سير عمل لمراجعة المحتوى ونشره تلقائياً',
+   208→    color: 'text-blue-400',
+   209→    bg: 'bg-blue-400/10',
+   210→  },
+   211→  {
+   212→    icon: BarChart3,
+   213→    title: 'أظهر تقرير التكاليف',
+   214→    description: 'ملخص استهلاك API خلال الشهر الحالي',
+   215→    command: 'أظهر تقرير تكاليف API للشهر الحالي',
+   216→    color: 'text-amber-400',
+   217→    bg: 'bg-amber-400/10',
+   218→  },
+   219→  {
+   220→    icon: ShieldCheck,
+   221→    title: 'فحص أمان شامل',
+   222→    description: 'تحقق من جميع المفاتيح والصلاحيات',
+   223→    command: 'قم بفحص أمان شامل للنظام وتحقق من المفاتيح والصلاحيات',
+   224→    color: 'text-red-400',
+   225→    bg: 'bg-red-400/10',
+   226→  },
+   227→  {
+   228→    icon: Layers,
+   229→    title: 'إدارة النماذج',
+   230→    description: 'قائمة بجميع النماذج المتصلة وحالتها',
+   231→    command: 'أظهر حالة جميع نماذج الذكاء الاصطناعي المتصلة',
+   232→    color: 'text-purple-400',
+   233→    bg: 'bg-purple-400/10',
+   234→  },
+   235→  {
+   236→    icon: MessageSquare,
+   237→    title: 'تحليل المحادثات',
+   238→    description: 'إحصائيات وتحليلات المحادثات الأخيرة',
+   239→    command: 'اعرض تحليل وإحصائيات المحادثات خلال آخر 7 أيام',
+   240→    color: 'text-cyan-400',
+   241→    bg: 'bg-cyan-400/10',
+   242→  },
+   243→];
+   244→
+   245→// ────────────────────────────────────────────────────────────────────────────
+   246→// Quick Stats for Command Center
+   247→// ────────────────────────────────────────────────────────────────────────────
+   248→
+   249→const QUICK_STATS = [
+   250→  { label: 'الموظفون النشطون', value: '12', icon: Bot, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+   251→  { label: 'المهام الجارية', value: '47', icon: CheckSquare, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+   252→  { label: 'النماذج المتصلة', value: '8', icon: Cpu, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+   253→  { label: 'التكلفة اليومية', value: '$23', icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+   254→];
+   255→
+   256→const RECENT_ACTIVITY = [
+   257→  { action: 'تم تنفيذ مهمة فحص المحتوى', agent: 'محتوى-وكتيل', time: 'منذ 3 دقائق', type: 'task' as const },
+   258→  { action: 'موظف جديد «دعم فني» مفعل', agent: 'النظام', time: 'منذ 12 دقيقة', type: 'agent' as const },
+   259→  { action: 'نموذج GPT-4o متصل بنجاح', agent: 'المزودون', time: 'منذ 30 دقيقة', type: 'system' as const },
+   260→  { action: 'سير عمل النشر التلقائي مكتمل', agent: 'أتمتة', time: 'منذ ساعة', type: 'workflow' as const },
+   261→  { action: 'تنبيه: استهلاك API تجاوز 80%', agent: 'المراقبة', time: 'منذ ساعتين', type: 'alert' as const },
+   262→];
+   263→
+   264→// ────────────────────────────────────────────────────────────────────────────
+   265→// Placeholder Section Component
+   266→// ────────────────────────────────────────────────────────────────────────────
+   267→
+   268→function PlaceholderSection({ id }: { id: SectionId }) {
+   269→  const meta = SECTION_META[id];
+   270→  const Icon = meta.icon;
+   271→
+   272→  return (
+   273→    <motion.div
+   274→      initial={{ opacity: 0, y: 20 }}
+   275→      animate={{ opacity: 1, y: 0 }}
+   276→      exit={{ opacity: 0, y: -20 }}
+   277→      transition={{ duration: 0.3, ease: 'easeOut' }}
+   278→      className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4"
+   279→    >
+   280→      <motion.div
+   281→        initial={{ scale: 0.8, opacity: 0 }}
+   282→        animate={{ scale: 1, opacity: 1 }}
+   283→        transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+   284→        className={`w-20 h-20 rounded-2xl bg-sultan/10 flex items-center justify-center mb-6`}
+   285→      >
+   286→        <Icon className="w-10 h-10 text-sultan" />
+   287→      </motion.div>
+   288→      <h2 className="text-2xl font-bold mb-3 text-gradient-sultan">{meta.title}</h2>
+   289→      <p className="text-muted-foreground text-sm max-w-md mb-6 leading-relaxed">
+   290→        {meta.description}
+   291→      </p>
+   292→      <Badge variant="outline" className="border-sultan/30 text-sultan text-xs">
+   293→        قريباً — قيد التطوير
+   294→      </Badge>
+   295→    </motion.div>
+   296→  );
+   297→}
+   298→
+   299→// ────────────────────────────────────────────────────────────────────────────
+   300→// Command Center Section (Fully Implemented)
+   301→// ────────────────────────────────────────────────────────────────────────────
+   302→
+   303→function CommandCenterSection() {
+   304→  const [command, setCommand] = useState('');
+   305→
+   306→  const handleExampleClick = useCallback((cmd: string) => {
+   307→    setCommand(cmd);
+   308→  }, []);
+   309→
+   310→  const handleSubmit = useCallback((e: React.FormEvent) => {
+   311→    e.preventDefault();
+   312→    if (!command.trim()) return;
+   313→    // Command execution will be wired up later
+   314→    setCommand('');
+   315→  }, [command]);
+   316→
+   317→  return (
+   318→    <motion.div
+   319→      initial={{ opacity: 0, y: 20 }}
+   320→      animate={{ opacity: 1, y: 0 }}
+   321→      exit={{ opacity: 0, y: -20 }}
+   322→      transition={{ duration: 0.3, ease: 'easeOut' }}
+   323→      className="space-y-6"
+   324→    >
+   325→      {/* ── Chat Command Input ── */}
+   326→      <motion.div
+   327→        initial={{ opacity: 0, y: 10 }}
+   328→        animate={{ opacity: 1, y: 0 }}
+   329→        transition={{ delay: 0.05 }}
+   330→      >
+   331→        <Card className="border-sultan/20 sultan-glow overflow-hidden">
+   332→          <div className="p-1">
+   333→            <form onSubmit={handleSubmit}>
+   334→              <div className="flex items-end gap-2 p-4">
+   335→                <div className="flex-1 relative">
+   336→                  <textarea
+   337→                    value={command}
+   338→                    onChange={(e) => setCommand(e.target.value)}
+   339→                    placeholder="اكتب أمراً أو اسأل سلطان..."
+   340→                    rows={3}
+   341→                    className="w-full bg-transparent text-sm placeholder:text-muted-foreground/60 focus:outline-none resize-none leading-relaxed"
+   342→                    dir="rtl"
+   343→                  />
+   344→                </div>
+   345→                <Button
+   346→                  type="submit"
+   347→                  size="icon"
+   348→                  disabled={!command.trim()}
+   349→                  className="shrink-0 h-10 w-10 rounded-xl bg-sultan hover:bg-sultan/90 text-sultan-foreground sultan-glow"
+   350→                >
+   351→                  <Send className="h-4 w-4" />
+   352→                </Button>
+   353→              </div>
+   354→              <div className="flex items-center justify-between px-4 pb-3">
+   355→                <div className="flex items-center gap-2">
+   356→                  <Badge variant="outline" className="border-border/50 text-[10px] text-muted-foreground">
+   357→                    <Terminal className="h-3 w-3 ms-1" />
+   358→                    وضع الأوامر
+   359→                  </Badge>
+   360→                </div>
+   361→                <span className="text-[10px] text-muted-foreground">
+   362→                  ⌘ + Enter للإرسال
+   363→                </span>
+   364→              </div>
+   365→            </form>
+   366→          </div>
+   367→        </Card>
+   368→      </motion.div>
+   369→
+   370→      {/* ── Quick Stats ── */}
+   371→      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+   372→        {QUICK_STATS.map((stat, i) => (
+   373→          <motion.div
+   374→            key={stat.label}
+   375→            initial={{ opacity: 0, y: 15 }}
+   376→            animate={{ opacity: 1, y: 0 }}
+   377→            transition={{ delay: 0.1 + i * 0.05 }}
+   378→          >
+   379→            <Card className="border-border/50 p-4">
+   380→              <div className="flex items-center justify-between mb-3">
+   381→                <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
+   382→                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+   383→                </div>
+   384→              </div>
+   385→              <p className="text-xl font-bold">{stat.value}</p>
+   386→              <p className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</p>
+   387→            </Card>
+   388→          </motion.div>
+   389→        ))}
+   390→      </div>
+   391→
+   392→      {/* ── Example Command Cards ── */}
+   393→      <motion.div
+   394→        initial={{ opacity: 0, y: 15 }}
+   395→        animate={{ opacity: 1, y: 0 }}
+   396→        transition={{ delay: 0.3 }}
+   397→      >
+   398→        <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+   399→          <Sparkles className="h-4 w-4 text-sultan" />
+   400→          أوامر مقترحة
+   401→        </h3>
+   402→        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+   403→          {COMMAND_EXAMPLES.map((example, i) => (
+   404→            <motion.button
+   405→              key={example.title}
+   406→              initial={{ opacity: 0, y: 10 }}
+   407→              animate={{ opacity: 1, y: 0 }}
+   408→              transition={{ delay: 0.35 + i * 0.05 }}
+   409→              whileHover={{ scale: 1.02, y: -2 }}
+   410→              whileTap={{ scale: 0.98 }}
+   411→              onClick={() => handleExampleClick(example.command)}
+   412→              className="group text-start rounded-xl border border-border/50 bg-card p-4 hover:border-sultan/30 hover:bg-accent/30 transition-all duration-200"
+   413→            >
+   414→              <div className="flex items-start gap-3">
+   415→                <div className={`w-10 h-10 rounded-xl ${example.bg} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+   416→                  <example.icon className={`h-5 w-5 ${example.color}`} />
+   417→                </div>
+   418→                <div className="flex-1 min-w-0">
+   419→                  <p className="text-sm font-semibold mb-1 group-hover:text-sultan transition-colors">
+   420→                    {example.title}
+   421→                  </p>
+   422→                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+   423→                    {example.description}
+   424→                  </p>
+   425→                </div>
+   426→              </div>
+   427→              <div className="mt-3 pt-3 border-t border-border/30">
+   428→                <code className="text-[10px] text-muted-foreground/70 font-mono leading-relaxed line-clamp-1" dir="rtl">
+   429→                  {example.command}
+   430→                </code>
+   431→              </div>
+   432→            </motion.button>
+   433→          ))}
+   434→        </div>
+   435→      </motion.div>
+   436→
+   437→      {/* ── Recent Activity ── */}
+   438→      <motion.div
+   439→        initial={{ opacity: 0, y: 15 }}
+   440→        animate={{ opacity: 1, y: 0 }}
+   441→        transition={{ delay: 0.6 }}
+   442→      >
+   443→        <Card className="border-border/50 p-4">
+   444→          <div className="flex items-center justify-between mb-4">
+   445→            <h3 className="text-sm font-semibold flex items-center gap-2">
+   446→              <Activity className="h-4 w-4 text-sultan" />
+   447→              النشاط الأخير
+   448→            </h3>
+   449→            <Badge variant="outline" className="text-[10px] border-border/50">
+   450→              <span className="relative flex h-2 w-2 me-1">
+   451→                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+   452→                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+   453→              </span>
+   454→              مباشر
+   455→            </Badge>
+   456→          </div>
+   457→          <div className="space-y-1">
+   458→            {RECENT_ACTIVITY.map((activity, i) => {
+   459→              const typeStyles: Record<string, { color: string; bg: string }> = {
+   460→                task: { color: 'text-blue-400', bg: 'bg-blue-400/10' },
+   461→                agent: { color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+   462→                system: { color: 'text-purple-400', bg: 'bg-purple-400/10' },
+   463→                workflow: { color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
+   464→                alert: { color: 'text-amber-400', bg: 'bg-amber-400/10' },
+   465→              };
+   466→              const style = typeStyles[activity.type] || typeStyles.system;
+   467→              const typeLabels: Record<string, string> = {
+   468→                task: 'مهمة',
+   469→                agent: 'وكيل',
+   470→                system: 'نظام',
+   471→                workflow: 'سير عمل',
+   472→                alert: 'تنبيه',
+   473→              };
+   474→              return (
+   475→                <motion.div
+   476→                  key={i}
+   477→                  initial={{ opacity: 0, x: 10 }}
+   478→                  animate={{ opacity: 1, x: 0 }}
+   479→                  transition={{ delay: 0.65 + i * 0.05 }}
+   480→                  className="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-accent/30 transition-colors"
+   481→                >
+   482→                  <div className={`w-8 h-8 rounded-lg ${style.bg} flex items-center justify-center shrink-0`}>
+   483→                    <div className={`w-2 h-2 rounded-full ${style.color.replace('text-', 'bg-')}`} />
+   484→                  </div>
+   485→                  <div className="flex-1 min-w-0">
+   486→                    <p className="text-sm truncate">{activity.action}</p>
+   487→                    <p className="text-[10px] text-muted-foreground">{activity.agent}</p>
+   488→                  </div>
+   489→                  <div className="flex items-center gap-2 shrink-0">
+   490→                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+   491→                      {typeLabels[activity.type]}
+   492→                    </Badge>
+   493→                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">{activity.time}</span>
+   494→                  </div>
+   495→                </motion.div>
+   496→              );
+   497→            })}
+   498→          </div>
+   499→        </Card>
+   500→      </motion.div>
+   501→    </motion.div>
+   502→  );
+   503→}
+   504→
+   505→// ────────────────────────────────────────────────────────────────────────────
+   506→// Sidebar Component
+   507→// ────────────────────────────────────────────────────────────────────────────
+   508→
+   509→function Sidebar({
+   510→  activeSection,
+   511→  onSectionChange,
+   512→  collapsed,
+   513→  onToggleCollapse,
+   514→}: {
+   515→  activeSection: SectionId;
+   516→  onSectionChange: (id: SectionId) => void;
+   517→  collapsed: boolean;
+   518→  onToggleCollapse: () => void;
+   519→}) {
+   520→  return (
+   521→    <TooltipProvider delayDuration={0}>
+   522→      <motion.aside
+   523→        initial={false}
+   524→        animate={{ width: collapsed ? 72 : 280 }}
+   525→        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+   526→        className="shrink-0 h-full border-l border-border/50 bg-card flex flex-col overflow-hidden"
+   527→      >
+   528→        {/* ── Header ── */}
+   529→        <div className="p-3 flex flex-col items-center border-b border-border/50">
+   530→          <div className="flex items-center justify-between w-full mb-3">
+   531→            {!collapsed && (
+   532→              <motion.div
+   533→                initial={{ opacity: 0 }}
+   534→                animate={{ opacity: 1 }}
+   535→                exit={{ opacity: 0 }}
+   536→                className="flex items-center gap-2"
+   537→              >
+   538→                <div className="w-8 h-8 rounded-lg sultan-gradient flex items-center justify-center">
+   539→                  <Crown className="w-4 h-4 text-sultan-foreground" />
+   540→                </div>
+   541→                <div>
+   542→                  <h1 className="text-sm font-bold text-gradient-sultan leading-none">SULTAN</h1>
+   543→                  <p className="text-[9px] text-muted-foreground leading-none mt-0.5">AI Operating System</p>
+   544→                </div>
+   545→              </motion.div>
+   546→            )}
+   547→            {collapsed && (
+   548→              <div className="w-8 h-8 rounded-lg sultan-gradient flex items-center justify-center">
+   549→                <Crown className="w-4 h-4 text-sultan-foreground" />
+   550→              </div>
+   551→            )}
+   552→          </div>
+   553→          <Button
+   554→            variant="ghost"
+   555→            size="sm"
+   556→            onClick={onToggleCollapse}
+   557→            className="w-full h-7 text-[10px] text-muted-foreground hover:text-foreground"
+   558→          >
+   559→            {collapsed ? (
+   560→              <PanelRightOpen className="h-3.5 w-3.5 ms-1" />
+   561→            ) : (
+   562→              <>
+   563→                <PanelRightClose className="h-3.5 w-3.5 ms-1" />
+   564→                طي القائمة
+   565→              </>
+   566→            )}
+   567→          </Button>
+   568→        </div>
+   569→
+   570→        {/* ── Navigation Items ── */}
+   571→        <ScrollArea className="flex-1 py-2">
+   572→          <nav className="flex flex-col gap-0.5 px-2">
+   573→            {NAV_ENTRIES.map((entry) => {
+   574→              if (entry.type === 'separator') {
+   575→                return (
+   576→                  <div key={entry.label} className="flex flex-col gap-1 mt-3 mb-1">
+   577→                    {!collapsed && (
+   578→                      <motion.div
+   579→                        initial={{ opacity: 0 }}
+   580→                        animate={{ opacity: 1 }}
+   581→                        className="flex items-center gap-2 px-2"
+   582→                      >
+   583→                        <Separator className="flex-1" />
+   584→                        <span className="text-[9px] text-muted-foreground font-medium whitespace-nowrap">
+   585→                          {entry.label}
+   586→                        </span>
+   587→                        <Separator className="flex-1" />
+   588→                      </motion.div>
+   589→                    )}
+   590→                    {collapsed && <Separator className="mx-1" />}
+   591→                  </div>
+   592→                );
+   593→              }
+   594→
+   595→              const isActive = activeSection === entry.id;
+   596→              const Icon = entry.icon;
+   597→
+   598→              const buttonContent = (
+   599→                <button
+   600→                  onClick={() => onSectionChange(entry.id)}
+   601→                  className={`
+   602→                    w-full flex items-center gap-3 rounded-lg transition-all duration-200 group relative
+   603→                    ${collapsed ? 'justify-center p-2.5' : 'px-3 py-2.5'}
+   604→                    ${isActive
+   605→                      ? 'bg-sultan/10 text-sultan font-medium'
+   606→                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+   607→                    }
+   608→                  `}
+   609→                >
+   610→                  {/* Active Indicator */}
+   611→                  {isActive && (
+   612→                    <motion.div
+   613→                      layoutId="activeIndicator"
+   614→                      className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-sultan"
+   615→                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+   616→                    />
+   617→                  )}
+   618→                  <Icon className={`h-4 w-4 shrink-0 transition-colors ${isActive ? 'text-sultan' : ''}`} />
+   619→                  {!collapsed && (
+   620→                    <motion.span
+   621→                      initial={{ opacity: 0 }}
+   622→                      animate={{ opacity: 1 }}
+   623→                      exit={{ opacity: 0 }}
+   624→                      className="text-xs truncate"
+   625→                    >
+   626→                      {entry.label}
+   627→                    </motion.span>
+   628→                  )}
+   629→                </button>
+   630→              );
+   631→
+   632→              if (collapsed) {
+   633→                return (
+   634→                  <Tooltip key={entry.id}>
+   635→                    <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
+   636→                    <TooltipContent side="left" className="text-xs font-medium">
+   637→                      <p>{entry.label}</p>
+   638→                      <p className="text-[10px] text-muted-foreground mt-0.5 max-w-[200px]">
+   639→                        {entry.description}
+   640→                      </p>
+   641→                    </TooltipContent>
+   642→                  </Tooltip>
+   643→                );
+   644→              }
+   645→
+   646→              return <React.Fragment key={entry.id}>{buttonContent}</React.Fragment>;
+   647→            })}
+   648→          </nav>
+   649→        </ScrollArea>
+   650→
+   651→        {/* ── Footer ── */}
+   652→        {!collapsed && (
+   653→          <div className="p-3 border-t border-border/50">
+   654→            <div className="flex items-center gap-2 px-2">
+   655→              <div className="w-7 h-7 rounded-full bg-sultan/20 flex items-center justify-center">
+   656→                <span className="text-[10px] font-bold text-sultan">YS</span>
+   657→              </div>
+   658→              <div className="flex-1 min-w-0">
+   659→                <p className="text-xs font-medium truncate">يوسف السلطان</p>
+   660→                <p className="text-[9px] text-muted-foreground">Super Admin</p>
+   661→              </div>
+   662→              <Badge variant="outline" className="border-sultan/30 text-sultan text-[8px] px-1 py-0">
+   663→                PRO
+   664→              </Badge>
+   665→            </div>
+   666→          </div>
+   667→        )}
+   668→        {collapsed && (
+   669→          <div className="p-2 border-t border-border/50 flex justify-center">
+   670→            <Tooltip>
+   671→              <TooltipTrigger asChild>
+   672→                <div className="w-8 h-8 rounded-full bg-sultan/20 flex items-center justify-center cursor-pointer">
+   673→                  <span className="text-[10px] font-bold text-sultan">YS</span>
+   674→                </div>
+   675→              </TooltipTrigger>
+   676→              <TooltipContent side="left">
+   677→                <p className="text-xs font-medium">يوسف السلطان</p>
+   678→                <p className="text-[10px] text-muted-foreground">Super Admin • PRO</p>
+   679→              </TooltipContent>
+   680→            </Tooltip>
+   681→          </div>
+   682→        )}
+   683→      </motion.aside>
+   684→    </TooltipProvider>
+   685→  );
+   686→}
+   687→
+   688→// ────────────────────────────────────────────────────────────────────────────
+   689→// Main Admin Command Center Component
+   690→// ────────────────────────────────────────────────────────────────────────────
+   691→
+   692→// Sub-panel imports (lazy-loaded in production)
+   693→import AIEmployeesPanel from './agents/AIEmployeesPanel';
+   694→import ModelsHubPanel from './models/ModelsHubPanel';
+   695→import ProvidersPanel from './providers/ProvidersPanel';
+   696→import SecretsPanel from './secrets/SecretsPanel';
+   697→
+   698→interface AdminCommandCenterProps {
+   699→  onBack?: () => void;
+   700→}
+   701→
+   702→export default function AdminCommandCenter({ onBack }: AdminCommandCenterProps) {
+   703→  const [activeSection, setActiveSection] = useState<SectionId>('command-center');
+   704→  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+   705→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   706→
+   707→  const handleSectionChange = useCallback((id: SectionId) => {
+   708→    setActiveSection(id);
+   709→    setMobileMenuOpen(false);
+   710→  }, []);
+   711→
+   712→  const currentMeta = SECTION_META[activeSection];
+   713→
+   714→  return (
+   715→    <div className="h-screen flex bg-background overflow-hidden" dir="rtl">
+   716→      {/* ── Mobile Overlay ── */}
+   717→      <AnimatePresence>
+   718→        {mobileMenuOpen && (
+   719→          <motion.div
+   720→            initial={{ opacity: 0 }}
+   721→            animate={{ opacity: 1 }}
+   722→            exit={{ opacity: 0 }}
+   723→            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+   724→            onClick={() => setMobileMenuOpen(false)}
+   725→          />
+   726→        )}
+   727→      </AnimatePresence>
+   728→
+   729→      {/* ── Mobile Sidebar ── */}
+   730→      <AnimatePresence>
+   731→        {mobileMenuOpen && (
+   732→          <motion.div
+   733→            initial={{ x: 300 }}
+   734→            animate={{ x: 0 }}
+   735→            exit={{ x: 300 }}
+   736→            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+   737→            className="fixed inset-y-0 start-0 z-50 lg:hidden"
+   738→          >
+   739→            <Sidebar
+   740→              activeSection={activeSection}
+   741→              onSectionChange={handleSectionChange}
+   742→              collapsed={false}
+   743→              onToggleCollapse={() => setMobileMenuOpen(false)}
+   744→            />
+   745→          </motion.div>
+   746→        )}
+   747→      </AnimatePresence>
+   748→
+   749→      {/* ── Desktop Sidebar ── */}
+   750→      <div className="hidden lg:block">
+   751→        <Sidebar
+   752→          activeSection={activeSection}
+   753→          onSectionChange={handleSectionChange}
+   754→          collapsed={sidebarCollapsed}
+   755→          onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
+   756→        />
+   757→      </div>
+   758→
+   759→      {/* ── Main Content ── */}
+   760→      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+   761→        {/* ── Top Bar ── */}
+   762→        <header className="shrink-0 h-14 border-b border-border/50 bg-card/80 backdrop-blur-xl flex items-center px-4 gap-3">
+   763→          {/* Mobile Menu Button */}
+   764→          <Button
+   765→            variant="ghost"
+   766→            size="icon"
+   767→            className="lg:hidden h-8 w-8"
+   768→            onClick={() => setMobileMenuOpen(true)}
+   769→          >
+   770→            <ChevronRight className="h-4 w-4" />
+   771→          </Button>
+   772→
+   773→          {/* Section Title */}
+   774→          <div className="flex items-center gap-3">
+   775→            <div className={`w-8 h-8 rounded-lg bg-sultan/10 flex items-center justify-center`}>
+   776→              <currentMeta.icon className="h-4 w-4 text-sultan" />
+   777→            </div>
+   778→            <div>
+   779→              <h1 className="text-sm font-bold leading-none">{currentMeta.title}</h1>
+   780→              <p className="text-[10px] text-muted-foreground mt-0.5">{currentMeta.description}</p>
+   781→            </div>
+   782→          </div>
+   783→
+   784→          {/* Status Indicators */}
+   785→          <div className="ms-auto flex items-center gap-2">
+   786→            <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 text-[10px]">
+   787→              <span className="relative flex h-1.5 w-1.5 me-1">
+   788→                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+   789→                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+   790→              </span>
+   791→              متصل
+   792→            </Badge>
+   793→            <Badge variant="secondary" className="text-[10px]">
+   794→              <Crown className="h-3 w-3 me-1 text-sultan" />
+   795→              DEMO
+   796→            </Badge>
+   797→          </div>
+   798→        </header>
+   799→
+   800→        {/* ── Scrollable Content ── */}
+   801→        <ScrollArea className="flex-1">
+   802→          <div className="p-4 lg:p-6 max-w-6xl mx-auto">
+   803→            <AnimatePresence mode="wait">
+   804→              {activeSection === 'command-center' && <CommandCenterSection key="command-center" />}
+   805→              {activeSection === 'ai-employees' && <AIEmployeesPanel key="ai-employees" />}
+   806→              {activeSection === 'models-hub' && <ModelsHubPanel key="models-hub" />}
+   807→              {activeSection === 'providers' && <ProvidersPanel key="providers" />}
+   808→              {activeSection === 'api-keys' && <SecretsPanel key="api-keys" />}
+   809→              {!['command-center', 'ai-employees', 'models-hub', 'providers', 'api-keys'].includes(activeSection) && (
+   810→                <PlaceholderSection key={activeSection} id={activeSection} />
+   811→              )}
+   812→            </AnimatePresence>
+   813→          </div>
+   814→        </ScrollArea>
+   815→      </main>
+   816→    </div>
+   817→  );
+   818→}
+   819→

@@ -37,7 +37,18 @@ import {
   MessageSquare,
   PanelRightClose,
   PanelRightOpen,
+  TrendingUp,
+  SlidersHorizontal,
+  ToggleLeft,
+  Gift,
+  Banknote,
+  Percent,
 } from 'lucide-react';
+import EconomyOverview from '@/components/sultan/admin/economy/EconomyOverview';
+import InfluenceCenter from '@/components/sultan/admin/economy/InfluenceCenter';
+import EconomyRulesPanel from '@/components/sultan/admin/economy/EconomyRulesPanel';
+import FeatureFlagsPanel from '@/components/sultan/admin/economy/FeatureFlagsPanel';
+import AuditLogPanel from '@/components/sultan/admin/economy/AuditLogPanel';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -79,7 +90,15 @@ type SectionId =
   | 'approvals'
   | 'audit-log'
   | 'costs'
-  | 'system-settings';
+  | 'system-settings'
+  | 'economy-overview'
+  | 'economy-rules'
+  | 'economy-influence'
+  | 'economy-flags'
+  | 'economy-audit'
+  | 'economy-grants'
+  | 'economy-cashouts'
+  | 'economy-commissions';
 
 interface NavItem {
   type: 'item';
@@ -128,6 +147,15 @@ const NAV_ENTRIES: NavEntry[] = [
   { type: 'item', id: 'audit-log', label: 'سجل التدقيق', icon: FileText, description: 'تتبع جميع العمليات' },
   { type: 'item', id: 'costs', label: 'التكاليف', icon: DollarSign, description: 'مراقبة وتحليل التكاليف' },
   { type: 'item', id: 'system-settings', label: 'إعدادات النظام', icon: Settings, description: 'الإعدادات العامة والتكوين' },
+  { type: 'separator', label: 'اقتصاد سلطان' },
+  { type: 'item', id: 'economy-overview', label: 'اقتصاد سلطان', icon: DollarSign, description: 'نظرة عامة على الاقتصاد الرقمي' },
+  { type: 'item', id: 'economy-influence', label: 'مركز التأثير', icon: TrendingUp, description: 'إدارة النمو والتعزيز والظهور' },
+  { type: 'item', id: 'economy-rules', label: 'قواعد الاقتصاد', icon: SlidersHorizontal, description: 'إدارة قواعد ونسب الاقتصاد' },
+  { type: 'item', id: 'economy-flags', label: 'ميزات النظام', icon: ToggleLeft, description: 'تفعيل وإيقاف ميزات الاقتصاد' },
+  { type: 'item', id: 'economy-audit', label: 'سجل التدقيق', icon: FileText, description: 'سجل عمليات الاقتصاد' },
+  { type: 'item', id: 'economy-grants', label: 'المنح', icon: Gift, description: 'إدارة حملات المنح' },
+  { type: 'item', id: 'economy-cashouts', label: 'السحوبات', icon: Banknote, description: 'إدارة طلبات السحب' },
+  { type: 'item', id: 'economy-commissions', label: 'العمولات', icon: Percent, description: 'إدارة نسب العمولات' },
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -160,6 +188,14 @@ const SECTION_META: Record<SectionId, { title: string; description: string; icon
   'audit-log':         { title: 'سجل التدقيق',        description: 'سجل شامل لجميع العمليات والتغييرات في النظام', icon: FileText },
   'costs':             { title: 'التكاليف',           description: 'تحليل استهلاك API والتنبؤ بالتكاليف الشهرية', icon: DollarSign },
   'system-settings':   { title: 'إعدادات النظام',     description: 'التكوين العام والتفضيلات ومتغيرات البيئة', icon: Settings },
+  'economy-overview':  { title: 'اقتصاد سلطان',      description: 'نظرة عامة على الاقتصاد الرقمي والإيرادات والمكافآت', icon: DollarSign },
+  'economy-influence': { title: 'مركز التأثير',       description: 'إدارة النمو والتعزيز والظهور والمستخدمين', icon: TrendingUp },
+  'economy-rules':    { title: 'قواعد الاقتصاد',     description: 'إدارة قواعد ونسب الاقتصاد الرقمي', icon: SlidersHorizontal },
+  'economy-flags':    { title: 'ميزات النظام',       description: 'تفعيل وإيقاف ميزات الاقتصاد والتحكم الطارئ', icon: ToggleLeft },
+  'economy-audit':    { title: 'سجل التدقيق',        description: 'سجل عمليات الاقتصاد والتغييرات', icon: FileText },
+  'economy-grants':   { title: 'المنح',              description: 'إدارة حملات المنح والطلبات', icon: Gift },
+  'economy-cashouts': { title: 'السحوبات',           description: 'إدارة طلبات السحب والمراجعة', icon: Banknote },
+  'economy-commissions': { title: 'العمولات',        description: 'إدارة نسب العمولات حسب القسم', icon: Percent },
 };
 
 // ────────────────────────────────────────────────────────────────────────────

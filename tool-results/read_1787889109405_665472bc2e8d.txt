@@ -1,0 +1,613 @@
+     1→'use client';
+     2→import { useEffect, useState, useMemo } from 'react';
+     3→import { useSultanStore } from '@/lib/store';
+     4→import { useEconomyStore } from '@/lib/economy';
+     5→import { Badge } from '@/components/ui/badge';
+     6→import { Separator } from '@/components/ui/separator';
+     7→import { motion } from 'framer-motion';
+     8→import {
+     9→  ArrowRight,
+    10→  Wallet,
+    11→  Coins,
+    12→  Gift,
+    13→  Clock,
+    14→  Zap,
+    15→  ShoppingCart,
+    16→  Heart,
+    17→  TrendingUp,
+    18→  ArrowDownLeft,
+    19→  History,
+    20→  Shield,
+    21→  CheckCircle2,
+    22→  XCircle,
+    23→  AlertCircle,
+    24→  Lock,
+    25→  Trophy,
+    26→  CircleDot,
+    27→  type LucideIcon,
+    28→} from 'lucide-react';
+    29→
+    30→const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
+    31→
+    32→// ─── Transaction Type Labels ─────────────────────────────────────────────────
+    33→
+    34→const TX_TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; color: string; bg: string }> = {
+    35→  coin_purchase: { label: 'شراء', icon: ShoppingCart, color: 'text-sultan', bg: 'bg-sultan/10' },
+    36→  support_sent: { label: 'دعم', icon: Heart, color: 'text-pink-400', bg: 'bg-pink-400/10' },
+    37→  support_received: { label: 'دعم مُستلم', icon: Heart, color: 'text-green-400', bg: 'bg-green-400/10' },
+    38→  reward_earned: { label: 'مكافأة', icon: Gift, color: 'text-sultan', bg: 'bg-sultan/10' },
+    39→  reward_pending: { label: 'مكافأة معلّقة', icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+    40→  reward_available: { label: 'مكافأة متاحة', icon: Gift, color: 'text-green-400', bg: 'bg-green-400/10' },
+    41→  cashout_requested: { label: 'سحب', icon: ArrowDownLeft, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
+    42→  cashout_paid: { label: 'سحب مكتمل', icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    43→  challenge_reward: { label: 'جائزة تحدي', icon: Trophy, color: 'text-sultan', bg: 'bg-sultan/10' },
+    44→  bounty_reward: { label: 'جائزة مهمة', icon: Gift, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    45→  task_payment: { label: 'دفع مهمة', icon: TrendingUp, color: 'text-green-400', bg: 'bg-green-400/10' },
+    46→  admin_grant: { label: 'منحة إدارية', icon: Shield, color: 'text-sultan', bg: 'bg-sultan/10' },
+    47→  refund_issued: { label: 'استرداد', icon: AlertCircle, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    48→  power_earned: { label: 'قوة مكتسبة', icon: Zap, color: 'text-sultan', bg: 'bg-sultan/10' },
+    49→  grant_received: { label: 'منحة', icon: Gift, color: 'text-sultan', bg: 'bg-sultan/10' },
+    50→  commission_deducted: { label: 'رسوم', icon: XCircle, color: 'text-red-400', bg: 'bg-red-400/10' },
+    51→};
+    52→
+    53→const TX_STATUS_MAP: Record<string, { label: string; cls: string; icon: LucideIcon }> = {
+    54→  completed: { label: 'مكتمل', cls: 'bg-green-500/10 text-green-400', icon: CheckCircle2 },
+    55→  pending: { label: 'قيد الانتظار', cls: 'bg-yellow-500/10 text-yellow-400', icon: Clock },
+    56→  failed: { label: 'فشل', cls: 'bg-red-500/10 text-red-400', icon: XCircle },
+    57→  frozen: { label: 'مجمد', cls: 'bg-blue-400/10 text-blue-300', icon: Lock },
+    58→  cancelled: { label: 'ملغى', cls: 'bg-gray-500/10 text-gray-400', icon: XCircle },
+    59→  reversed: { label: 'مرتجع', cls: 'bg-orange-400/10 text-orange-400', icon: AlertCircle },
+    60→};
+    61→
+    62→// ─── History Filters ─────────────────────────────────────────────────────────
+    63→
+    64→type HistoryFilter = 'all' | 'support' | 'purchase' | 'reward' | 'grant' | 'cashout';
+    65→
+    66→const HISTORY_FILTERS: { key: HistoryFilter; label: string }[] = [
+    67→  { key: 'all', label: 'كل' },
+    68→  { key: 'support', label: 'دعم' },
+    69→  { key: 'purchase', label: 'شراء' },
+    70→  { key: 'reward', label: 'مكافأة' },
+    71→  { key: 'grant', label: 'منح' },
+    72→  { key: 'cashout', label: 'سحب' },
+    73→];
+    74→
+    75→const FILTER_TYPE_MAP: Record<HistoryFilter, string[]> = {
+    76→  all: [],
+    77→  support: ['support_sent', 'support_received'],
+    78→  purchase: ['coin_purchase', 'boost_purchase', 'featured_purchase', 'promotion_purchase'],
+    79→  reward: ['reward_earned', 'reward_pending', 'reward_available', 'challenge_reward', 'bounty_reward', 'task_payment'],
+    80→  grant: ['grant_received', 'admin_grant'],
+    81→  cashout: ['cashout_requested', 'cashout_approved', 'cashout_paid'],
+    82→};
+    83→
+    84→// ─── Component ───────────────────────────────────────────────────────────────
+    85→
+    86→export default function WalletCenter() {
+    87→  const { goBack, openSupportModal, navigate, addToast, currentProfile } = useSultanStore();
+    88→  const {
+    89→    wallet,
+    90→    initWallet,
+    91→    getWalletBalance,
+    92→    getAvailableBalance,
+    93→    getPendingBalance,
+    94→    getTransactionHistory,
+    95→    coinPackages,
+    96→    getCashoutEligibility,
+    97→    isFeatureEnabled,
+    98→  } = useEconomyStore();
+    99→
+   100→  const [activeSection, setActiveSection] = useState<'balance' | 'history' | 'buy'>('balance');
+   101→  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
+   102→
+   103→  // ─── Initialize wallet ───────────────────────────────────────────────────
+   104→  useEffect(() => {
+   105→    if (currentProfile?.id) {
+   106→      initWallet(currentProfile.id);
+   107→    }
+   108→  }, [currentProfile?.id, initWallet]);
+   109→
+   110→  // ─── Wallet data with fallback to profile ───────────────────────────────
+   111→  const coinsBalance = wallet?.coins.balance ?? currentProfile?.coinsBalance ?? 0;
+   112→  const coinsAvailable = wallet?.coins.available ?? currentProfile?.coinsBalance ?? 0;
+   113→  const coinsPending = wallet?.coins.pending ?? 0;
+   114→  const coinsLifetimeReceived = wallet?.coins.lifetimeReceived ?? 0;
+   115→  const coinsLifetimeGiven = wallet?.coins.lifetimeGiven ?? 0;
+   116→
+   117→  const rewardsBalance = wallet?.rewards.balance ?? currentProfile?.rewardsBalance ?? 0;
+   118→  const rewardsAvailable = wallet?.rewards.available ?? currentProfile?.rewardsBalance ?? 0;
+   119→  const rewardsPending = wallet?.rewards.pending ?? 0;
+   120→
+   121→  const pendingRewardsAmount = wallet?.pendingRewards.pending ?? currentProfile?.pendingRewards ?? 0;
+   122→
+   123→  const powerBalance = wallet?.power.balance ?? currentProfile?.sultanPower ?? 0;
+   124→  const powerAvailable = wallet?.power.available ?? currentProfile?.sultanPower ?? 0;
+   125→
+   126→  // Cashout eligibility — defaults to eligible if no cashout system enabled
+   127→  const cashoutEligibility = currentProfile ? getCashoutEligibility(currentProfile.id) : null;
+   128→  const withdrawableSR = cashoutEligibility?.eligible ? rewardsAvailable : 0;
+   129→
+   130→  // ─── Transactions ───────────────────────────────────────────────────────
+   131→  const transactions = useMemo(() => {
+   132→    if (!currentProfile?.id) return [];
+   133→    if (historyFilter === 'all') {
+   134→      return getTransactionHistory(currentProfile.id, { limit: 20 });
+   135→    }
+   136→    const types = FILTER_TYPE_MAP[historyFilter];
+   137→    return types.flatMap((type) =>
+   138→      getTransactionHistory(currentProfile.id, { type, limit: 10 }),
+   139→    );
+   140→  }, [currentProfile?.id, historyFilter, getTransactionHistory]);
+   141→
+   142→  // ─── Helpers ────────────────────────────────────────────────────────────
+   143→  const formatNum = (n: number) => n.toLocaleString('ar-MA');
+   144→  const formatDate = (iso: string) => {
+   145→    try {
+   146→      return new Date(iso).toLocaleDateString('ar-MA', {
+   147→        day: 'numeric',
+   148→        month: 'short',
+   149→      });
+   150→    } catch {
+   151→      return iso;
+   152→    }
+   153→  };
+   154→
+   155→  const getTxTypeInfo = (type: string) => TX_TYPE_LABELS[type] ?? { label: type, icon: CircleDot, color: 'text-muted-foreground', bg: 'bg-muted' };
+   156→  const getTxStatusInfo = (status: string) => TX_STATUS_MAP[status] ?? { label: status, cls: 'bg-muted text-muted-foreground', icon: AlertCircle };
+   157→
+   158→  // ─── Action Handlers ────────────────────────────────────────────────────
+   159→  const handleBuyCoins = () => {
+   160→    setActiveSection('buy');
+   161→  };
+   162→
+   163→  const handleSupport = () => {
+   164→    openSupportModal();
+   165→  };
+   166→
+   167→  const handleEarn = () => {
+   168→    addToast('فرص الربح متاحة عبر التحديات والمهام والمنح — قريباً بتفاصيل أكثر', 'info');
+   169→  };
+   170→
+   171→  const handleWithdraw = () => {
+   172→    if (!isFeatureEnabled('cashout_enabled')) {
+   173→      addToast('خدمة السحب غير مفعّلة حالياً', 'info');
+   174→      return;
+   175→    }
+   176→    navigate('cashout');
+   177→  };
+   178→
+   179→  const handleHistory = () => {
+   180→    setActiveSection('history');
+   181→  };
+   182→
+   183→  const handleBuyPackage = (pkg: { id: string; label: string }) => {
+   184→    addToast(`حزمة ${pkg.label} — قيد التكامل مع مزود الدفع`, 'info');
+   185→  };
+   186→
+   187→  return (
+   188→    <div className="max-w-4xl mx-auto px-4 pb-24">
+   189→      {/* ═══ Header ═══ */}
+   190→      <motion.div {...fadeUp} className="flex items-center gap-3 py-4">
+   191→        <button
+   192→          onClick={() => goBack()}
+   193→          className="p-2 rounded-lg hover:bg-secondary transition-colors"
+   194→          aria-label="رجوع"
+   195→        >
+   196→          <ArrowRight className="h-5 w-5" />
+   197→        </button>
+   198→        <h1 className="text-xl font-bold">محفظة سلطان</h1>
+   199→        <Badge variant="outline" className="border-sultan/30 text-sultan text-xs flex items-center gap-1">
+   200→          <Wallet className="h-3 w-3" />
+   201→          مركز المحفظة
+   202→        </Badge>
+   203→      </motion.div>
+   204→
+   205→      {/* ═══ Balance Cards ═══ */}
+   206→      {activeSection === 'balance' && (
+   207→        <>
+   208→          {/* SC — Sultan Coins */}
+   209→          <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="rounded-2xl overflow-hidden mb-4 relative">
+   210→            <div className="absolute inset-0 bg-gradient-to-br from-sultan/30 via-sultan/10 to-royal-light z-0" />
+   211→            <div className="absolute inset-0 zellige-pattern opacity-20" />
+   212→            <div className="relative z-10 p-5">
+   213→              <div className="flex items-center justify-between mb-3">
+   214→                <div className="flex items-center gap-2">
+   215→                  <div className="w-9 h-9 rounded-lg bg-sultan/20 flex items-center justify-center">
+   216→                    <Coins className="h-5 w-5 text-sultan" />
+   217→                  </div>
+   218→                  <div>
+   219→                    <p className="text-sm font-bold">عملات سلطان</p>
+   220→                    <p className="text-[10px] text-muted-foreground">SC — عملات قابلة للشراء والإنفاق</p>
+   221→                  </div>
+   222→                </div>
+   223→                <Badge variant="outline" className="border-sultan/30 text-sultan text-[10px]">SC</Badge>
+   224→              </div>
+   225→              <div className="flex items-end gap-2 mb-3">
+   226→                <h2 className="text-3xl font-bold text-gradient-sultan">{formatNum(coinsBalance)}</h2>
+   227→                <span className="text-sm text-sultan/60 mb-1">SC</span>
+   228→              </div>
+   229→              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   230→                <div className="bg-black/20 rounded-lg p-2.5">
+   231→                  <p className="text-[10px] text-muted-foreground mb-0.5">متاح للاستخدام</p>
+   232→                  <p className="text-sm font-bold text-green-400">{formatNum(coinsAvailable)}</p>
+   233→                </div>
+   234→                <div className="bg-black/20 rounded-lg p-2.5">
+   235→                  <p className="text-[10px] text-muted-foreground mb-0.5">معلّق</p>
+   236→                  <p className="text-sm font-bold text-yellow-400">{formatNum(coinsPending)}</p>
+   237→                </div>
+   238→                <div className="bg-black/20 rounded-lg p-2.5">
+   239→                  <p className="text-[10px] text-muted-foreground mb-0.5">مُستلَم مدى الحياة</p>
+   240→                  <p className="text-sm font-bold text-cyan-400">{formatNum(coinsLifetimeReceived)}</p>
+   241→                </div>
+   242→                <div className="bg-black/20 rounded-lg p-2.5">
+   243→                  <p className="text-[10px] text-muted-foreground mb-0.5">مُرسَل مدى الحياة</p>
+   244→                  <p className="text-sm font-bold text-orange-400">{formatNum(coinsLifetimeGiven)}</p>
+   245→                </div>
+   246→              </div>
+   247→            </div>
+   248→          </motion.div>
+   249→
+   250→          {/* SR — Sultan Rewards */}
+   251→          <motion.div {...fadeUp} transition={{ delay: 0.1 }} className="rounded-xl bg-card border border-border/50 p-5 mb-4">
+   252→            <div className="flex items-center justify-between mb-3">
+   253→              <div className="flex items-center gap-2">
+   254→                <div className="w-9 h-9 rounded-lg bg-green-500/10 flex items-center justify-center">
+   255→                  <Gift className="h-5 w-5 text-green-400" />
+   256→                </div>
+   257→                <div>
+   258→                  <p className="text-sm font-bold">مكافآت سلطان</p>
+   259→                  <p className="text-[10px] text-muted-foreground">SR — مكافآت مكتسبة من النشاط</p>
+   260→                </div>
+   261→              </div>
+   262→              <Badge variant="outline" className="border-green-500/30 text-green-400 text-[10px]">SR</Badge>
+   263→            </div>
+   264→            <div className="flex items-end gap-2 mb-3">
+   265→              <h2 className="text-2xl font-bold text-green-400">{formatNum(rewardsBalance)}</h2>
+   266→              <span className="text-sm text-green-400/60 mb-0.5">SR</span>
+   267→            </div>
+   268→            <div className="grid grid-cols-3 gap-3">
+   269→              <div className="bg-secondary/40 rounded-lg p-2.5">
+   270→                <p className="text-[10px] text-muted-foreground mb-0.5">متاح للاستخدام</p>
+   271→                <p className="text-sm font-bold text-green-400">{formatNum(rewardsAvailable)}</p>
+   272→              </div>
+   273→              <div className="bg-secondary/40 rounded-lg p-2.5">
+   274→                <p className="text-[10px] text-muted-foreground mb-0.5">معلّق</p>
+   275→                <p className="text-sm font-bold text-yellow-400">{formatNum(rewardsPending)}</p>
+   276→              </div>
+   277→              <div className="bg-secondary/40 rounded-lg p-2.5">
+   278→                <p className="text-[10px] text-muted-foreground mb-0.5">قابل للسحب</p>
+   279→                <p className="text-sm font-bold text-cyan-400">{formatNum(withdrawableSR)}</p>
+   280→              </div>
+   281→            </div>
+   282→          </motion.div>
+   283→
+   284→          {/* Pending SR — Pending Rewards */}
+   285→          <motion.div {...fadeUp} transition={{ delay: 0.15 }} className="rounded-xl bg-card border border-yellow-500/20 p-5 mb-4 relative overflow-hidden">
+   286→            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent" />
+   287→            <div className="relative z-10">
+   288→              <div className="flex items-center justify-between mb-3">
+   289→                <div className="flex items-center gap-2">
+   290→                  <div className="w-9 h-9 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+   291→                    <Clock className="h-5 w-5 text-yellow-400" />
+   292→                  </div>
+   293→                  <div>
+   294→                    <p className="text-sm font-bold">مكافآت معلّقة</p>
+   295→                    <p className="text-[10px] text-yellow-400/70">SR — غير متاحة حتى تكتمل فترة الانتظار</p>
+   296→                  </div>
+   297→                </div>
+   298→                <Badge className="bg-yellow-500/10 text-yellow-400 border-0 text-[10px] flex items-center gap-1">
+   299→                  <Lock className="h-3 w-3" />
+   300→                  معلّقة
+   301→                </Badge>
+   302→              </div>
+   303→              <div className="flex items-end gap-2">
+   304→                <h2 className="text-2xl font-bold text-yellow-400">{formatNum(pendingRewardsAmount)}</h2>
+   305→                <span className="text-sm text-yellow-400/60 mb-0.5">SR</span>
+   306→              </div>
+   307→              <p className="text-[11px] text-muted-foreground mt-2">ستتحول تلقائياً إلى مكافآت متاحة بعد انتهاء فترة الانتظار</p>
+   308→            </div>
+   309→          </motion.div>
+   310→
+   311→          {/* SP — Sultan Power */}
+   312→          <motion.div {...fadeUp} transition={{ delay: 0.2 }} className="rounded-xl bg-card border border-sultan/20 p-5 mb-6 relative overflow-hidden">
+   313→            <div className="absolute inset-0 bg-gradient-to-br from-sultan/5 to-transparent" />
+   314→            <div className="relative z-10">
+   315→              <div className="flex items-center justify-between mb-3">
+   316→                <div className="flex items-center gap-2">
+   317→                  <div className="w-9 h-9 rounded-lg bg-sultan/10 flex items-center justify-center">
+   318→                    <Zap className="h-5 w-5 text-sultan" />
+   319→                  </div>
+   320→                  <div>
+   321→                    <p className="text-sm font-bold">قوة سلطان</p>
+   322→                    <p className="text-[10px] text-muted-foreground">SP — مؤشر تأثير وليس عملة مالية</p>
+   323→                  </div>
+   324→                </div>
+   325→                <Badge variant="outline" className="border-sultan/20 text-sultan text-[10px]">SP</Badge>
+   326→              </div>
+   327→              <div className="flex items-end gap-2 mb-2">
+   328→                <h2 className="text-2xl font-bold text-sultan">{formatNum(powerBalance)}</h2>
+   329→                <span className="text-sm text-sultan/60 mb-0.5">SP</span>
+   330→              </div>
+   331→              <div className="flex items-center gap-2">
+   332→                <Badge variant="secondary" className="text-[10px]">
+   333→                  <Trophy className="h-3 w-3 ml-1 text-sultan" />
+   334→                  غير قابل للشراء أو السحب
+   335→                </Badge>
+   336→                <Badge variant="secondary" className="text-[10px]">
+   337→                  <Zap className="h-3 w-3 ml-1 text-sultan" />
+   338→                  يُكتسب بالنشاط والتأثير
+   339→                </Badge>
+   340→              </div>
+   341→              <p className="text-[11px] text-muted-foreground mt-2">قوة سلطان تعكس مستوى تأثيرك ومصداقيتك في المجتمع. كلما زادت نقاطك، ارتفع مستواك وظهرت شاراتك.</p>
+   342→            </div>
+   343→          </motion.div>
+   344→
+   345→          {/* ═══ Action Buttons ═══ */}
+   346→          <motion.div {...fadeUp} transition={{ delay: 0.25 }} className="mb-6">
+   347→            <h3 className="font-bold text-sm flex items-center gap-2 mb-4">
+   348→              <Zap className="h-4 w-4 text-sultan" />
+   349→              إجراءات سريعة
+   350→            </h3>
+   351→            <div className="grid grid-cols-5 gap-2 sm:gap-3">
+   352→              <button
+   353→                onClick={handleBuyCoins}
+   354→                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border/50 hover:border-sultan/30 hover:bg-secondary/50 transition-all group"
+   355→              >
+   356→                <div className="w-10 h-10 rounded-lg bg-sultan/10 flex items-center justify-center group-hover:bg-sultan/20 transition-colors">
+   357→                  <ShoppingCart className="h-5 w-5 text-sultan" />
+   358→                </div>
+   359→                <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">شراء عملات</span>
+   360→              </button>
+   361→
+   362→              <button
+   363→                onClick={handleSupport}
+   364→                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border/50 hover:border-pink-500/30 hover:bg-secondary/50 transition-all group"
+   365→              >
+   366→                <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center group-hover:bg-pink-500/20 transition-colors">
+   367→                  <Heart className="h-5 w-5 text-pink-400" />
+   368→                </div>
+   369→                <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">ادعم</span>
+   370→              </button>
+   371→
+   372→              <button
+   373→                onClick={handleEarn}
+   374→                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border/50 hover:border-green-500/30 hover:bg-secondary/50 transition-all group"
+   375→              >
+   376→                <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+   377→                  <TrendingUp className="h-5 w-5 text-green-400" />
+   378→                </div>
+   379→                <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">اربح</span>
+   380→              </button>
+   381→
+   382→              <button
+   383→                onClick={handleWithdraw}
+   384→                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border/50 hover:border-cyan-500/30 hover:bg-secondary/50 transition-all group"
+   385→              >
+   386→                <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+   387→                  <ArrowDownLeft className="h-5 w-5 text-cyan-400" />
+   388→                </div>
+   389→                <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">اسحب</span>
+   390→              </button>
+   391→
+   392→              <button
+   393→                onClick={handleHistory}
+   394→                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border/50 hover:border-sultan/30 hover:bg-secondary/50 transition-all group"
+   395→              >
+   396→                <div className="w-10 h-10 rounded-lg bg-sultan/10 flex items-center justify-center group-hover:bg-sultan/20 transition-colors">
+   397→                  <History className="h-5 w-5 text-sultan" />
+   398→                </div>
+   399→                <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">السجل</span>
+   400→              </button>
+   401→            </div>
+   402→          </motion.div>
+   403→
+   404→          {/* ═══ Recent Transactions Preview ═══ */}
+   405→          <motion.div {...fadeUp} transition={{ delay: 0.3 }} className="mb-6">
+   406→            <div className="flex items-center justify-between mb-4">
+   407→              <h3 className="font-bold text-sm flex items-center gap-2">
+   408→                <History className="h-4 w-4 text-sultan" />
+   409→                آخر العمليات
+   410→              </h3>
+   411→              <button
+   412→                onClick={() => setActiveSection('history')}
+   413→                className="text-[11px] text-sultan hover:text-sultan/80 transition-colors"
+   414→              >
+   415→                عرض الكل
+   416→              </button>
+   417→            </div>
+   418→            {transactions.length === 0 ? (
+   419→              <div className="rounded-xl bg-card border border-border/50 p-8 text-center">
+   420→                <Wallet className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+   421→                <p className="text-sm text-muted-foreground">لا توجد عمليات بعد</p>
+   422→                <p className="text-[11px] text-muted-foreground/60 mt-1">ستظهر هنا جميع معاملاتك المالية</p>
+   423→              </div>
+   424→            ) : (
+   425→              <div className="rounded-xl bg-card border border-border/50 divide-y divide-border/30 overflow-hidden max-h-80 overflow-y-auto scrollbar-thin">
+   426→                {transactions.slice(0, 5).map((tx) => {
+   427→                  const txInfo = getTxTypeInfo(tx.type);
+   428→                  const stInfo = getTxStatusInfo(tx.status);
+   429→                  const isPositive = tx.type.includes('received') || tx.type.includes('earned') || tx.type.includes('reward') || tx.type.includes('grant') || tx.type.includes('bounty') || tx.type.includes('refund');
+   430→                  return (
+   431→                    <div key={tx.id} className="flex items-center gap-3 p-3 hover:bg-secondary/30 transition-colors">
+   432→                      <div className={`w-9 h-9 rounded-lg ${txInfo.bg} flex items-center justify-center shrink-0`}>
+   433→                        <txInfo.icon className={`h-4 w-4 ${txInfo.color}`} />
+   434→                      </div>
+   435→                      <div className="flex-1 min-w-0">
+   436→                        <p className="text-sm font-medium truncate">{txInfo.label}</p>
+   437→                        <div className="flex items-center gap-2">
+   438→                          <p className="text-[11px] text-muted-foreground">{formatDate(tx.createdAt)}</p>
+   439→                          {tx.status !== 'completed' && (
+   440→                            <Badge className={`${stInfo.cls} border-0 text-[9px] px-1.5`}>
+   441→                              <stInfo.icon className="h-2.5 w-2.5 ml-0.5" />
+   442→                              {stInfo.label}
+   443→                            </Badge>
+   444→                          )}
+   445→                        </div>
+   446→                      </div>
+   447→                      <div className="text-end shrink-0">
+   448→                        <p className={`text-sm font-bold ${isPositive ? 'text-green-400' : 'text-foreground'}`}>
+   449→                          {isPositive ? '+' : '-'}{formatNum(tx.amount)}
+   450→                          <span className="text-[10px] text-muted-foreground font-normal mr-1">{tx.currency}</span>
+   451→                        </p>
+   452→                      </div>
+   453→                    </div>
+   454→                  );
+   455→                })}
+   456→              </div>
+   457→            )}
+   458→          </motion.div>
+   459→        </>
+   460→      )}
+   461→
+   462→      {/* ═══ History Section (Full) ═══ */}
+   463→      {activeSection === 'history' && (
+   464→        <>
+   465→          <motion.div {...fadeUp} className="mb-4">
+   466→            <div className="flex items-center justify-between mb-4">
+   467→              <h3 className="font-bold text-sm flex items-center gap-2">
+   468→                <History className="h-4 w-4 text-sultan" />
+   469→                سجل العمليات
+   470→              </h3>
+   471→              <button
+   472→                onClick={() => setActiveSection('balance')}
+   473→                className="text-[11px] text-sultan hover:text-sultan/80 transition-colors"
+   474→              >
+   475→                العودة للرصيد
+   476→              </button>
+   477→            </div>
+   478→
+   479→            {/* Filter Tabs */}
+   480→            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 mb-4">
+   481→              {HISTORY_FILTERS.map((f) => (
+   482→                <button
+   483→                  key={f.key}
+   484→                  onClick={() => setHistoryFilter(f.key)}
+   485→                  className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+   486→                    historyFilter === f.key
+   487→                      ? 'bg-sultan text-sultan-foreground'
+   488→                      : 'bg-secondary text-muted-foreground hover:text-foreground'
+   489→                  }`}
+   490→                >
+   491→                  {f.label}
+   492→                </button>
+   493→              ))}
+   494→            </div>
+   495→
+   496→            {transactions.length === 0 ? (
+   497→              <div className="rounded-xl bg-card border border-border/50 p-8 text-center">
+   498→                <History className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+   499→                <p className="text-sm text-muted-foreground">لا توجد عمليات</p>
+   500→                <p className="text-[11px] text-muted-foreground/60 mt-1">
+   501→                  {historyFilter !== 'all' ? 'لا توجد عمليات من هذا النوع' : 'ستظهر هنا جميع معاملاتك المالية'}
+   502→                </p>
+   503→              </div>
+   504→            ) : (
+   505→              <div className="rounded-xl bg-card border border-border/50 divide-y divide-border/30 overflow-hidden max-h-[60vh] overflow-y-auto scrollbar-thin">
+   506→                {transactions.map((tx) => {
+   507→                  const txInfo = getTxTypeInfo(tx.type);
+   508→                  const stInfo = getTxStatusInfo(tx.status);
+   509→                  const isPositive = tx.type.includes('received') || tx.type.includes('earned') || tx.type.includes('reward') || tx.type.includes('grant') || tx.type.includes('bounty') || tx.type.includes('refund');
+   510→                  return (
+   511→                    <div key={tx.id} className="flex items-center gap-3 p-3 hover:bg-secondary/30 transition-colors">
+   512→                      <div className={`w-9 h-9 rounded-lg ${txInfo.bg} flex items-center justify-center shrink-0`}>
+   513→                        <txInfo.icon className={`h-4 w-4 ${txInfo.color}`} />
+   514→                      </div>
+   515→                      <div className="flex-1 min-w-0">
+   516→                        <p className="text-sm font-medium truncate">
+   517→                          {tx.metadata?.description || txInfo.label}
+   518→                        </p>
+   519→                        <div className="flex items-center gap-2">
+   520→                          <p className="text-[11px] text-muted-foreground">{formatDate(tx.createdAt)}</p>
+   521→                          <Badge className={`${stInfo.cls} border-0 text-[9px] px-1.5`}>
+   522→                            {tx.status === 'completed' ? null : <stInfo.icon className="h-2.5 w-2.5 ml-0.5" />}
+   523→                            {stInfo.label}
+   524→                          </Badge>
+   525→                        </div>
+   526→                      </div>
+   527→                      <div className="text-end shrink-0">
+   528→                        <p className={`text-sm font-bold ${isPositive ? 'text-green-400' : 'text-foreground'}`}>
+   529→                          {isPositive ? '+' : '-'}{formatNum(tx.amount)}
+   530→                          <span className="text-[10px] text-muted-foreground font-normal mr-1">{tx.currency}</span>
+   531→                        </p>
+   532→                      </div>
+   533→                    </div>
+   534→                  );
+   535→                })}
+   536→              </div>
+   537→            )}
+   538→          </motion.div>
+   539→        </>
+   540→      )}
+   541→
+   542→      {/* ═══ Buy Coins Section ═══ */}
+   543→      {activeSection === 'buy' && (
+   544→        <>
+   545→          <motion.div {...fadeUp}>
+   546→            <div className="flex items-center justify-between mb-4">
+   547→              <h3 className="font-bold text-sm flex items-center gap-2">
+   548→                <Coins className="h-4 w-4 text-sultan" />
+   549→                شراء عملات سلطان
+   550→              </h3>
+   551→              <button
+   552→                onClick={() => setActiveSection('balance')}
+   553→                className="text-[11px] text-sultan hover:text-sultan/80 transition-colors"
+   554→              >
+   555→                العودة للرصيد
+   556→              </button>
+   557→            </div>
+   558→
+   559→            {/* Pending Integration Notice */}
+   560→            <div className="rounded-xl bg-yellow-500/5 border border-yellow-500/20 p-3 mb-4 flex items-center gap-2">
+   561→              <AlertCircle className="h-4 w-4 text-yellow-400 shrink-0" />
+   562→              <p className="text-[11px] text-yellow-400/80">
+   563→                خدمة الشراء في طور التكامل مع مزود دفع مرخّص. الأسعار المعروضة تقريبية.
+   564→              </p>
+   565→            </div>
+   566→
+   567→            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+   568→              {coinPackages.map((pkg) => (
+   569→                <button
+   570→                  key={pkg.id}
+   571→                  onClick={() => handleBuyPackage(pkg)}
+   572→                  className={`relative rounded-xl bg-card border p-4 text-center transition-all hover:border-sultan/30 hover:bg-secondary/30 group ${
+   573→                    pkg.popular ? 'border-sultan/40 ring-1 ring-sultan/20' : 'border-border/50'
+   574→                  }`}
+   575→                >
+   576→                  {pkg.popular && (
+   577→                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-sultan text-sultan-foreground text-[9px] px-2 border-0">
+   578→                      الأكثر شعبية
+   579→                    </Badge>
+   580→                  )}
+   581→                  <Coins className="h-8 w-8 text-sultan/60 mx-auto mb-2 group-hover:text-sultan transition-colors" />
+   582→                  <p className="text-base font-bold text-foreground mb-0.5">{formatNum(pkg.coins)}</p>
+   583→                  <p className="text-[10px] text-muted-foreground mb-2">عملة سلطان</p>
+   584→                  {pkg.bonus > 0 && (
+   585→                    <p className="text-[10px] text-green-400 font-medium mb-2">+{formatNum(pkg.bonus)} مجاناً</p>
+   586→                  )}
+   587→                  <Separator className="my-2 bg-border/30" />
+   588→                  <div className="flex items-center justify-center gap-1">
+   589→                    <span className="text-base font-bold text-sultan">{pkg.priceMAD}</span>
+   590→                    <span className="text-[11px] text-muted-foreground">درهم</span>
+   591→                  </div>
+   592→                  <Badge variant="outline" className="border-yellow-500/30 text-yellow-400 text-[8px] mt-2">
+   593→                    قيد التكامل
+   594→                  </Badge>
+   595→                </button>
+   596→              ))}
+   597→            </div>
+   598→          </motion.div>
+   599→        </>
+   600→      )}
+   601→
+   602→      {/* ═══ Architecture Note ═══ */}
+   603→      <motion.div {...fadeUp} className="rounded-xl bg-sultan/5 border border-sultan/20 p-4 flex items-start gap-3 mt-4">
+   604→        <Shield className="h-5 w-5 text-sultan mt-0.5 shrink-0" />
+   605→        <div>
+   606→          <p className="font-semibold text-sm text-sultan">ملاحظة معمارية</p>
+   607→          <p className="text-xs text-muted-foreground mt-1">هذا النظام مصمم للتكامل مع مزود دفع مرخص. لا يتم أي معالجة مالية فعلية في هذه النسخة التجريبية. جميع الأرقام بيانات توضيحية.</p>
+   608→        </div>
+   609→      </motion.div>
+   610→    </div>
+   611→  );
+   612→}
+   613→

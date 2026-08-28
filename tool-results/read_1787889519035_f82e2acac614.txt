@@ -1,0 +1,627 @@
+     1→'use client';
+     2→import { useState, useEffect, useMemo } from 'react';
+     3→import { useSultanStore } from '@/lib/store';
+     4→import { useEconomyStore } from '@/lib/economy';
+     5→import { CASHOUT_STATUS_LABELS } from '@/lib/economy/constants';
+     6→import { Badge } from '@/components/ui/badge';
+     7→import { Separator } from '@/components/ui/separator';
+     8→import { motion } from 'framer-motion';
+     9→import {
+    10→  ArrowRight,
+    11→  Wallet,
+    12→  Clock,
+    13→  Shield,
+    14→  ShieldCheck,
+    15→  ShieldAlert,
+    16→  ShieldX,
+    17→  AlertCircle,
+    18→  CheckCircle2,
+    19→  XCircle,
+    20→  Loader2,
+    21→  Info,
+    22→  Banknote,
+    23→  Timer,
+    24→  FileText,
+    25→  ArrowDownLeft,
+    26→  Lock,
+    27→  CircleDot,
+    28→  type LucideIcon,
+    29→} from 'lucide-react';
+    30→
+    31→const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
+    32→
+    33→// ─── KYC Status Map ──────────────────────────────────────────────────────────
+    34→
+    35→const KYC_STATUS_MAP: Record<string, { label: string; icon: LucideIcon; color: string; bg: string }> = {
+    36→  not_required: { label: 'غير مطلوب', icon: ShieldCheck, color: 'text-green-400', bg: 'bg-green-400/10' },
+    37→  required:    { label: 'مطلوب', icon: ShieldAlert, color: 'text-orange-400', bg: 'bg-orange-400/10' },
+    38→  pending:     { label: 'قيد المراجعة', icon: Shield, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+    39→  verified:    { label: 'مُوثّق', icon: ShieldCheck, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    40→  rejected:    { label: 'مرفوض', icon: ShieldX, color: 'text-red-400', bg: 'bg-red-400/10' },
+    41→  expired:     { label: 'منتهي الصلاحية', icon: ShieldX, color: 'text-gray-400', bg: 'bg-gray-400/10' },
+    42→  review:      { label: 'مراجعة يدوية', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    43→};
+    44→
+    45→// ─── Component ───────────────────────────────────────────────────────────────
+    46→
+    47→export default function CashoutCenter() {
+    48→  const { goBack, currentProfile, addToast } = useSultanStore();
+    49→  const {
+    50→    wallet,
+    51→    initWallet,
+    52→    getAvailableBalance,
+    53→    getPendingBalance,
+    54→    getRule,
+    55→    getCashoutEligibility,
+    56→    requestCashout,
+    57→    isFeatureEnabled,
+    58→    cashoutRequests,
+    59→    integrationStatus,
+    60→  } = useEconomyStore();
+    61→
+    62→  const [amount, setAmount] = useState('');
+    63→  const [loading, setLoading] = useState(false);
+    64→  const [error, setError] = useState('');
+    65→
+    66→  // ─── Initialize wallet ───────────────────────────────────────────────────
+    67→  useEffect(() => {
+    68→    if (currentProfile?.id) {
+    69→      initWallet(currentProfile.id);
+    70→    }
+    71→  }, [currentProfile?.id, initWallet]);
+    72→
+    73→  // ─── Derived data ────────────────────────────────────────────────────────
+    74→  const cashoutEnabled = isFeatureEnabled('cashout_enabled');
+    75→  const cashoutIntegration = integrationStatus.cashout;
+    76→  const isCashoutConfigured = cashoutIntegration?.configured ?? false;
+    77→
+    78→  const minCashoutRule = getRule('min_cashout_sr');
+    79→  const maxCashoutRule = getRule('max_cashout_sr');
+    80→  const processingDaysRule = getRule('cashout_frequency_days');
+    81→  const pendingPeriodRule = getRule('pending_period_days');
+    82→  const feeRule = getRule('platform_fee_percent');
+    83→
+    84→  const minCashout = (minCashoutRule?.value as number) ?? 500;
+    85→  const maxCashout = (maxCashoutRule?.value as number) ?? 50000;
+    86→  const processingDays = (processingDaysRule?.value as number) ?? 7;
+    87→  const pendingDays = (pendingPeriodRule?.value as number) ?? 7;
+    88→  const feePercent = (feeRule?.value as number) ?? 0;
+    89→
+    90→  const availableSR = currentProfile?.id ? getAvailableBalance('SR') : 0;
+    91→  const pendingSR = currentProfile?.id ? getPendingBalance('SR') : 0;
+    92→
+    93→  const eligibility = currentProfile?.id
+    94→    ? getCashoutEligibility(currentProfile.id)
+    95→    : null;
+    96→
+    97→  const numericAmount = parseInt(amount, 10) || 0;
+    98→  const calculatedFee = feePercent > 0 ? Math.round((numericAmount * feePercent) / 100) : 0;
+    99→  const netAmount = numericAmount - calculatedFee;
+   100→
+   101→  const userCashouts = useMemo(() => {
+   102→    if (!currentProfile?.id) return [];
+   103→    return cashoutRequests
+   104→      .filter((r: { userId: string }) => r.userId === currentProfile.id)
+   105→      .sort((a: { requestedAt: string }, b: { requestedAt: string }) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+   106→  }, [cashoutRequests, currentProfile?.id]);
+   107→
+   108→  // ─── Helpers ────────────────────────────────────────────────────────────
+   109→  const formatNum = (n: number) => n.toLocaleString('ar-MA');
+   110→  const formatDate = (iso: string) => {
+   111→    try {
+   112→      return new Date(iso).toLocaleDateString('ar-MA', {
+   113→        day: 'numeric',
+   114→        month: 'short',
+   115→        year: 'numeric',
+   116→      });
+   117→    } catch {
+   118→      return iso;
+   119→    }
+   120→  };
+   121→
+   122→  const getStatusBadge = (status: string) => {
+   123→    const info = CASHOUT_STATUS_LABELS[status];
+   124→    if (!info) return <Badge variant="outline" className="text-xs">{status}</Badge>;
+   125→    return (
+   126→      <Badge
+   127→        variant="outline"
+   128→        className={`text-xs border-transparent ${info.bgColor} ${info.color}`}
+   129→      >
+   130→        {info.label}
+   131→      </Badge>
+   132→    );
+   133→  };
+   134→
+   135→  const getKycInfo = (kycStatus: string) => {
+   136→    return KYC_STATUS_MAP[kycStatus] ?? { label: kycStatus, icon: CircleDot, color: 'text-muted-foreground', bg: 'bg-muted' };
+   137→  };
+   138→
+   139→  // ─── Submit handler ─────────────────────────────────────────────────────
+   140→  const handleSubmit = async () => {
+   141→    setError('');
+   142→
+   143→    if (!currentProfile?.id) {
+   144→      setError('يرجى تسجيل الدخول أولاً');
+   145→      return;
+   146→    }
+   147→
+   148→    if (numericAmount < minCashout) {
+   149→      setError(`الحد الأدنى للسحب ${formatNum(minCashout)} SR`);
+   150→      return;
+   151→    }
+   152→
+   153→    if (numericAmount > availableSR) {
+   154→      setError('المبلغ يتجاوز الرصيد المتاح');
+   155→      return;
+   156→    }
+   157→
+   158→    if (numericAmount > maxCashout) {
+   159→      setError(`الحد الأقصى للسحب في عملية واحدة ${formatNum(maxCashout)} SR`);
+   160→      return;
+   161→    }
+   162→
+   163→    setLoading(true);
+   164→    try {
+   165→      // Simulate a small delay for UX
+   166→      await new Promise((r) => setTimeout(r, 600));
+   167→      const result = requestCashout(currentProfile.id, numericAmount);
+   168→      if (result.success) {
+   169→        addToast('تم تقديم طلب السحب بنجاح', 'success');
+   170→        setAmount('');
+   171→      } else {
+   172→        setError(result.error ?? 'حدث خطأ غير متوقع');
+   173→      }
+   174→    } catch {
+   175→      setError('حدث خطأ أثناء تقديم الطلب');
+   176→    } finally {
+   177→      setLoading(false);
+   178→    }
+   179→  };
+   180→
+   181→  const isFormDisabled = !cashoutEnabled || !isCashoutConfigured || !eligibility?.eligible;
+   182→
+   183→  // ─── Render ─────────────────────────────────────────────────────────────
+   184→  return (
+   185→    <div className="max-w-4xl mx-auto px-4 pb-24">
+   186→      {/* ═══ Header ═══ */}
+   187→      <motion.div {...fadeUp} className="flex items-center gap-3 py-4">
+   188→        <button
+   189→          onClick={() => goBack()}
+   190→          className="p-2 rounded-lg hover:bg-secondary transition-colors"
+   191→          aria-label="رجوع"
+   192→        >
+   193→          <ArrowRight className="h-5 w-5" />
+   194→        </button>
+   195→        <h1 className="text-xl font-bold">سحب المكافآت</h1>
+   196→        <Badge variant="outline" className="border-sultan/30 text-sultan text-xs flex items-center gap-1">
+   197→          <Banknote className="h-3 w-3" />
+   198→          مركز السحب
+   199→        </Badge>
+   200→      </motion.div>
+   201→
+   202→      {/* ═══ Integration Status Badge ═══ */}
+   203→      {!isCashoutConfigured && (
+   204→        <motion.div {...fadeUp} transition={{ delay: 0.03 }} className="mb-4">
+   205→          <div className="rounded-xl border border-orange-500/30 bg-orange-500/5 p-4 flex items-center gap-3">
+   206→            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+   207→              <AlertCircle className="h-5 w-5 text-orange-400" />
+   208→            </div>
+   209→            <div className="flex-1 min-w-0">
+   210→              <div className="flex items-center gap-2 mb-1">
+   211→                <span className="text-sm font-bold text-orange-400">قيد التكامل</span>
+   212→                <Badge variant="outline" className="text-[10px] border-orange-500/30 text-orange-400">
+   213→                  Pending Integration
+   214→                </Badge>
+   215→              </div>
+   216→              <p className="text-xs text-muted-foreground">
+   217→                خدمة السحب لا تزال قيد التكامل مع مزود الدفع. لن تتم عمليات السحب الحقيقية حتى يتم التكامل.
+   218→              </p>
+   219→            </div>
+   220→          </div>
+   221→        </motion.div>
+   222→      )}
+   223→
+   224→      {/* ═══ Feature Disabled Message ═══ */}
+   225→      {!cashoutEnabled && (
+   226→        <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="mb-4">
+   227→          <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 flex flex-col items-center text-center gap-3">
+   228→            <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+   229→              <Lock className="h-7 w-7 text-red-400" />
+   230→            </div>
+   231→            <div>
+   232→              <h3 className="text-lg font-bold text-red-400 mb-1">السحب غير مفعّل حالياً</h3>
+   233→              <p className="text-sm text-muted-foreground">
+   234→                تم تعطيل خدمة السحب مؤقتاً من قبل الإدارة. يرجى المتابعة لاحقاً.
+   235→              </p>
+   236→            </div>
+   237→          </div>
+   238→        </motion.div>
+   239→      )}
+   240→
+   241→      {/* ═══ Balance Overview Card ═══ */}
+   242→      <motion.div {...fadeUp} transition={{ delay: 0.07 }} className="rounded-xl bg-card border border-border/50 p-5 mb-4">
+   243→        <div className="flex items-center gap-2 mb-4">
+   244→          <div className="w-9 h-9 rounded-lg bg-sultan/20 flex items-center justify-center">
+   245→            <Wallet className="h-5 w-5 text-sultan" />
+   246→          </div>
+   247→          <div>
+   248→            <p className="text-sm font-bold">نظرة عامة على الرصيد</p>
+   249→            <p className="text-[10px] text-muted-foreground">SR — مكافآت سلطان قابلة للسحب</p>
+   250→          </div>
+   251→        </div>
+   252→
+   253→        <div className="grid grid-cols-2 gap-3">
+   254→          {/* Available */}
+   255→          <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4">
+   256→            <div className="flex items-center gap-1.5 mb-2">
+   257→              <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+   258→              <p className="text-[11px] text-muted-foreground">الرصيد المتاح للسحب</p>
+   259→            </div>
+   260→            <p className="text-xl font-bold text-green-400">{formatNum(availableSR)}</p>
+   261→            <p className="text-[10px] text-green-400/60 mt-0.5">≈ {formatNum(availableSR)} MAD</p>
+   262→          </div>
+   263→
+   264→          {/* Pending */}
+   265→          <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-4">
+   266→            <div className="flex items-center gap-1.5 mb-2">
+   267→              <Clock className="h-3.5 w-3.5 text-yellow-400" />
+   268→              <p className="text-[11px] text-muted-foreground">المكافآت المعلّقة</p>
+   269→            </div>
+   270→            <p className="text-xl font-bold text-yellow-400">{formatNum(pendingSR)}</p>
+   271→            <p className="text-[10px] text-yellow-400/60 mt-0.5">≈ {formatNum(pendingSR)} MAD</p>
+   272→          </div>
+   273→        </div>
+   274→      </motion.div>
+   275→
+   276→      {/* ═══ Cashout Info Grid ═══ */}
+   277→      <motion.div {...fadeUp} transition={{ delay: 0.1 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+   278→        {/* Minimum Cashout */}
+   279→        <div className="bg-card border border-border/50 rounded-xl p-3">
+   280→          <div className="flex items-center gap-1.5 mb-1.5">
+   281→            <Banknote className="h-3.5 w-3.5 text-sultan" />
+   282→            <p className="text-[10px] text-muted-foreground">الحد الأدنى للسحب</p>
+   283→          </div>
+   284→          <p className="text-sm font-bold">{formatNum(minCashout)} <span className="text-sultan text-xs">SR</span></p>
+   285→          <p className="text-[10px] text-muted-foreground">≈ {formatNum(minCashout)} MAD</p>
+   286→        </div>
+   287→
+   288→        {/* Maximum Cashout */}
+   289→        <div className="bg-card border border-border/50 rounded-xl p-3">
+   290→          <div className="flex items-center gap-1.5 mb-1.5">
+   291→            <Banknote className="h-3.5 w-3.5 text-sultan" />
+   292→            <p className="text-[10px] text-muted-foreground">الحد الأقصى للسحب</p>
+   293→          </div>
+   294→          <p className="text-sm font-bold">{formatNum(maxCashout)} <span className="text-sultan text-xs">SR</span></p>
+   295→          <p className="text-[10px] text-muted-foreground">≈ {formatNum(maxCashout)} MAD</p>
+   296→        </div>
+   297→
+   298→        {/* Processing Time */}
+   299→        <div className="bg-card border border-border/50 rounded-xl p-3">
+   300→          <div className="flex items-center gap-1.5 mb-1.5">
+   301→            <Timer className="h-3.5 w-3.5 text-cyan-400" />
+   302→            <p className="text-[10px] text-muted-foreground">مدة المعالجة المتوقعة</p>
+   303→          </div>
+   304→          <p className="text-sm font-bold">{processingDays} - {processingDays + 3} <span className="text-cyan-400 text-xs">أيام</span></p>
+   305→          <p className="text-[10px] text-muted-foreground">أيام عمل</p>
+   306→        </div>
+   307→
+   308→        {/* Pending Period */}
+   309→        <div className="bg-card border border-border/50 rounded-xl p-3">
+   310→          <div className="flex items-center gap-1.5 mb-1.5">
+   311→            <Clock className="h-3.5 w-3.5 text-orange-400" />
+   312→            <p className="text-[10px] text-muted-foreground">فترة انتظار المكافآت</p>
+   313→          </div>
+   314→          <p className="text-sm font-bold">{pendingDays} <span className="text-orange-400 text-xs">يوم</span></p>
+   315→          <p className="text-[10px] text-muted-foreground">قبل التوفير</p>
+   316→        </div>
+   317→      </motion.div>
+   318→
+   319→      {/* ═══ Eligibility Card ═══ */}
+   320→      {currentProfile?.id && eligibility && (
+   321→        <motion.div {...fadeUp} transition={{ delay: 0.13 }} className="rounded-xl bg-card border border-border/50 p-5 mb-4">
+   322→          <div className="flex items-center gap-2 mb-3">
+   323→            <div className="w-9 h-9 rounded-lg bg-sultan/20 flex items-center justify-center">
+   324→              <Shield className="h-5 w-5 text-sultan" />
+   325→            </div>
+   326→            <p className="text-sm font-bold">حالة الأهلية</p>
+   327→          </div>
+   328→
+   329→          <div className="space-y-3">
+   330→            {/* Eligibility Status */}
+   331→            <div className="flex items-center justify-between">
+   332→              <span className="text-xs text-muted-foreground">حالة الأهلية</span>
+   333→              {eligibility.eligible ? (
+   334→                <Badge className="bg-green-500/10 text-green-400 border-transparent text-xs flex items-center gap-1">
+   335→                  <CheckCircle2 className="h-3 w-3" />
+   336→                  مؤهل للسحب
+   337→                </Badge>
+   338→              ) : (
+   339→                <Badge className="bg-red-500/10 text-red-400 border-transparent text-xs flex items-center gap-1">
+   340→                  <XCircle className="h-3 w-3" />
+   341→                  غير مؤهل
+   342→                </Badge>
+   343→              )}
+   344→            </div>
+   345→
+   346→            {/* Reason (if not eligible) */}
+   347→            {!eligibility.eligible && eligibility.reason && (
+   348→              <div className="rounded-lg bg-red-500/5 border border-red-500/20 p-3">
+   349→                <div className="flex items-start gap-2">
+   350→                  <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+   351→                  <p className="text-xs text-red-400">{eligibility.reason}</p>
+   352→                </div>
+   353→              </div>
+   354→            )}
+   355→
+   356→            <Separator className="bg-border/50" />
+   357→
+   358→            {/* KYC Status */}
+   359→            <div className="flex items-center justify-between">
+   360→              <span className="text-xs text-muted-foreground">حالة التحقق (KYC)</span>
+   361→              {(() => {
+   362→                const kycInfo = getKycInfo(eligibility.kycStatus);
+   363→                const KycIcon = kycInfo.icon;
+   364→                return (
+   365→                  <Badge variant="outline" className={`text-xs border-transparent ${kycInfo.bg} ${kycInfo.color} flex items-center gap-1`}>
+   366→                    <KycIcon className="h-3 w-3" />
+   367→                    {kycInfo.label}
+   368→                  </Badge>
+   369→                );
+   370→              })()}
+   371→            </div>
+   372→
+   373→            {/* Risk Status */}
+   374→            <div className="flex items-center justify-between">
+   375→              <span className="text-xs text-muted-foreground">مستوى المخاطر</span>
+   376→              <Badge
+   377→                variant="outline"
+   378→                className={`text-xs border-transparent ${
+   379→                  eligibility.riskStatus === 'low'
+   380→                    ? 'bg-green-400/10 text-green-400'
+   381→                    : eligibility.riskStatus === 'medium'
+   382→                      ? 'bg-yellow-400/10 text-yellow-400'
+   383→                      : eligibility.riskStatus === 'high'
+   384→                        ? 'bg-orange-400/10 text-orange-400'
+   385→                        : 'bg-red-400/10 text-red-400'
+   386→                }`}
+   387→              >
+   388→                {eligibility.riskStatus === 'low'
+   389→                  ? 'منخفض'
+   390→                  : eligibility.riskStatus === 'medium'
+   391→                    ? 'متوسط'
+   392→                    : eligibility.riskStatus === 'high'
+   393→                      ? 'عالي'
+   394→                      : 'حرج'}
+   395→              </Badge>
+   396→            </div>
+   397→
+   398→            {/* Tax/Fee Info */}
+   399→            {feePercent > 0 && (
+   400→              <>
+   401→                <Separator className="bg-border/50" />
+   402→                <div className="flex items-center justify-between">
+   403→                  <span className="text-xs text-muted-foreground">رسوم المنصة</span>
+   404→                  <span className="text-xs font-bold text-sultan">{feePercent}%</span>
+   405→                </div>
+   406→                <p className="text-[10px] text-muted-foreground">
+   407→                  تُخصم رسوم المنصة من مبلغ السحب. المبلغ الصافي هو ما يصل لحسابك البنكي.
+   408→                </p>
+   409→              </>
+   410→            )}
+   411→          </div>
+   412→        </motion.div>
+   413→      )}
+   414→
+   415→      {/* ═══ Cashout Form ═══ */}
+   416→      <motion.div {...fadeUp} transition={{ delay: 0.16 }} className="rounded-xl bg-card border border-border/50 p-5 mb-4">
+   417→        <div className="flex items-center gap-2 mb-4">
+   418→          <div className="w-9 h-9 rounded-lg bg-sultan/20 flex items-center justify-center">
+   419→            <ArrowDownLeft className="h-5 w-5 text-sultan" />
+   420→          </div>
+   421→          <p className="text-sm font-bold">طلب سحب</p>
+   422→        </div>
+   423→
+   424→        <div className="space-y-4">
+   425→          {/* Amount Input */}
+   426→          <div>
+   427→            <label className="text-xs text-muted-foreground mb-2 block">
+   428→              مبلغ السحب (SR)
+   429→            </label>
+   430→            <div className="relative">
+   431→              <input
+   432→                type="number"
+   433→                value={amount}
+   434→                onChange={(e) => {
+   435→                  setAmount(e.target.value);
+   436→                  setError('');
+   437→                }}
+   438→                placeholder={`الحد الأدنى ${formatNum(minCashout)}`}
+   439→                disabled={isFormDisabled}
+   440→                min={minCashout}
+   441→                max={Math.min(availableSR, maxCashout)}
+   442→                className="w-full bg-background border border-border/50 rounded-xl px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-sultan/50 focus:ring-1 focus:ring-sultan/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+   443→                dir="ltr"
+   444→              />
+   445→              <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+   446→                <span className="text-xs text-muted-foreground font-bold">SR</span>
+   447→              </div>
+   448→            </div>
+   449→          </div>
+   450→
+   451→          {/* Quick Amount Buttons */}
+   452→          {!isFormDisabled && availableSR > 0 && (
+   453→            <div className="flex flex-wrap gap-2">
+   454→              {[
+   455→                { label: 'الكل', value: Math.min(availableSR, maxCashout) },
+   456→                { label: 'نصف', value: Math.floor(Math.min(availableSR, maxCashout) / 2) },
+   457→                { label: formatNum(minCashout), value: minCashout },
+   458→              ].map((preset) => (
+   459→                <button
+   460→                  key={preset.label}
+   461→                  onClick={() => setAmount(String(preset.value))}
+   462→                  className="px-3 py-1.5 rounded-lg bg-sultan/10 text-sultan text-xs font-bold hover:bg-sultan/20 transition-colors"
+   463→                >
+   464→                  {preset.label}
+   465→                </button>
+   466→              ))}
+   467→            </div>
+   468→          )}
+   469→
+   470→          {/* Fees Breakdown */}
+   471→          {numericAmount > 0 && (
+   472→            <motion.div
+   473→              initial={{ opacity: 0, height: 0 }}
+   474→              animate={{ opacity: 1, height: 'auto' }}
+   475→              className="rounded-lg bg-background border border-border/30 p-4 space-y-2.5"
+   476→            >
+   477→              <p className="text-xs font-bold text-muted-foreground mb-3">تفاصيل السحب</p>
+   478→
+   479→              <div className="flex items-center justify-between">
+   480→                <span className="text-xs text-muted-foreground">المبلغ المطلوب</span>
+   481→                <span className="text-sm font-bold">{formatNum(numericAmount)} SR</span>
+   482→              </div>
+   483→
+   484→              {calculatedFee > 0 && (
+   485→                <div className="flex items-center justify-between">
+   486→                  <span className="text-xs text-muted-foreground">رسوم المنصة ({feePercent}%)</span>
+   487→                  <span className="text-sm font-bold text-red-400">-{formatNum(calculatedFee)} SR</span>
+   488→                </div>
+   489→              )}
+   490→
+   491→              <Separator className="bg-border/50" />
+   492→
+   493→              <div className="flex items-center justify-between">
+   494→                <span className="text-xs text-muted-foreground">المبلغ الصافي</span>
+   495→                <span className="text-sm font-bold text-green-400">{formatNum(netAmount)} SR</span>
+   496→              </div>
+   497→
+   498→              <div className="flex items-center justify-between">
+   499→                <span className="text-xs text-muted-foreground">سيُحوّل إلى</span>
+   500→                <span className="text-sm font-bold text-sultan">{formatNum(netAmount)} MAD</span>
+   501→              </div>
+   502→            </motion.div>
+   503→          )}
+   504→
+   505→          {/* Error Message */}
+   506→          {error && (
+   507→            <motion.div
+   508→              initial={{ opacity: 0, y: -4 }}
+   509→              animate={{ opacity: 1, y: 0 }}
+   510→              className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 p-3"
+   511→            >
+   512→              <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+   513→              <p className="text-xs text-red-400">{error}</p>
+   514→            </motion.div>
+   515→          )}
+   516→
+   517→          {/* Confirm Button */}
+   518→          <button
+   519→            onClick={handleSubmit}
+   520→            disabled={isFormDisabled || loading || numericAmount <= 0}
+   521→            className="w-full py-3 rounded-xl bg-sultan text-black font-bold text-sm flex items-center justify-center gap-2 hover:bg-sultan/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+   522→          >
+   523→            {loading ? (
+   524→              <>
+   525→                <Loader2 className="h-4 w-4 animate-spin" />
+   526→                <span>جاري التقديم...</span>
+   527→              </>
+   528→            ) : isFormDisabled ? (
+   529→              <>
+   530→                <Lock className="h-4 w-4" />
+   531→                <span>السحب غير متاح حالياً</span>
+   532→              </>
+   533→            ) : (
+   534→              <>
+   535→                <ArrowDownLeft className="h-4 w-4" />
+   536→                <span>تأكيد السحب — {formatNum(numericAmount)} MAD</span>
+   537→              </>
+   538→            )}
+   539→          </button>
+   540→        </div>
+   541→      </motion.div>
+   542→
+   543→      {/* ═══ Cashout History ═══ */}
+   544→      <motion.div {...fadeUp} transition={{ delay: 0.19 }} className="rounded-xl bg-card border border-border/50 p-5 mb-4">
+   545→        <div className="flex items-center justify-between mb-4">
+   546→          <div className="flex items-center gap-2">
+   547→            <div className="w-9 h-9 rounded-lg bg-sultan/20 flex items-center justify-center">
+   548→              <FileText className="h-5 w-5 text-sultan" />
+   549→            </div>
+   550→            <p className="text-sm font-bold">سجل طلبات السحب</p>
+   551→          </div>
+   552→          {userCashouts.length > 0 && (
+   553→            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+   554→              {userCashouts.length} طلب
+   555→            </Badge>
+   556→          )}
+   557→        </div>
+   558→
+   559→        {userCashouts.length === 0 ? (
+   560→          <div className="text-center py-8">
+   561→            <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+   562→              <FileText className="h-5 w-5 text-muted-foreground" />
+   563→            </div>
+   564→            <p className="text-sm text-muted-foreground">لا توجد طلبات سحب بعد</p>
+   565→            <p className="text-[10px] text-muted-foreground/60 mt-1">
+   566→              ستظهر طلبات السحب هنا بعد تقديم أول طلب
+   567→            </p>
+   568→          </div>
+   569→        ) : (
+   570→          <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
+   571→            {userCashouts.map((req) => (
+   572→              <motion.div
+   573→                key={req.id}
+   574→                initial={{ opacity: 0, x: -8 }}
+   575→                animate={{ opacity: 1, x: 0 }}
+   576→                className="rounded-lg bg-background border border-border/30 p-4"
+   577→              >
+   578→                <div className="flex items-start justify-between mb-2">
+   579→                  <div>
+   580→                    <p className="text-sm font-bold">{formatNum(req.amount)} <span className="text-sultan text-xs">SR</span></p>
+   581→                    <p className="text-[10px] text-muted-foreground">≈ {formatNum(req.amount)} MAD</p>
+   582→                  </div>
+   583→                  {getStatusBadge(req.status)}
+   584→                </div>
+   585→
+   586→                <div className="flex items-center justify-between">
+   587→                  <div className="flex items-center gap-1.5">
+   588→                    <Clock className="h-3 w-3 text-muted-foreground" />
+   589→                    <span className="text-[10px] text-muted-foreground">
+   590→                      {formatDate(req.requestedAt)}
+   591→                    </span>
+   592→                  </div>
+   593→                  <span className="text-[10px] text-muted-foreground">
+   594→                    {req.method === 'bank_transfer' ? 'تحويل بنكي' : req.method}
+   595→                  </span>
+   596→                </div>
+   597→
+   598→                {req.rejectionReason && (
+   599→                  <div className="mt-2 pt-2 border-t border-border/30">
+   600→                    <p className="text-[10px] text-red-400">{req.rejectionReason}</p>
+   601→                  </div>
+   602→                )}
+   603→              </motion.div>
+   604→            ))}
+   605→          </div>
+   606→        )}
+   607→      </motion.div>
+   608→
+   609→      {/* ═══ Integration Note ═══ */}
+   610→      <motion.div {...fadeUp} transition={{ delay: 0.22 }}>
+   611→        <div className="rounded-xl border border-border/30 bg-muted/30 p-4">
+   612→          <div className="flex items-start gap-3">
+   613→            <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+   614→            <div>
+   615→              <p className="text-xs font-bold text-muted-foreground mb-1">ملاحظة التكامل</p>
+   616→              <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+   617→                لا يوجد مزود سحب حقيقي مُهيأ حالياً. جميع عمليات السحب هي محاكاة لأغراض التطوير والاختبار.
+   618→                سيتم ربط مزود دفع حقيقي (مثل CIH Bank أو PayPal) عند اكتمال مرحلة التكامل.
+   619→              </p>
+   620→            </div>
+   621→          </div>
+   622→        </div>
+   623→      </motion.div>
+   624→    </div>
+   625→  );
+   626→}
+   627→

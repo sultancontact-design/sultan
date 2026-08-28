@@ -21,6 +21,9 @@ import PublishWizard from '@/components/sultan/PublishWizard';
 import SultanSearch from '@/components/sultan/search/SultanSearch';
 import MarriageView from '@/components/sultan/marriage/MarriageView';
 import SultanMoney from '@/components/sultan/money/SultanMoney';
+import WalletCenter from '@/components/sultan/economy/WalletCenter';
+import CashoutCenter from '@/components/sultan/economy/CashoutCenter';
+import OpportunityCenter from '@/components/sultan/economy/opportunity/OpportunityCenter';
 import BusinessView from '@/components/sultan/business/BusinessView';
 import TrustView from '@/components/sultan/TrustView';
 import TrendsView from '@/components/sultan/TrendsView';
@@ -77,8 +80,13 @@ export default function Page() {
       case 'search':
         return <SultanSearch />;
       case 'money':
-      case 'wallet':
         return <SultanMoney />;
+      case 'wallet':
+        return <WalletCenter />;
+      case 'cashout':
+        return <CashoutCenter />;
+      case 'opportunities':
+        return <OpportunityCenter />;
       case 'business':
         return <BusinessView />;
       case 'trust':

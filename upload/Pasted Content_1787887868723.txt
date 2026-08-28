@@ -1,0 +1,1851 @@
+MASTER IMPLEMENTATION COMMAND
+SULTAN ECONOMY + REWARDS + INFLUENCE + OPPORTUNITY ENGINE
+
+أنت تعمل الآن داخل مشروع SULTAN القائم.
+
+مهمتك الوحيدة في هذه المرحلة هي إضافة وتكامل نظام:
+SULTAN ECONOMY + SULTAN REWARDS + SULTAN INFLUENCE + SULTAN OPPORTUNITY ENGINE
+
+إلى المنصة الحالية بدون حذف أو كسر أو إعادة كتابة أو إعادة تصميم أي وظيفة موجودة مسبقًا.
+
+==================================================
+0. قاعدة عدم التخريب — إلزامية
+==================================================
+
+ممنوع تمامًا:
+
+- حذف أي قسم موجود.
+- حذف أي صفحة موجودة.
+- حذف أي بيانات موجودة.
+- إعادة بناء التطبيق من الصفر.
+- استبدال التصميم الحالي بالكامل.
+- تغيير الـrouting الموجود إلا عند الضرورة لإضافة الصفحات الجديدة.
+- كسر Marketplace.
+- كسر Motors.
+- كسر Real Estate.
+- كسر Food.
+- كسر Services.
+- كسر Jobs.
+- كسر Auctions.
+- كسر Charity.
+- كسر Business Center.
+- كسر CRM.
+- كسر Analytics.
+- كسر News.
+- كسر Messaging.
+- كسر Notifications.
+- كسر Super Admin.
+- تغيير صلاحيات المستخدمين الحالية بطريقة غير مقصودة.
+- إضافة أزرار وهمية.
+- إضافة واجهات لا تعمل.
+- إضافة بيانات وهمية على أنها بيانات حقيقية.
+- إنشاء وظائف مكتوب عليها "Coming Soon" إذا كانت مطلوبة في هذه المهمة.
+- اختراع API غير موجود ثم الادعاء بأنه يعمل.
+- اختراع Payment Gateway غير متصل.
+- اختراع Cashout Provider غير متصل.
+- اختراع KYC حقيقي غير متوفر.
+
+إذا كانت البنية الحالية لا تحتوي Backend أو Payment Provider أو KYC Provider حقيقيًا:
+أنشئ طبقة Integration واضحة وقابلة للربط، مع حالة "Integration Required" داخل Super Admin، ولا تدّعِ أن العملية المالية الحقيقية تعمل.
+
+يجب أن تبقى جميع الميزات الموجودة حاليًا تعمل كما كانت قبل تنفيذ هذه المهمة.
+
+قبل التعديل:
+- افحص بنية المشروع.
+- افحص routes.
+- افحص components.
+- افحص state management.
+- افحص database schema إن وجدت.
+- افحص authentication.
+- افحص permissions.
+- افحص Super Admin.
+- افحص wallet/payment architecture إن وجدت.
+- افحص News.
+- افحص Marketplace وServices وBusiness Center.
+- حدد نقاط التكامل بدل إعادة بناء الأجزاء الموجودة.
+
+نفذ التغيير بأقل قدر ممكن من التعديلات على النظام الحالي.
+
+==================================================
+1. الهدف
+==================================================
+
+أضف إلى SULTAN اقتصادًا رقميًا داخليًا موحدًا يعمل عبر جميع أقسام المنصة.
+
+الهدف:
+
+المستخدم يستطيع:
+- شراء Sultan Coins.
+- دعم مستخدم آخر.
+- استقبال دعم.
+- استخدام Coins داخل سلطان.
+- الحصول على Rewards عندما يكون مؤهلًا.
+- بناء Reputation.
+- الحصول على Sultan Power.
+- استخدام الرصيد الداخلي للمزايا.
+- التقدم في المستويات.
+- الاشتراك في Challenges.
+- إنشاء Bounties.
+- إنشاء Tasks.
+- الاستفادة من فرص الربح الحقيقية.
+- التقديم للسحب عندما يصبح مؤهلًا.
+
+المنصة تستطيع:
+- بيع Coins.
+- تحقيق إيرادات من الاقتصاد.
+- بيع Boosts.
+- بيع Promotions.
+- بيع Featured placements.
+- بيع Ads.
+- أخذ عمولة معلنة من الأنشطة المؤهلة.
+- إدارة Rewards.
+- إدارة Cashouts.
+- إدارة الحملات.
+- دعم المستخدمين.
+- رفع ظهور الحسابات.
+- إطلاق Grants.
+- إدارة كل ذلك من Super Admin.
+
+==================================================
+2. العملات والأرصدة
+==================================================
+
+أنشئ نظامًا منفصلًا وواضحًا لهذه الأرصدة:
+
+A) Sultan Coins
+Code: SC
+
+SC هي عملة الاستخدام داخل المنصة.
+
+مصادرها:
+- شراء رسمي من سلطان.
+- Grants محددة من سلطان.
+- Promotions محددة.
+- Rewards promotions غير نقدية.
+
+الاستخدام:
+- Support.
+- Boost.
+- Featured.
+- Profile enhancements.
+- Challenges.
+- بعض الخدمات الرقمية داخل Sultan.
+- بعض عناصر التفاعل.
+- مزايا الحساب.
+- إرسال دعم لمستخدمين آخرين.
+
+SC ليست رصيدًا نقديًا مباشرًا.
+
+B) Sultan Rewards
+Code: SR
+
+SR هو رصيد المكافآت المؤهل للسحب عندما يستوفي المستخدم شروط السلطان.
+
+لا تسمح بشراء SR مباشرة.
+
+SR ينتج فقط من أحداث مؤهلة.
+
+C) Sultan Power
+Code: SP
+
+SP رصيد/نقاط تأثير غير نقدية.
+
+تستخدم لـ:
+- Levels.
+- Badges.
+- Profile status.
+- Unlocks.
+- Reputation-related progression.
+- بعض مزايا الظهور.
+- Rewards داخل المنصة.
+
+D) Pending Rewards
+
+أي Reward لم يصبح متاحًا للسحب بسبب:
+- review
+- fraud check
+- chargeback protection
+- KYC
+- transaction settlement
+- campaign completion
+
+لا يظهر كرصد قابل للسحب.
+
+==================================================
+3. Wallet Architecture
+==================================================
+
+أنشئ Wallet Center للمستخدم.
+
+يجب أن يعرض:
+
+Sultan Coins
+Sultan Rewards
+Pending Rewards
+Sultan Power
+Available Cashout
+Lifetime Received
+Lifetime Given
+Lifetime Withdrawn
+
+كل رصيد له:
+- balance
+- pending
+- available
+- frozen
+- lifetime
+- transaction history
+
+لا تستخدم متغير balance فقط.
+
+استخدم ledger-based transaction architecture.
+
+كل حركة يجب أن تحتوي:
+
+transaction_id
+user_id
+source
+destination
+currency
+amount
+type
+status
+reference_id
+campaign_id
+created_at
+completed_at
+created_by
+risk_status
+metadata
+audit_id
+
+يجب أن تكون العمليات المالية قابلة للتتبع بالكامل.
+
+==================================================
+4. Sultan Support
+==================================================
+
+لا تستخدم مفهوم Host.
+
+SULTAN منصة متعددة الخدمات.
+
+استخدم مفهوم:
+Support
+Supported User
+Contributor
+Recipient
+Creator فقط عندما يكون السياق متعلقًا بالمحتوى.
+
+أضف زر:
+
+"ادعم"
+
+في:
+- Profiles
+- Posts
+- News content عندما يكون الحساب مؤهلًا.
+- Services.
+- Business profiles.
+- Projects.
+- Challenges.
+- Bounties.
+- Community contributions.
+
+خيارات الدعم:
+50 SC
+100 SC
+500 SC
+1,000 SC
+5,000 SC
+10,000 SC
+Custom Amount
+
+أضف رسالة اختيارية:
+
+"أعجبني ما قدمته"
+"شكرًا"
+"أدعم فكرتك"
+"تستحق"
+"أدعم موهبتك"
+
+يجب أن يظهر للمستخدم بوضوح مقدار SC الذي خرج منه ومقدار الدعم الذي وصل للطرف الآخر وفق قواعد الاقتصاد الحالية.
+
+==================================================
+5. Reward Conversion Engine
+==================================================
+
+لا تضع نسبة ثابتة داخل الكود.
+
+أنشئ Economy Rules Engine.
+
+Super Admin يستطيع تعديل:
+
+coin purchase rates
+reward conversion rates
+platform fee
+recipient share
+minimum cashout
+maximum cashout
+cashout frequency
+pending period
+risk thresholds
+support limits
+campaign budgets
+boost pricing
+featured pricing
+commission tiers
+
+كلها من لوحة الإدارة.
+
+يجب أن تكون القواعد versioned.
+
+كل معاملة تحفظ نسخة القاعدة التي طبقت عليها.
+
+==================================================
+6. Cashout System
+==================================================
+
+أنشئ Cashout Center.
+
+المستخدم يرى:
+
+Available to Withdraw
+Pending
+Minimum Cashout
+Estimated Processing
+Cashout History
+Verification Status
+Tax/fee information when applicable
+
+السحب متاح فقط للحسابات المؤهلة.
+
+شروط الأهلية قابلة للتحكم من Super Admin:
+
+minimum rewards
+account age
+KYC status
+risk score
+community standing
+chargeback status
+supported country
+supported payout method
+campaign restrictions
+
+لا تجعل "فتح السحب" مجرد boolean غير آمن.
+
+أنشئ:
+
+cashout_eligibility
+
+ويحتوي على:
+eligible
+reason
+review_status
+risk_status
+kyc_status
+approved_by
+approved_at
+expires_at
+
+Super Admin يستطيع فتح السحب يدويًا لحساب مؤهل بعد تسجيل السبب.
+
+==================================================
+7. Admin Cashout Override
+==================================================
+
+داخل User Command Center:
+
+أضف:
+
+Enable Cashout
+Disable Cashout
+Review Cashout
+Approve Eligibility
+Freeze Cashout
+Unfreeze Cashout
+
+عند أي Override:
+اطلب:
+- reason
+- confirmation
+
+وسجل:
+Admin ID
+timestamp
+before state
+after state
+reason
+audit ID
+
+لا تسمح بتعديل الرصيد مباشرة.
+
+إذا احتاج الأدمن إلى Grant أو Adjustment:
+يجب أن تكون حركة Ledger منفصلة.
+
+==================================================
+8. Sultan Power
+==================================================
+
+لا تجعل المستخدم يشعر أن كل القيمة التي يحصل عليها يجب أن تتحول إلى نقد.
+
+أنشئ Sultan Power.
+
+يستخدم لـ:
+- Profile upgrades
+- Badges
+- Frames
+- Visibility benefits
+- Achievement levels
+- Community status
+- selected discovery benefits
+- access to selected campaigns
+
+اعرض:
+
+"قوة سلطان"
+وليس:
+"رصيد مالي"
+
+ولا تجعل SP قابلة للسحب.
+
+==================================================
+9. Sultan Reputation
+==================================================
+
+أنشئ Reputation Engine مستقلًا.
+
+لا تحسب Reputation من المال فقط.
+
+استخدم إشارات:
+
+successful transactions
+completed tasks
+completed services
+positive reviews
+helpful contributions
+challenge results
+business verification
+identity verification
+account age
+community behavior
+fraud history
+content quality
+support received
+support given
+
+ولا تسمح للأدمن بتغيير Reputation يدويًا بدون Audit Log.
+
+يمكن للأدمن منح:
+Recognition
+Badge
+Support
+Visibility
+
+بدل تزوير السمعة.
+
+==================================================
+10. Sultan Supporter
+==================================================
+
+أنشئ:
+
+Supporter Level
+Supporter Score
+Contribution Score
+
+أظهر للمستخدم:
+
+People Supported
+Total Support Given
+Community Impact
+Supporter Level
+
+أنشئ:
+Top Supporters
+Rising Supporters
+Community Supporters
+Local Supporters
+
+لا تجعل الترتيب مبنيًا على المال فقط.
+
+==================================================
+11. Sultan Supported
+==================================================
+
+أنشئ حالة مستقلة:
+
+Sultan Supported
+
+لا تخلطها مع:
+Verified
+Official
+Featured
+Sponsored
+
+Sultan Supported تعني أن سلطان يمنح الحساب دعمًا ترويجيًا/تشغيليًا.
+
+أظهر badge واضحًا:
+
+"👑 Sultan Supported"
+
+مع tooltip:
+"هذا الحساب يحظى بدعم ترويجي من سلطان."
+
+Super Admin يستطيع:
+Grant Support
+Edit Support
+Pause Support
+End Support
+
+ويحدد:
+duration
+surfaces
+budget
+priority
+reason
+campaign
+
+==================================================
+12. Verification
+==================================================
+
+أنشئ حالات منفصلة:
+
+Identity Verified
+Business Verified
+Official Account
+Trusted Contributor
+Sultan Supported
+Featured
+Sponsored
+
+لا تستخدم علامة واحدة لكل الحالات.
+
+كل حالة لها معنى مختلف.
+
+==================================================
+13. Growth Engine
+==================================================
+
+أنشئ نظامًا حقيقيًا للحملات.
+
+لا تسمح بزيادة followers أو likes بشكل اصطناعي عن طريق تعديل counter فقط.
+
+أضف:
+
+Follower Growth Campaign
+Engagement Campaign
+Reach Campaign
+Profile Visit Campaign
+Content Discovery Campaign
+
+الحملة تعمل عبر distribution/recommendation.
+
+المستخدم الحقيقي هو الذي يقرر:
+Follow
+Like
+Comment
+Save
+Share
+
+كل رقم ناتج عن الحملة يجب أن يكون قابلًا للتتبع.
+
+أظهر للمستخدم عند الحاجة:
+Promoted
+Sponsored
+Sultan Supported
+
+ولا تقدم الترويج المدفوع كأنه نمو عضوي.
+
+==================================================
+14. Super Admin Growth Controls
+==================================================
+
+داخل User Command Center:
+
+Profile Boost
+Post Boost
+Service Boost
+Business Boost
+News Boost
+Marketplace Boost
+Featured Placement
+Discover Placement
+Regional Promotion
+City Promotion
+Category Promotion
+Audience Campaign
+
+حدد:
+budget
+duration
+audience
+surfaces
+priority
+status
+
+==================================================
+15. Sultan Rising
+==================================================
+
+أنشئ قسم:
+
+"Sultan Rising"
+
+لاختيار المستخدمين الصاعدين.
+
+الاختيار يعتمد على:
+growth velocity
+engagement quality
+completion rate
+reviews
+trust
+activity
+original contribution
+community response
+
+لا تعتمد فقط على followers.
+
+أضف:
+Rising badge
+temporary discovery boost
+optional Sultan grant
+featured placement
+
+==================================================
+16. Sultan Grants
+==================================================
+
+أنشئ Grant Campaign system.
+
+Super Admin يستطيع إنشاء:
+
+Grant Campaign
+
+مثال:
+"دعم 100 موهبة مغربية"
+
+يحدد:
+number of recipients
+grant amount
+grant type
+categories
+cities
+duration
+eligibility
+application process
+selection method
+budget
+visibility
+
+أنشئ:
+Grant applications
+Grant review
+Grant approval
+Grant rejection
+Grant payout
+Grant audit
+
+==================================================
+17. Sultan Challenges
+==================================================
+
+أنشئ Challenges.
+
+أي مستخدم مؤهل أو Business يستطيع إنشاء Challenge.
+
+يحتوي:
+title
+description
+rules
+deadline
+reward
+category
+location
+attachments
+submission type
+winner count
+jury
+status
+
+حالات:
+Draft
+Published
+Active
+Closed
+Judging
+Winner Selected
+Rewarded
+Cancelled
+
+Reward لا يتحول تلقائيًا إلى cashout إلا وفق قواعد Rewards.
+
+==================================================
+18. Sultan Bounties
+==================================================
+
+أنشئ Bounty system.
+
+Bounty:
+مشكلة أو مهمة تحتاج حلًا.
+
+يحتوي:
+title
+problem
+budget/reward
+deadline
+requirements
+location
+category
+submissions
+winner
+payment status
+
+يجب أن يدعم:
+multiple submissions
+private submission
+winner selection
+dispute state
+reward release
+
+==================================================
+19. Sultan Tasks
+==================================================
+
+أنشئ Micro Tasks.
+
+أمثلة:
+- data collection
+- testing
+- translation
+- design
+- research
+- local verification
+- photography
+- digital assistance
+
+لا تعد المستخدم بدخل مضمون.
+
+اعرض:
+"فرص مدفوعة مقابل مهام حقيقية."
+
+كل Task:
+budget
+reward
+estimated time
+skills
+location
+deadline
+verification
+completion proof
+review
+payout state
+
+==================================================
+20. Sultan Opportunity Center
+==================================================
+
+أضف قسمًا رئيسيًا:
+
+"فرص سلطان"
+
+ويجمع:
+Jobs
+Tasks
+Bounties
+Challenges
+Grants
+Services
+Business opportunities
+Promotions
+Affiliate opportunities إذا كانت متاحة قانونيًا وتشغيليًا
+
+أضف AI filtering.
+
+المستخدم يحدد:
+مهاراتي
+مدينتي
+وقتي المتاح
+اللغات
+مجالاتي
+
+ثم تظهر له الفرص المناسبة.
+
+==================================================
+21. Sultan AI Opportunity Assistant
+==================================================
+
+أضف مساعدًا ذكيًا داخل Opportunity Center.
+
+يفهم العربية والدارجة المغربية والفرنسية والإنجليزية.
+
+مثال:
+"بغيت شي خدمة نقدر نديرها فالليل وعندي ساعتين."
+
+يحوّل الطلب إلى filters ويعرض الفرص الموجودة فعلًا في قاعدة البيانات.
+
+ممنوع اختراع فرص.
+
+إذا لم توجد فرص:
+قل بوضوح:
+"لا توجد حاليًا فرصة مطابقة."
+
+==================================================
+22. Sultan Business Boost
+==================================================
+
+أضف Business promotion.
+
+Business يستطيع شراء:
+Local Boost
+City Boost
+Regional Boost
+National Boost
+Diaspora Boost
+
+استهداف:
+city
+country
+language
+category
+interest
+audience
+
+أظهر Sponsored عندما تكون الحملة مدفوعة.
+
+==================================================
+23. Morocco + Diaspora
+==================================================
+
+أضف audience segmentation:
+
+Morocco
+Moroccan Diaspora
+France
+Spain
+Belgium
+Netherlands
+Canada
+Other
+
+وأضف:
+"Mghrib to the World"
+
+للترويج للمنتجات والخدمات المغربية للجالية والأسواق الخارجية.
+
+لا تنشئ أي نظام تحويل أموال أو remittance حقيقي إلا عبر مزود دفع مرخص ومتكامل فعليًا.
+
+==================================================
+24. News Economy
+==================================================
+
+ادمج Economy مع News بدون تحويل الأخبار إلى سوق دعم سياسي.
+
+في News:
+- المقالات المؤهلة يمكن أن تحتوي Support.
+- Contributors المؤهلون يمكن أن يحصلوا على Rewards وفق سياسة مستقلة.
+- Publisher accounts يمكن أن تحصل على Business tools.
+- Promoted News يجب أن تكون واضحة.
+- Sponsored News يجب أن تكون واضحة.
+
+أضف Trust information:
+source
+published date
+updated date
+correction
+related sources
+verification status
+
+لا تستخدم Sultan Coins للتصويت السياسي أو التأثير السري في الانتخابات أو صناعة رأي سياسي مصطنع.
+
+==================================================
+25. Sultan Fact Layer
+==================================================
+
+أضف طبقة معلومات للأخبار:
+
+Source
+Date
+Author
+Publisher
+Verification state
+Correction state
+Related coverage
+
+لا تدعي أن سلطان يثبت الحقيقة آليًا إذا لم توجد عملية تحقق حقيقية.
+
+==================================================
+26. Super Admin — Sultan Economy
+==================================================
+
+أضف قسم:
+
+Sultan Economy
+
+Subsections:
+
+Overview
+Coins
+Purchases
+Transfers
+Rewards
+Pending Rewards
+Cashouts
+Frozen Balances
+Grants
+Campaigns
+Fees
+Economy Rules
+Ledger
+Risk
+Audit
+
+Dashboard metrics:
+
+Total Coin Sales
+Coins Circulating
+Coins Spent
+Coins Transferred
+Rewards Generated
+Rewards Pending
+Rewards Paid
+Cashout Volume
+Platform Revenue
+Fees
+Refunds
+Chargebacks
+Fraud Prevented
+Active Supporters
+Supported Users
+Campaign Revenue
+
+==================================================
+27. Super Admin — Influence Center
+==================================================
+
+أضف:
+
+Influence Center
+
+User Search
+User Command Center
+Profile Boost
+Follower Campaign
+Engagement Campaign
+Reach Campaign
+Featured
+Trending
+Sultan Supported
+Sultan Rising
+Grants
+Badges
+Announcements
+
+كل حملة:
+Campaign ID
+Owner
+Budget
+Start
+End
+Target
+Surface
+Status
+Results
+Spend
+Audit
+
+==================================================
+28. User Command Center
+==================================================
+
+عند فتح أي مستخدم من Super Admin:
+
+Header:
+avatar
+name
+username
+status
+trust
+reputation
+level
+risk
+verification
+
+Metrics:
+followers
+following
+support given
+support received
+coins
+rewards
+pending
+power
+reach
+engagement
+transactions
+
+Quick Actions:
+Grant Support
+Grant Coins
+Grant Reward
+Enable Cashout
+Freeze Cashout
+Verify Identity
+Verify Business
+Sultan Supported
+Featured
+Boost Profile
+Launch Growth Campaign
+Launch Engagement Campaign
+Add Badge
+Add to Rising
+Grant
+Restrict
+Freeze Account
+
+كل action يجب أن يكون حقيقيًا ويحدث state فعليًا.
+
+==================================================
+29. Admin Bulk Actions
+==================================================
+
+أضف bulk selection للمستخدمين.
+
+العمليات المسموحة:
+- Add to campaign
+- Grant Support
+- Grant Badge
+- Add Boost
+- Verify business
+- Export
+- Restrict
+- Review
+
+لا تسمح bulk financial grants إلا بصلاحية Super Admin + confirmation + audit.
+
+==================================================
+30. Announcements
+==================================================
+
+أنشئ Announcement Engine.
+
+أنواع:
+Sultan Supported
+Sultan Rising
+Grant Recipient
+Featured Member
+New Opportunity
+Campaign
+News Alert
+Business Spotlight
+
+Channels:
+Home
+Notifications
+Discover
+Profile
+News
+Opportunity Center
+
+لا تظهر إعلانات الدعم كأنها أخبار مستقلة.
+
+==================================================
+31. Monetization
+==================================================
+
+أضف Revenue streams:
+
+Coin Sales
+Promotion
+Boost
+Featured
+Advertising
+Business subscriptions
+Service commissions
+Marketplace commissions
+Opportunity commissions
+Optional premium tools
+
+لا تجعل كل النشاطات لها نفس العمولة.
+
+أنشئ configurable commission engine.
+
+==================================================
+32. Commission Engine
+==================================================
+
+Super Admin يستطيع تحديد commission حسب:
+
+module
+category
+seller type
+user tier
+campaign
+payment method
+country
+currency
+promotion type
+
+كل commission versioned.
+
+لا تغير عمولة المعاملة القديمة بعد تنفيذها.
+
+==================================================
+33. Economy Rules
+==================================================
+
+أنشئ صفحة:
+
+Economy Rules
+
+Fields:
+coin packages
+coin value
+reward conversion
+recipient share
+platform fee
+campaign fee
+minimum cashout
+maximum cashout
+cashout frequency
+pending period
+risk thresholds
+daily transfer limits
+monthly transfer limits
+new-account limits
+grant limits
+
+كل تغيير:
+Admin
+Reason
+Old value
+New value
+Timestamp
+Version
+
+==================================================
+34. Anti-Fraud
+==================================================
+
+أنشئ Risk Engine.
+
+راقب:
+multiple accounts
+device reuse
+IP anomalies
+circular transfers
+self-support
+rapid purchase/cashout
+chargebacks
+fake engagement
+bot behavior
+referral abuse
+grant abuse
+
+أضف Risk Score.
+
+0–30 Low
+31–60 Medium
+61–80 High
+81–100 Critical
+
+الحساب عالي المخاطر:
+- لا يتم cashout تلقائيًا.
+- يدخل review.
+- يمكن لـSuper Admin override بعد تسجيل السبب.
+
+==================================================
+35. Withdrawal Safety
+==================================================
+
+Cashout states:
+
+Requested
+Pending
+Risk Review
+KYC Review
+Approved
+Processing
+Paid
+Rejected
+Cancelled
+Frozen
+
+لا تغير الحالة بدون Ledger event.
+
+لا تحذف cashout history.
+
+==================================================
+36. Notifications
+==================================================
+
+أنشئ Notifications لكل:
+
+Support received
+Support sent
+Reward earned
+Reward pending
+Reward available
+Cashout requested
+Cashout approved
+Cashout rejected
+Sultan Supported
+Boost activated
+Campaign completed
+Grant received
+Challenge won
+Bounty won
+Task completed
+
+==================================================
+37. User Wallet UI
+==================================================
+
+صمم Wallet احترافيًا.
+
+Header:
+Sultan Wallet
+
+Cards:
+
+Sultan Coins
+Sultan Rewards
+Pending Rewards
+Sultan Power
+
+Actions:
+
+Buy Coins
+Support
+Earn
+Withdraw
+History
+
+أظهر دائمًا الفرق بين:
+usable
+pending
+withdrawable
+non-cashable
+
+لا تستخدم عبارات مضللة.
+
+==================================================
+38. Economy History
+==================================================
+
+كل مستخدم يستطيع رؤية:
+
+Date
+Type
+Amount
+From
+To
+Status
+Reference
+
+Filters:
+Support
+Purchase
+Reward
+Grant
+Boost
+Cashout
+Refund
+Adjustment
+
+==================================================
+39. Support Receipt
+==================================================
+
+بعد الدعم:
+
+أظهر:
+"تم دعم @username بـ 1,000 SC"
+
+مع:
+reason
+timestamp
+transaction ID
+
+ولا تعرض بيانات حساسة.
+
+==================================================
+40. Public Transparency
+==================================================
+
+أضف صفحات مساعدة:
+
+How Sultan Rewards works
+How Support works
+How Cashout works
+Eligibility
+Fees
+Pending period
+Risk review
+Refunds
+Promotions
+Sponsored content
+Sultan Supported
+Verification
+
+القواعد التي تؤثر على المال يجب أن تكون واضحة.
+
+==================================================
+41. Payment Integration
+==================================================
+
+إذا كان Payment Gateway حقيقيًا موجودًا في المشروع:
+استخدمه.
+
+إذا لم يكن:
+لا تختلق integration.
+
+أنشئ abstraction:
+
+PaymentProvider
+PurchaseIntent
+PaymentConfirmation
+Refund
+Webhook
+
+واستخدم mock/local adapter فقط في development mode.
+
+Production يجب أن يرفض إتمام المعاملة الحقيقية إذا لم يوجد provider configured.
+
+==================================================
+42. Cashout Integration
+==================================================
+
+نفس القاعدة.
+
+إذا كان payout provider حقيقيًا موجودًا:
+اربطه.
+
+إذا لم يكن:
+أنشئ adapter architecture فقط.
+
+لا تعرض:
+"Money sent"
+إذا لم يتم إرسال المال فعلًا.
+
+استخدم:
+"Pending Integration"
+أو
+"Processing"
+
+بوضوح.
+
+==================================================
+43. KYC
+==================================================
+
+إذا لم يوجد KYC provider حقيقي:
+أنشئ KYC state machine فقط.
+
+States:
+Not Required
+Required
+Pending
+Verified
+Rejected
+Expired
+Review
+
+لا تزعم التحقق من الهوية بدون provider فعلي.
+
+==================================================
+44. Moroccan-first UX
+==================================================
+
+الواجهة الأساسية:
+Arabic RTL.
+
+دعم:
+Darija
+Arabic
+French
+English
+
+استخدم مصطلحات سهلة للمستخدم المغربي.
+
+Currency display:
+MAD
+
+عند عرض أسعار حقيقية:
+استخدم السعر القادم من configuration/provider.
+
+==================================================
+45. Moroccan Opportunities
+==================================================
+
+أضف filters:
+City
+Region
+Morocco
+Diaspora
+
+Categories:
+Commerce
+Services
+Freelance
+Tourism
+Crafts
+Food
+Technology
+Design
+Marketing
+Education
+Transport
+Real Estate
+Events
+Local Tasks
+
+==================================================
+46. Performance
+==================================================
+
+لا تجعل Economy يبطئ Home أو News.
+
+استخدم:
+pagination
+lazy loading
+caching
+indexes
+debounced search
+virtualized long lists حيث يلزم.
+
+لا تحمل كل transactions دفعة واحدة.
+
+==================================================
+47. Security
+==================================================
+
+جميع العمليات الحساسة:
+- server-side validation
+- permission check
+- transaction validation
+- idempotency
+- audit logging
+
+لا تعتمد على client-side permissions.
+
+لا تسمح للمستخدم بإرسال SC لنفسه.
+
+لا تسمح بتحويل أكثر من balance.
+
+لا تسمح negative balances.
+
+لا تسمح duplicate transaction execution.
+
+==================================================
+48. Data Integrity
+==================================================
+
+العمليات المالية يجب أن تكون atomic.
+
+إذا فشل جزء من العملية:
+لا تسجل نجاحًا جزئيًا.
+
+استخدم transaction IDs وidempotency keys.
+
+لا تعدل ledger history.
+
+أي correction يجب أن يكون:
+new adjustment transaction.
+
+==================================================
+49. Feature Flags
+==================================================
+
+أضف Feature Flags:
+
+economy_enabled
+support_enabled
+rewards_enabled
+cashout_enabled
+grants_enabled
+tasks_enabled
+bounties_enabled
+challenges_enabled
+growth_campaigns_enabled
+news_rewards_enabled
+business_boost_enabled
+diaspora_enabled
+
+Super Admin يستطيع تشغيل/إيقاف الميزات.
+
+==================================================
+50. Emergency Controls
+==================================================
+
+أضف:
+
+Pause Coin Purchases
+Pause Support
+Pause Transfers
+Pause Rewards
+Pause Cashouts
+Pause Growth Campaigns
+Pause Grants
+
+عند التفعيل:
+اعرض رسالة واضحة للمستخدم.
+
+==================================================
+51. Audit Log
+==================================================
+
+كل Admin action حساس يجب تسجيله.
+
+Fields:
+admin_id
+action
+target_user
+target_transaction
+old_value
+new_value
+reason
+timestamp
+IP/session metadata إذا كان النظام يدعم ذلك
+audit_id
+
+Audit logs غير قابلة للحذف من الواجهة العادية.
+
+==================================================
+52. Admin Dashboard
+==================================================
+
+أنشئ Dashboard حقيقية:
+
+ECONOMY HEALTH
+Revenue
+Coin Sales
+Rewards Liability
+Cashout Liability
+Pending
+Fraud
+Refunds
+
+GROWTH
+New Users
+Supported Users
+Campaign Reach
+Follower Growth
+Engagement
+Conversion
+
+OPPORTUNITIES
+Jobs
+Tasks
+Bounties
+Challenges
+Completed
+Rewards Paid
+
+TRUST
+Verified
+Supported
+Flagged
+Risk
+
+NEWS
+Top Sources
+Promoted
+Engagement
+Trust states
+
+==================================================
+53. Business Intelligence
+==================================================
+
+أضف metrics:
+
+ARPU
+ARPPU
+Coin Purchase Conversion
+Support Conversion
+Supporter Retention
+Recipient Retention
+Cashout Rate
+Reward Liability
+Campaign ROI
+Boost ROI
+User LTV
+Fraud Rate
+Chargeback Rate
+Average Support
+Median Support
+Top Categories
+Top Cities
+Top Opportunity Types
+
+==================================================
+54. الاقتصاد لا يعتمد على Whale واحد
+==================================================
+
+أضف dashboard يراقب:
+
+Top 1 supporter share
+Top 10 supporter share
+Top 1 recipient share
+Top 10 recipient share
+
+إذا كان الاقتصاد يعتمد بشكل خطير على عدد صغير من المستخدمين:
+ضع warning.
+
+==================================================
+55. Recommendations
+==================================================
+
+لا تجعل الخوارزمية تعطي كل الظهور للحسابات الكبيرة فقط.
+
+أنشئ discovery balance:
+
+Established
+Rising
+New
+Local
+Relevant
+
+استخدم engagement quality وretention وليس follower count فقط.
+
+==================================================
+56. No Fake Economy
+==================================================
+
+ممنوع:
+fake followers
+fake likes
+fake comments
+fake transactions
+fake cashouts
+fake revenue
+fake verification
+fake payment confirmation
+
+في development mode:
+يمكن استخدام seed/demo data فقط إذا كانت موسومة DEMO.
+
+في production:
+لا تستخدم demo data.
+
+==================================================
+57. UX Quality
+==================================================
+
+لا تضف شاشة مزدحمة.
+
+استخدم:
+cards
+tabs
+filters
+charts
+drawer
+modal
+confirmation dialogs
+
+كل عملية مالية حساسة تحتاج confirmation.
+
+الأزرار يجب أن تعطي feedback:
+loading
+success
+error
+pending
+
+لا يوجد dead button.
+
+==================================================
+58. Mobile-first
+==================================================
+
+Wallet
+Support
+Cashout
+Campaigns
+Opportunities
+User Command Center
+
+يجب أن تعمل بشكل ممتاز على الهاتف.
+
+==================================================
+59. Final Integration
+==================================================
+
+ادمج النظام في:
+
+Home
+Profiles
+News
+Marketplace
+Services
+Jobs
+Business
+Messaging
+Notifications
+Search
+Discover
+Super Admin
+
+ولا تضف Navigation ضخمة.
+
+استخدم:
+Wallet icon
+Support actions
+Opportunity Center
+Economy داخل Account
+Economy داخل Super Admin
+
+==================================================
+60. Deployment Safety
+==================================================
+
+قبل إنهاء المهمة:
+
+1. شغّل build/lint/tests الموجودة.
+2. أصلح الأخطاء الناتجة عن التغييرات فقط.
+3. اختبر routes.
+4. اختبر authentication.
+5. اختبر permissions.
+6. اختبر Wallet.
+7. اختبر Ledger.
+8. اختبر Support.
+9. اختبر Reward.
+10. اختبر Cashout states.
+11. اختبر Admin overrides.
+12. اختبر Feature Flags.
+13. اختبر Audit Logs.
+14. اختبر News integration.
+15. اختبر Marketplace integration.
+16. اختبر Services integration.
+17. اختبر mobile layouts.
+18. تأكد من عدم وجود console errors جديدة.
+19. تأكد من عدم وجود dead buttons.
+20. تأكد من عدم وجود fake production claims.
+
+==================================================
+61. التنفيذ المرحلي
+==================================================
+
+نفذ بالترتيب:
+
+PHASE 1
+Architecture
+Ledger
+Wallet
+Currency models
+Economy rules
+Permissions
+
+PHASE 2
+Support
+Transfers
+Rewards
+Pending Rewards
+Power
+
+PHASE 3
+Cashout eligibility
+Cashout workflow
+KYC states
+Risk
+
+PHASE 4
+Super Admin Economy
+User Command Center
+Admin Overrides
+Audit
+
+PHASE 5
+Influence Center
+Boost
+Featured
+Growth Campaigns
+
+PHASE 6
+Sultan Rising
+Sultan Supported
+Grants
+Badges
+
+PHASE 7
+Tasks
+Bounties
+Challenges
+Opportunity Center
+
+PHASE 8
+News Economy
+Trust Layer
+Morocco/Diaspora
+
+PHASE 9
+Analytics
+Fraud
+Economy Health
+ROI
+
+بعد كل Phase:
+اختبر النظام قبل الانتقال للمرحلة التالية.
+
+إذا فشلت مرحلة:
+أصلحها قبل الانتقال.
+
+==================================================
+62. FINAL RULE
+==================================================
+
+لا تشرح لي ما يمكن بناؤه.
+
+نفذ.
+
+لا تنشئ Prototype وهميًا.
+
+لا تضع UI فقط بدون state/data behavior.
+
+لا تنشئ API وهميًا على أنه حقيقي.
+
+لا تكسر أي جزء موجود.
+
+لا تعيد تصميم Sultan بالكامل.
+
+لا تحذف أي ميزة موجودة.
+
+لا تغير هوية Sultan.
+
+لا تنشئ نظامًا ماليًا حقيقيًا بدون integration فعلي.
+
+لا تصنع followers/likes مزيفة.
+
+كل Promotion يجب أن تكون قابلة للتتبع وموسومة عندما تكون مدفوعة.
+
+كل Reward يجب أن يكون له مصدر واضح.
+
+كل Cashout يجب أن يكون له status واضح.
+
+كل Admin Override يجب أن يكون له سبب وAudit Log.
+
+كل Wallet transaction يجب أن تكون Ledger-based.
+
+كل Feature يجب أن تعمل فعليًا أو تكون معلّمة بوضوح على أنها تحتاج integration خارجي.
+
+الهدف النهائي:
+
+تحويل SULTAN إلى اقتصاد رقمي مغربي متكامل يجمع:
+Support
+Rewards
+Commerce
+Services
+Jobs
+Tasks
+Bounties
+Challenges
+Grants
+News
+Business
+Reputation
+Visibility
+Growth
+Morocco
+Diaspora
+
+مع الحفاظ الكامل على جميع وظائف SULTAN الموجودة مسبقًا.

@@ -1,0 +1,728 @@
+     1→    25→    54→  isFeatureEnabled: (key: string) => boolean;
+     2→    26→    55→  toggleFeature: (key: string, adminId: string) => void;
+     3→    27→    56→
+     4→    28→    57→  // ─── Challenges ────────────────────────────────────────────────────────────
+     5→    29→    58→  challenges: Challenge[];
+     6→    30→    59→  addChallenge: (challenge: Omit<Challenge, 'id' | 'createdAt' | 'updatedAt'>) => string;
+     7→    31→    60→  updateChallengeStatus: (id: string, status: string) => void;
+     8→    32→    61→
+     9→    33→    62→  // ─── Bounties ──────────────────────────────────────────────────────────────
+    10→    34→    63→  bounties: Bounty[];
+    11→    35→    64→  addBounty: (bounty: Omit<Bounty, 'id' | 'createdAt' | 'updatedAt'>) => string;
+    12→    36→    65→  updateBountyStatus: (id: string, status: string) => void;
+    13→    37→    66→
+    14→    38→    67→  // ─── Tasks ─────────────────────────────────────────────────────────────────
+    15→    39→    68→  tasks: SultanTask[];
+    16→    40→    69→  addTask: (task: Omit<SultanTask, 'id' | 'createdAt' | 'updatedAt'>) => string;
+    17→    41→    70→  updateTaskStatus: (id: string, status: string) => void;
+    18→    42→    71→
+    19→    43→    72→  // ─── Grants ────────────────────────────────────────────────────────────────
+    20→    44→    73→  grantCampaigns: GrantCampaign[];
+    21→    45→    74→  grantApplications: GrantApplication[];
+    22→    46→    75→  addGrantCampaign: (campaign: Omit<GrantCampaign, 'id' | 'createdAt' | 'updatedAt'>) => string;
+    23→    47→    76→  applyForGrant: (campaignId: string; userId: string; reason: string) => string;
+    24→    48→    77→  reviewGrantApplication: (applicationId: string, status: 'approved' | 'rejected', adminId: string, notes: string) => void;
+    25→    49→    78→
+    26→    50→    79→  // ─── Growth Campaigns ─────────────────────────────────────────────────────
+    27→    51→    80→  campaigns: GrowthCampaign[];
+    28→    52→    81→  addCampaign: (campaign: Omit<GrowthCampaign, 'id' | 'createdAt' | 'updatedAt'>) => string;
+    29→    53→    82→  updateCampaignStatus: (id: string, status: string) => void;
+    30→    54→    83→
+    31→    55→    84→  // ─── Risk ──────────────────────────────────────────────────────────────────
+    32→    56→    85→  riskAssessments: Record<string, RiskAssessment>;
+    33→    57→    86→  getRiskScore: (userId: string) => RiskAssessment;
+    34→    58→    87→  assessRisk: (userId: string) => RiskAssessment;
+    35→    59→    88→
+    36→    60→    89→  // ─── Commission ────────────────────────────────────────────────────────────
+    37→    61→    90→  commissionRules: CommissionRule[];
+    38→    62→    91→  calculateCommission: (module: string, amount: number, category?: string) => number;
+    39→    63→    92→  addCommissionRule: (rule: Omit<CommissionRule, 'id' | 'createdAt' | 'version'>) => void;
+    40→    64→    93→
+    41→    65→    94→  // ─── Admin / Audit ─────────────────────────────────────────────────────────
+    42→    66→    95→  auditLog: AuditLogEntry[];
+    43→    67→    96→  adminOverrides: AdminOverride[];
+    44→    68→    97→  addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp' | 'auditId'>) => string;
+    45→    69→    98→  addAdminOverride: (override: Omit<AdminOverride, 'id' | 'timestamp' | 'auditId'>) => string;
+    46→    70→    99→
+    47→    71→   100→  // ─── Notifications ─────────────────────────────────────────────────────────
+    48→    72→   101→  economyNotifications: EconomyNotification[];
+    49→    73→   102→  addEconomyNotification: (notification: Omit<EconomyNotification, 'id' | 'createdAt' | 'read'>) => void;
+    50→    74→   103→  markNotificationRead: (id: string) => void;
+    51→    75→   104→  getUnreadCount: (userId: string) => number;
+    52→    76→   105→
+    53→    77→   106→  // ─── Coin Packages ─────────────────────────────────────────────────────────
+    54→    78→   107→  coinPackages: CoinPackage[];
+    55→    79→   108→
+    56→    80→   109→  // ─── Integration Status ────────────────────────────────────────────────────
+    57→    81→   110→  integrationStatus: Record<string, IntegrationStatus>;
+    58→    82→   111→
+    59→    83→   112→  // ─── Emergency Controls ────────────────────────────────────────────────────
+    60→    84→   113→  emergencyPauses: Record<string, boolean>;
+    61→    85→   114→  pauseFeature: (feature: string) => void;
+    62→    86→   115→  unpauseFeature: (feature: string) => void;
+    63→    87→   116→  isFeaturePaused: (feature: string) => boolean;
+    64→    88→   117→
+    65→    89→   118→  // ─── Admin Economy Actions ─────────────────────────────────────────────────
+    66→    90→   119→  adminGrantCoins: (adminId: string, userId: string, amount: number, reason: string) => string;
+    67→    91→   120→  adminGrantReward: (adminId: string, userId: string, amount: number, reason: string) => string;
+    68→    92→   121→  adminGrantPower: (adminId: string, userId: string, amount: number, reason: string) => string;
+    69→    93→   122→  adminEnableCashout: (adminId: string, userId: string, reason: string) => void;
+    70→    94→   123→  adminDisableCashout: (adminId: string, userId: string, reason: string) => void;
+    71→    95→   124→  adminFreezeCashout: (adminId: string, userId: string, reason: string) => void;
+    72→    96→   125→  adminSultanSupported: (adminId: string, userId: string, data: { duration: string; surfaces: string[]; budget: number; reason: string }) => void;
+    73→    97→   126→  adminAddBadge: (adminId: string, userId: string, badge: string, reason: string) => void;
+    74→    98→   127→  adminLaunchBoost: (adminId: string, params: Omit<GrowthCampaign, 'id' | 'createdAt' | 'updatedAt' | 'results'>) => string;
+    75→    99→   128→
+    76→   100→   129→  // ─── Stats ─────────────────────────────────────────────────────────────────
+    77→   101→   130→  getEconomyStats: () => {
+    78→   102→   131→    totalCoinSales: number; coinsCirculating: number; coinsSpent: number;
+    79→   103→   132→    coinsTransferred: number; rewardsGenerated: number; rewardsPending: number;
+    80→   104→   133→    rewardsPaid: number; cashoutVolume: number; platformRevenue: number;
+    81→   105→   134→    fees: number; refunds: number; chargebacks: number; fraudPrevented: number;
+    82→   106→   135→    activeSupporters: number; supportedUsers: number;
+    83→   107→   136→  };
+    84→   108→   137→}
+    85→   109→   138→
+    86→   110→   139→// ─── Helpers ─────────────────────────────────────────────────────────────────
+    87→   111→   140→
+    88→   112→   141→function generateId(): string {
+    89→   113→   142→  return crypto.randomUUID();
+    90→   114→   143→}
+    91→   115→   144→
+    92→   116→   145→function now(): string {
+    93→   117→   146→  return new Date().toISOString();
+    94→   118→   147→}
+    95→   119→   148→
+    96→   120→   149→function createEmptyWallet(userId: string): UserWallet {
+    97→   121→   150→  const emptyBalance = (currency: any) => ({
+    98→   122→   151→    currency, balance: 0, available: 0, pending: 0, frozen: 0,
+    99→   123→   152→    lifetimeReceived: 0, lifetimeGiven: 0, lifetimeWithdrawn: 0,
+   100→   124→   153→  });
+   101→   125→   154→  return {
+   102→   126→   155→    userId,
+   103→   127→   156→    coins: emptyBalance('SC' as any),
+   104→   128→   157→    rewards: emptyBalance('SR' as any),
+   105→   129→   158→    power: emptyBalance('SP' as any),
+   106→   130→   159→    pendingRewards: emptyBalance('SR' as any),
+   107→   131→   160→    updatedAt: now(),
+   108→   132→   161→  };
+   109→   133→   162→}
+   110→   134→   163→
+   111→   135→   164→// ─── Store Implementation ────────────────────────────────────────────────────
+   112→   136→   165→
+   113→   137→   166→export const useEconomyStore = create<EconomyState>()((set, get) => ({
+   114→   138→   167→  // ─── Wallet ────────────────────────────────────────────────────────────────
+   115→   139→   168→  wallet: null,
+   116→   140→   169→
+   117→   141→   170→  initWallet: (userId: string) => {
+   118→   142→   171→    const existing = get().wallet;
+   119→   143→   172→    if (existing && existing.userId === userId) return;
+   120→   144→   173→    const wallet = createEmptyWallet(userId);
+   121→   145→   174→    // Give demo user some coins
+   122→   146→   175→    if (userId === 'demo-001') {
+   123→   147→   176→      wallet.coins = { ...wallet.coins, balance: 2500, available: 2500, lifetimeReceived: 5000, lifetimeGiven: 2500 };
+   124→   148→   177→      wallet.rewards = { ...wallet.rewards, balance: 750, available: 750, lifetimeReceived: 1200 };
+   125→   149→   178→      wallet.pendingRewards = { ...wallet.pendingRewards, pending: 200 };
+   126→   150→   179→      wallet.power = { ...wallet.power, balance: 1200, available: 1200, lifetimeReceived: 2000 };
+   127→   151→   180→    } else if (userId === 'admin-001') {
+   128→   152→   181→      wallet.coins = { ...wallet.coins, balance: 99999, available: 99999 };
+   129→   153→   182→      wallet.power = { ...wallet.power, balance: 9999, available: 9999 };
+   130→   154→   183→    }
+   131→   155→   184→    set({ wallet });
+   132→   156→   185→  },
+   133→   157→   186→
+   134→   158→   187→  getWalletBalance: (currency) => {
+   135→   159→   188→    const w = get().wallet;
+   136→   160→   189→    if (!w) return 0;
+   137→   161→   190→    switch (currency) {
+   138→   162→   191→      case 'SC': return w.coins.balance;
+   139→   163→   192→      case 'SR': return w.rewards.balance;
+   140→   164→   193→      case 'SP': return w.power.balance;
+   141→   165→   194→      default: return 0;
+   142→   166→   195→    }
+   143→   167→   196→  },
+   144→   168→   197→
+   145→   169→   198→  getAvailableBalance: (currency) => {
+   146→   170→   199→    const w = get().wallet;
+   147→   171→   200→    if (!w) return 0;
+   148→   172→   201→    switch (currency) {
+   149→   173→   202→      case 'SC': return w.coins.available;
+   150→   174→   203→      case 'SR': return w.rewards.available;
+   151→   175→   204→      case 'SP': return w.power.available;
+   152→   176→   205→      default: return 0;
+   153→   177→   206→    }
+   154→   178→   207→  },
+   155→   179→   208→
+   156→   180→   209→  getPendingBalance: (currency) => {
+   157→   181→   210→    const w = get().wallet;
+   158→   182→   211→    if (!w) return 0;
+   159→   183→   212→    return w.pendingRewards.pending;
+   160→   184→   213→  },
+   161→   185→   214→
+   162→   186→   215→  // ─── Ledger ────────────────────────────────────────────────────────────────
+   163→   187→   216→  ledger: [],
+   164→   188→   217→
+   165→   189→   218→  addLedgerEntry: (entry) => {
+   166→   190→   219→    const id = generateId();
+   167→   191→   220→    const rule = get().getRule('platform_fee_percent');
+   168→   192→   221→    const tx: LedgerTransaction = {
+   169→   193→   222→      ...entry,
+   170→   194→   223→      id,
+   171→   195→   224→      createdAt: now(),
+   172→   196→   225→      ruleVersion: rule?.version ?? 1,
+   173→   197→   226→    };
+   174→   198→   227→    set((s) => ({ ledger: [tx, ...s.ledger] }));
+   175→   199→   228→    return id;
+   176→   200→   229→  },
+   177→   201→   230→
+   178→   202→   231→  getTransactionHistory: (userId, filters) => {
+   179→   203→   232→    let txs = get().ledger.filter((t) => t.userId === userId);
+   180→   204→   233→    if (filters?.type) txs = txs.filter((t) => t.type === filters.type);
+   181→   205→   234→    if (filters?.currency) txs = txs.filter((t) => t.currency === filters.currency);
+   182→   206→   235→    if (filters?.limit) txs = txs.slice(0, filters.limit);
+   183→   207→   236→    return txs;
+   184→   208→   237→  },
+   185→   209→   238→
+   186→   210→   239→  // ─── Support ───────────────────────────────────────────────────────────────
+   187→   211→   240→  supportEvents: [],
+   188→   212→   241→
+   189→   213→   242→  executeSupport: (params) => {
+   190→   214→   243→    const { supporterId, recipientId, amount, message, targetType, targetId } = params;
+   191→   215→   244→    const state = get();
+   192→   216→   245→
+   193→   217→   246→    // Validation: cannot support self
+   194→   218→   247→    if (supporterId === recipientId) {
+   195→   219→   248→      return { success: false, transactionId: '', error: 'لا يمكنك دعم نفسك' };
+   196→   220→   249→    }
+   197→   221→   250→
+   198→   222→   251→    // Check feature enabled
+   199→   223→   252→    if (!state.isFeatureEnabled('support_enabled')) {
+   200→   224→   253→      return { success: false, transactionId: '', error: 'الدعم معطل حالياً' };
+   201→   225→   254→    }
+   202→   226→   255→
+   203→   227→   256→    // Check emergency pause
+   204→   228→   257→    if (state.isFeaturePaused('support')) {
+   205→   229→   258→      return { success: false, transactionId: '', error: 'الدعم متوقف مؤقتاً' };
+   206→   230→   259→    }
+   207→   231→   260→
+   208→   232→   261→    // Check balance
+   209→   233→   262→    const feeRate = state.getRule('platform_fee_percent')?.value ?? 5;
+   210→   234→   263→    const fee = Math.round((amount * feeRate) / 100);
+   211→   235→   264→    const total = amount + fee;
+   212→   236→   265→    const available = state.getAvailableBalance('SC');
+   213→   237→   266→
+   214→   238→   267→    if (available < total) {
+   215→   239→   268→      return { success: false, transactionId: '', error: 'رصيدك غير كافٍ' };
+   216→   240→   269→    }
+   217→   241→   270→
+   218→   242→   271→    // Execute
+   219→   243→   272→    const txId = generateId();
+   220→   244→   273→    const event: SupportEvent = {
+   221→   245→   274→      id: generateId(), supporterId, recipientId, amount, fee,
+   222→   246→   275→      recipientReceives: amount,
+   223→   247→   276→      currency: 'SC', message, targetType: targetType as any, targetId,
+   224→   248→   277→      transactionId: txId, createdAt: now(),
+   225→   249→   278→    };
+   226→   250→   279→
+   227→   251→   280→    // Deduct from supporter
+   228→   252→   281→    state.addLedgerEntry({
+   229→   253→   282→      userId: supporterId, source: 'wallet', destination: `user:${recipientId}`,
+   230→   254→   283→      currency: 'SC', amount: -total, type: 'support_sent', status: 'completed',
+   231→   255→   284→      referenceId: targetId, campaignId: null, completedAt: now(),
+   232→   256→   285→      createdBy: supporterId, riskStatus: 'low', metadata: { message, targetType, targetId }, auditId: null,
+   233→   257→   286→    });
+   234→   258→   287→
+   235→   259→   288→    // Add to recipient
+   236→   260→   289→    state.addLedgerEntry({
+   237→   261→   290→      userId: recipientId, source: `user:${supporterId}`, destination: 'wallet',
+   238→   262→   291→      currency: 'SC', amount, type: 'support_received', status: 'completed',
+   239→   263→   292→      referenceId: targetId, campaignId: null, completedAt: now(),
+   240→   264→   293→      createdBy: supporterId, riskStatus: 'low', metadata: { message, targetType, targetId }, auditId: null,
+   241→   265→   294→    });
+   242→   266→   295→
+   243→   267→   296→    // Update wallet balances
+   244→   268→   297→    set((s) => {
+   245→   269→   298→      if (!s.wallet || s.wallet.userId !== supporterId) return s;
+   246→   270→   299→      return {
+   247→   271→   300→        wallet: {
+   248→   272→   301→          ...s.wallet,
+   249→   273→   302→          coins: { ...s.wallet.coins, balance: s.wallet.coins.balance - total, available: s.wallet.coins.available - total, lifetimeGiven: s.wallet.coins.lifetimeGiven + total },
+   250→   274→   303→        },
+   251→   275→   304→      };
+   252→   276→   305→    });
+   253→   277→   306→
+   254→   278→   307→    // Add support event
+   255→   279→   308→    set((s) => ({ supportEvents: [...s.supportEvents, event] }));
+   256→   280→   309→
+   257→   281→   310→    // Add notification for recipient
+   258→   282→   311→    state.addEconomyNotification({
+   259→   283→   312→      userId: recipientId, type: 'support_received',
+   260→   284→   313→      title: 'دعم جديد',
+   261→   285→   314→      body: `تم دعمك بـ ${amount.toLocaleString()} SC`,
+   262→   286→   315→      metadata: { supporterId, amount, message, txId },
+   263→   287→   316→    });
+   264→   288→   317→
+   265→   289→   318→    return { success: true, transactionId: txId };
+   266→   290→   319→  },
+   267→   291→   320→
+   268→   292→   321→  getSupporterStats: (userId) => {
+   269→   293→   322→    const events = get().supportEvents.filter((e) => e.supporterId === userId);
+   270→   294→   323→    return {
+   271→   295→   324→      totalGiven: events.reduce((sum, e) => sum + e.amount + e.fee, 0),
+   272→   296→   325→      peopleSupported: new Set(events.map((e) => e.recipientId)).size,
+   273→   297→   326→    };
+   274→   298→   327→  },
+   275→   299→   328→
+   276→   300→   329→  getRecipientStats: (userId) => {
+   277→   301→   330→    const events = get().supportEvents.filter((e) => e.recipientId === userId);
+   278→   302→   331→    return {
+   279→   303→   332→      totalReceived: events.reduce((sum, e) => sum + e.recipientReceives, 0),
+   280→   304→   333→      supporters: new Set(events.map((e) => e.supporterId)).size,
+   281→   305→   334→    };
+   282→   306→   335→  },
+   283→   307→   336→
+   284→   308→   337→  // ─── Rewards ───────────────────────────────────────────────────────────────
+   285→   309→   338→  addReward: (userId, amount, source, referenceId) => {
+   286→   310→   339→    // Add as pending first
+   287→   311→   340→    const txId = get().addLedgerEntry({
+   288→   312→   341→      userId, source, destination: 'wallet', currency: 'SR', amount,
+   289→   313→   342→      type: 'reward_pending', status: 'pending', referenceId,
+   290→   314→   343→      campaignId: null, completedAt: null, createdBy: null,
+   291→   315→   344→      riskStatus: 'low', metadata: { source }, auditId: null,
+   292→   316→   345→    });
+   293→   317→   346→    return txId;
+   294→   318→   347→  },
+   295→   319→   348→
+   296→   320→   349→  movePendingToAvailable: (transactionId) => {
+   297→   321→   350→    set((s) => ({
+   298→   322→   351→      ledger: s.ledger.map((t) =>
+   299→   323→   352→        t.id === transactionId
+   300→   324→   353→          ? { ...t, type: 'reward_available' as any, status: 'completed' as any, completedAt: now() }
+   301→   325→   354→          : t
+   302→   326→   355→      ),
+   303→   327→   356→    }));
+   304→   328→   357→  },
+   305→   329→   358→
+   306→   330→   359→  // ─── Cashout ───────────────────────────────────────────────────────────────
+   307→   331→   360→  cashoutRequests: [],
+   308→   332→   361→
+   309→   333→   362→  getCashoutEligibility: (userId) => {
+   310→   334→   363→    const state = get();
+   311→   335→   364→    if (!state.isFeatureEnabled('cashout_enabled')) {
+   312→   336→   365→      return { eligible: false, reason: 'السحب غير مفعّل حالياً', reviewStatus: 'none' as any, riskStatus: 'low' as any, kycStatus: 'not_required' as any, approvedBy: null, approvedAt: null, expiresAt: null };
+   313→   337→   366→    }
+   314→   338→   367→    if (state.isFeaturePaused('cashouts')) {
+   315→   339→   368→      return { eligible: false, reason: 'السحب متوقف مؤقتاً من قبل الإدارة', reviewStatus: 'none' as any, riskStatus: 'low' as any, kycStatus: 'not_required' as any, approvedBy: null, approvedAt: null, expiresAt: null };
+   316→   340→   369→    }
+   317→   341→   370→    const risk = state.getRiskScore(userId);
+   318→   342→   371→    if (risk.level === 'high' || risk.level === 'critical') {
+   319→   343→   372→      return { eligible: false, reason: 'حسابك يحتاج مراجعة أمنية', reviewStatus: 'pending' as any, riskStatus: risk.level, kycStatus: 'not_required' as any, approvedBy: null, approvedAt: null, expiresAt: null };
+   320→   344→   373→    }
+   321→   345→   374→    return { eligible: true, reason: 'مؤهل', reviewStatus: 'approved' as any, riskStatus: 'low' as any, kycStatus: 'not_required' as any, approvedBy: null, approvedAt: null, expiresAt: null };
+   322→   346→   375→  },
+   323→   347→   376→
+   324→   348→   377→  requestCashout: (userId, amount) => {
+   325→   349→   378→    const state = get();
+   326→   350→   379→    const eligibility = state.getCashoutEligibility(userId);
+   327→   351→   380→    if (!eligibility.eligible) {
+   328→   352→   381→      return { success: false, cashoutId: '', error: eligibility.reason };
+   329→   353→   382→    }
+   330→   354→   383→    const minCashout = (state.getRule('min_cashout_sr')?.value ?? 500) as number;
+   331→   355→   384→    if (amount < minCashout) {
+   332→   356→   385→      return { success: false, cashoutId: '', error: `الحد الأدنى للسحب ${minCashout.toLocaleString()} SR` };
+   333→   357→   386→    }
+   334→   358→   387→    const available = state.getAvailableBalance('SR');
+   335→   359→   388→    if (available < amount) {
+   336→   360→   389→      return { success: false, cashoutId: '', error: 'رصيدك المتاح غير كافٍ' };
+   337→   361→   390→    }
+   338→   362→   391→
+   339→   363→   392→    const id = generateId();
+   340→   364→   393→    const cashout: CashoutRequest = {
+   341→   365→   394→      id, userId, amount, currency: 'SR', status: 'requested',
+   342→   366→   395→      method: 'bank_transfer', methodDetails: {}, eligibility,
+   343→   367→   396→      requestedAt: now(), processedAt: null, completedAt: null,
+   344→   368→   397→      rejectionReason: null, transactionId: null, auditId: null,
+   345→   369→   398→    };
+   346→   370→   399→    set((s) => ({
+   347→   371→   400→      cashoutRequests: [...s.cashoutRequests, cashout],
+   348→   372→   401→      wallet: s.wallet && s.wallet.userId === userId ? {
+   349→   373→   402→        ...s.wallet,
+   350→   374→   403→        rewards: { ...s.wallet.rewards, available: s.wallet.rewards.available - amount, pending: s.wallet.rewards.pending + amount },
+   351→   375→   404→      } : s.wallet,
+   352→   376→   405→    }));
+   353→   377→   406→    return { success: true, cashoutId: id };
+   354→   378→   407→  },
+   355→   379→   408→
+   356→   380→   409→  updateCashoutStatus: (cashoutId, status, reason) => {
+   357→   381→   410→    set((s) => ({
+   358→   382→   411→      cashoutRequests: s.cashoutRequests.map((c) =>
+   359→   383→   412→        c.id === cashoutId
+   360→   384→   413→          ? { ...c, status: status as any, processedAt: now(), rejectionReason: reason ?? c.rejectionReason }
+   361→   385→   414→          : c
+   362→   386→   415→      ),
+   363→   387→   416→    }));
+   364→   388→   417→  },
+   365→   389→   418→
+   366→   390→   419→  // ─── Rules Engine ──────────────────────────────────────────────────────────
+   367→   391→   420→  economyRules: [...DEFAULT_ECONOMY_RULES],
+   368→   392→   421→
+   369→   393→   422→  getRule: (key) => get().economyRules.find((r) => r.key === key),
+   370→   394→   423→
+   371→   395→   424→  updateRule: (key, newValue, adminId, reason) => {
+   372→   396→   425→    set((s) => ({
+   373→   397→   426→      economyRules: s.economyRules.map((r) => {
+   374→   398→   427→        if (r.key !== key) return r;
+   375→   399→   428→        const updated: EconomyRule = {
+   376→   400→   429→          ...r, value: newValue, previousValue: r.value,
+   377→   401→   430→          version: r.version + 1, updatedBy: adminId, updatedAt: now(), changeReason: reason,
+   378→   402→   431→        };
+   379→   403→   432→        return updated;
+   380→   404→   433→      }),
+   381→   405→   434→    }));
+   382→   406→   435→    get().addAuditEntry({
+   383→   407→   436→      adminId, action: 'update_economy_rule', targetUser: null, targetTransaction: null,
+   384→   408→   437→      oldValue: { key, value: get().economyRules.find((r) => r.key === key)?.previousValue },
+   385→   409→   438→      newValue: { key, value: newValue }, reason, category: 'economy',
+   386→   410→   439→    });
+   387→   411→   440→  },
+   388→   412→   441→
+   389→   413→   442→  // ─── Feature Flags ─────────────────────────────────────────────────────────
+   390→   414→   443→  featureFlags: [...DEFAULT_FEATURE_FLAGS],
+   391→   415→   444→
+   392→   416→   445→  isFeatureEnabled: (key) => {
+   393→   417→   446→    const flag = get().featureFlags.find((f) => f.key === key);
+   394→   418→   447→    if (!flag) return false;
+   395→   419→   448→    if (!flag.enabled) return false;
+   396→   420→   449→    return !get().isFeaturePaused(key);
+   397→   421→   450→  },
+   398→   422→   451→
+   399→   423→   452→  toggleFeature: (key, adminId) => {
+   400→   424→   453→    set((s) => ({
+   401→   425→   454→      featureFlags: s.featureFlags.map((f) =>
+   402→   426→   455→        f.key === key ? { ...f, enabled: !f.enabled } : f
+   403→   427→   456→      ),
+   404→   428→   457→    }));
+   405→   429→   458→    get().addAuditEntry({
+   406→   430→   459→      adminId, action: 'toggle_feature_flag', targetUser: null, targetTransaction: null,
+   407→   431→   460→      oldValue: { key, enabled: get().featureFlags.find((f) => f.key === key)?.enabled },
+   408→   432→   461→      newValue: { key, enabled: !get().featureFlags.find((f) => f.key === key)?.enabled },
+   409→   433→   462→      reason: 'تغيير ميزة', category: 'system',
+   410→   434→   463→    });
+   411→   435→   464→  },
+   412→   436→   465→
+   413→   437→   466→  // ─── Challenges ────────────────────────────────────────────────────────────
+   414→   438→   467→  challenges: [],
+   415→   439→   468→  addChallenge: (c) => {
+   416→   440→   469→    const id = generateId();
+   417→   441→   470→    set((s) => ({ challenges: [...s.challenges, { ...c, id, createdAt: now(), updatedAt: now() }] }));
+   418→   442→   471→    return id;
+   419→   443→   472→  },
+   420→   444→   473→  updateChallengeStatus: (id, status) => {
+   421→   445→   474→    set((s) => ({
+   422→   446→   475→      challenges: s.challenges.map((c) => c.id === id ? { ...c, status: status as any, updatedAt: now() } : c),
+   423→   447→   476→    }));
+   424→   448→   477→  },
+   425→   449→   478→
+   426→   450→   479→  // ─── Bounties ──────────────────────────────────────────────────────────────
+   427→   451→   480→  bounties: [],
+   428→   452→   481→  addBounty: (b) => {
+   429→   453→   482→    const id = generateId();
+   430→   454→   483→    set((s) => ({ bounties: [...s.bounties, { ...b, id, createdAt: now(), updatedAt: now() }] }));
+   431→   455→   484→    return id;
+   432→   456→   485→  },
+   433→   457→   486→  updateBountyStatus: (id, status) => {
+   434→   458→   487→    set((s) => ({
+   435→   459→   488→      bounties: s.bounties.map((b) => b.id === id ? { ...b, status: status as any, updatedAt: now() } : b),
+   436→   460→   489→    }));
+   437→   461→   490→  },
+   438→   462→   491→
+   439→   463→   492→  // ─── Tasks ─────────────────────────────────────────────────────────────────
+   440→   464→   493→  tasks: [],
+   441→   465→   494→  addTask: (t) => {
+   442→   466→   495→    const id = generateId();
+   443→   467→   496→    set((s) => ({ tasks: [...s.tasks, { ...t, id, createdAt: now(), updatedAt: now() }] }));
+   444→   468→   497→    return id;
+   445→   469→   498→  },
+   446→   470→   499→  updateTaskStatus: (id, status) => {
+   447→   471→   500→    set((s) => ({
+   448→   472→   501→      tasks: s.tasks.map((t) => t.id === id ? { ...t, status: status as any, updatedAt: now() } : t),
+   449→   473→   502→    }));
+   450→   474→   503→  },
+   451→   475→   504→
+   452→   476→   505→  // ─── Grants ────────────────────────────────────────────────────────────────
+   453→   477→   506→  grantCampaigns: [],
+   454→   478→   507→  grantApplications: [],
+   455→   479→   508→  addGrantCampaign: (c) => {
+   456→   480→   509→    const id = generateId();
+   457→   481→   510→    set((s) => ({ grantCampaigns: [...s.grantCampaigns, { ...c, id, createdAt: now(), updatedAt: now() }] }));
+   458→   482→   511→    return id;
+   459→   483→   512→  },
+   460→   484→   513→  applyForGrant: (campaignId, userId, reason) => {
+   461→   485→   514→    const id = generateId();
+   462→   486→   515→    set((s) => ({
+   463→   487→   516→      grantApplications: [...s.grantApplications, {
+   464→   488→   517→        id, campaignId, userId, status: 'pending', amount: 0, reason,
+   465→   489→   518→        reviewNotes: null, reviewedBy: null, reviewedAt: null, createdAt: now(),
+   466→   490→   519→      }],
+   467→   491→   520→    }));
+   468→   492→   521→    return id;
+   469→   493→   522→  },
+   470→   494→   523→  reviewGrantApplication: (applicationId, status, adminId, notes) => {
+   471→   495→   524→    set((s) => ({
+   472→   496→   525→      grantApplications: s.grantApplications.map((a) =>
+   473→   497→   526→        a.id === applicationId
+   474→   498→   527→          ? { ...a, status: status as any, reviewedBy: adminId, reviewedAt: now(), reviewNotes: notes }
+   475→   499→   528→          : a
+   476→   500→   529→      ),
+   477→   501→   530→    }));
+   478→   502→   531→    get().addAuditEntry({
+   479→   503→   532→      adminId, action: 'review_grant_application', targetUser: null, targetTransaction: null,
+   480→   504→   533→      oldValue: { applicationId, status: 'pending' },
+   481→   505→   534→      newValue: { applicationId, status }, reason: notes, category: 'grant',
+   482→   506→   535→    });
+   483→   507→   536→  },
+   484→   508→   537→
+   485→   509→   538→  // ─── Growth Campaigns ─────────────────────────────────────────────────────
+   486→   510→   539→  campaigns: [],
+   487→   511→   540→  addCampaign: (c) => {
+   488→   512→   541→    const id = generateId();
+   489→   513→   542→    set((s) => ({ campaigns: [...s.campaigns, { ...c, id, createdAt: now(), updatedAt: now(), results: c.results ?? { impressions: 0, clicks: 0, follows: 0, engagement: 0, reach: 0 } }] }));
+   490→   514→   543→    return id;
+   491→   515→   544→  },
+   492→   516→   545→  updateCampaignStatus: (id, status) => {
+   493→   517→   546→    set((s) => ({
+   494→   518→   547→      campaigns: s.campaigns.map((c) => c.id === id ? { ...c, status: status as any, updatedAt: now() } : c),
+   495→   519→   548→    }));
+   496→   520→   549→  },
+   497→   521→   550→
+   498→   522→   551→  // ─── Risk ──────────────────────────────────────────────────────────────────
+   499→   523→   552→  riskAssessments: {},
+   500→   524→   553→  getRiskScore: (userId) => {
+   501→   525→   554→    const existing = get().riskAssessments[userId];
+   502→   526→   555→    if (existing) return existing;
+   503→   527→   556→    return { score: 0, level: 'low' as any, factors: [], lastAssessed: now() };
+   504→   528→   557→  },
+   505→   529→   558→  assessRisk: (userId) => {
+   506→   530→   559→    // Simplified risk assessment based on activity patterns
+   507→   531→   560→    const state = get();
+   508→   532→   561→    const userTxs = state.ledger.filter((t) => t.userId === userId);
+   509→   533→   562→    const recentTxs = userTxs.filter((t) => {
+   510→   534→   563→      const txDate = new Date(t.createdAt).getTime();
+   511→   535→   564→      const now_ = Date.now();
+   512→   536→   565→      return (now_ - txDate) < 24 * 60 * 60 * 1000; // last 24h
+   513→   537→   566→    });
+   514→   538→   567→
+   515→   539→   568→    let score = 0;
+   516→   540→   569→    const factors: { type: string; description: string; weight: number }[] = [];
+   517→   541→   570→
+   518→   542→   571→    // Rapid transactions factor
+   519→   543→   572→    if (recentTxs.length > 20) {
+   520→   544→   573→      score += 30;
+   521→   545→   574→      factors.push({ type: 'rapid_activity', description: 'نشاط سريع جداً', weight: 30 });
+   522→   546→   575→    } else if (recentTxs.length > 10) {
+   523→   547→   576→      score += 15;
+   524→   548→   577→      factors.push({ type: 'moderate_rapid', description: 'نشاط سريع', weight: 15 });
+   525→   549→   578→    }
+   526→   550→   579→
+   527→   551→   580→    // Self-support check (would need more data in production)
+   528→   552→   581→    const supportEvents = state.supportEvents.filter((e) => e.supporterId === userId);
+   529→   553→   582→    const circular = supportEvents.filter((e) => {
+   530→   554→   583→      return state.supportEvents.some((r) => r.supporterId === e.recipientId && r.recipientId === userId);
+   531→   555→   584→    });
+   532→   556→   585→    if (circular.length > 0) {
+   533→   557→   586→      score += 40;
+   534→   558→   587→      factors.push({ type: 'circular_support', description: 'دعم متبادل مشبوه', weight: 40 });
+   535→   559→   588→    }
+   536→   560→   589→
+   537→   561→   590→    // Determine level
+   538→   562→   591→    const rLow = (state.getRule('risk_threshold_low')?.value ?? 30) as number;
+   539→   563→   592→    const rMed = (state.getRule('risk_threshold_medium')?.value ?? 60) as number;
+   540→   564→   593→    const rHigh = (state.getRule('risk_threshold_high')?.value ?? 80) as number;
+   541→   565→   594→
+   542→   566→   595→    let level: 'low' | 'medium' | 'high' | 'critical' = 'low';
+   543→   567→   596→    if (score >= rHigh) level = 'critical';
+   544→   568→   597→    else if (score >= rMed) level = 'high';
+   545→   569→   598→    else if (score >= rLow) level = 'medium';
+   546→   570→   599→
+   547→   571→   600→    const assessment: RiskAssessment = { score, level, factors, lastAssessed: now() };
+   548→   572→   601→    set((s) => ({ riskAssessments: { ...s.riskAssessments, [userId]: assessment } }));
+   549→   573→   602→    return assessment;
+   550→   574→   603→  },
+   551→   575→   604→
+   552→   576→   605→  // ─── Commission ────────────────────────────────────────────────────────────
+   553→   577→   606→  commissionRules: [
+   554→   578→   607→    { id: 'cr-1', module: 'marketplace', category: null, sellerType: null, userTier: null, rate: 3, minFee: 0, maxFee: 500, currency: 'SC', version: 1, active: true, createdAt: now() },
+   555→   579→   608→    { id: 'cr-2', module: 'services', category: null, sellerType: null, userTier: null, rate: 5, minFee: 0, maxFee: 1000, currency: 'SC', version: 1, active: true, createdAt: now() },
+   556→   580→   609→    { id: 'cr-3', module: 'support', category: null, sellerType: null, userTier: null, rate: 5, minFee: 0, maxFee: 0, currency: 'SC', version: 1, active: true, createdAt: now() },
+   557→   581→   610→  { id: 'cr-4', module: 'jobs', category: null, sellerType: null, userTier: null, rate: 2, minFee: 0, maxFee: 200, currency: 'SC', version: 1, active: true, createdAt: now() },
+   558→   582→   611→  { id: 'cr-5', module: 'auctions', category: null, sellerType: null, userTier: null, rate: 4, minFee: 0, maxFee: 2000, currency: 'SC', version: 1, active: true, createdAt: now() },
+   559→   583→   612→  ],
+   560→   584→   613→
+   561→   585→   614→  calculateCommission: (module, amount, category) => {
+   562→   586→   615→    const rules = get().commissionRules;
+   563→   587→   616→    const rule = rules.find((r) => r.module === module && r.active && (!category || r.category === category));
+   564→   588→   617→    if (!rule) return 0;
+   565→   589→   618→    const fee = Math.round((amount * rule.rate) / 100);
+   566→   590→   619→    return Math.max(rule.minFee, Math.min(fee, rule.maxFee || fee));
+   567→   591→   620→  },
+   568→   592→   621→
+   569→   593→   622→  addCommissionRule: (rule) => {
+   570→   594→   623→    set((s) => ({ commissionRules: [...s.commissionRules, { ...rule, id: generateId(), createdAt: now(), version: 1 }] }));
+   571→   595→   624→  },
+   572→   596→   625→
+   573→   597→   626→  // ─── Admin / Audit ─────────────────────────────────────────────────────────
+   574→   598→   627→  auditLog: [],
+   575→   599→   628→  adminOverrides: [],
+   576→   600→   629→
+   577→   601→   630→  addAuditEntry: (entry) => {
+   578→   602→   631→    const id = generateId();
+   579→   603→   632→    const auditEntry: AuditLogEntry = { ...entry, id, timestamp: now(), auditId: id };
+   580→   604→   633→    set((s) => ({ auditLog: [...s.auditLog, auditEntry] }));
+   581→   605→   634→    return id;
+   582→   606→   635→  },
+   583→   607→   636→
+   584→   608→   637→  addAdminOverride: (override) => {
+   585→   609→   638→    const id = generateId();
+   586→   610→   639→    const entry: AdminOverride = { ...override, id, timestamp: now(), auditId: id };
+   587→   611→   640→    set((s) => ({ adminOverrides: [...s.adminOverrides, entry] }));
+   588→   612→   641→    get().addAuditEntry({
+   589→   613→   642→      adminId: override.adminId, action: override.action, targetUser: override.targetUserId,
+   590→   614→   643→      targetTransaction: null, oldValue: override.beforeState, newValue: override.afterState,
+   591→   615→   644→      reason: override.reason, category: 'economy',
+   592→   616→   645→    });
+   593→   617→   646→    return id;
+   594→   618→   647→  },
+   595→   619→   648→
+   596→   620→   649→  // ─── Notifications ─────────────────────────────────────────────────────────
+   597→   621→   650→  economyNotifications: [],
+   598→   622→   651→  addEconomyNotification: (n) => {
+   599→   623→   652→    set((s) => ({ economyNotifications: [{ ...n, id: generateId(), createdAt: now(), read: false }, ...s.economyNotifications] }));
+   600→   624→   653→  },
+   601→   625→   654→  markNotificationRead: (id) => {
+   602→   626→   655→    set((s) => ({
+   603→   627→   656→      economyNotifications: s.economyNotifications.map((n) => n.id === id ? { ...n, read: true } : n),
+   604→   628→   657→    }));
+   605→   629→   658→  },
+   606→   630→   659→  getUnreadCount: (userId) => get().economyNotifications.filter((n) => n.userId === userId && !n.read).length,
+   607→   631→   660→
+   608→   632→   661→  // ─── Coin Packages ─────────────────────────────────────────────────────────
+   609→   633→   662→  coinPackages: COIN_PACKAGES,
+   610→   634→   663→
+   611→   635→   664→  // ─── Integration Status ────────────────────────────────────────────────────
+   612→   636→   665→  integrationStatus: {
+   613→   637→   666→    payment: INTEGRATION_PROVIDERS.payment,
+   614→   638→   667→    cashout: INTEGRATION_PROVIDERS.cashout,
+   615→   639→   668→    kyc: INTEGRATION_PROVIDERS.kyc,
+   616→   640→   669→  },
+   617→   641→   670→
+   618→   642→   671→  // ─── Emergency Controls ────────────────────────────────────────────────────
+   619→   643→   672→  emergencyPauses: {},
+   620→   644→   673→  pauseFeature: (feature) => set((s) => ({ emergencyPauses: { ...s.emergencyPauses, [feature]: true } })),
+   621→   645→   674→  unpauseFeature: (feature) => set((s) => ({ emergencyPauses: { ...s.emergencyPauses, [feature]: false } })),
+   622→   646→   675→  isFeaturePaused: (feature) => get().emergencyPauses[feature] === true,
+   623→   647→   676→
+   624→   648→   677→  // ─── Admin Economy Actions ─────────────────────────────────────────────────
+   625→   649→   678→  adminGrantCoins: (adminId, userId, amount, reason) => {
+   626→   650→   679→    const txId = get().addLedgerEntry({
+   627→   651→   680→      userId, source: 'admin_grant', destination: 'wallet', currency: 'SC', amount,
+   628→   652→   681→      type: 'admin_grant', status: 'completed', referenceId: '', campaignId: null,
+   629→   653→   682→      completedAt: now(), createdBy: adminId, riskStatus: 'low', metadata: { reason }, auditId: null,
+   630→   654→   683→    });
+   631→   655→   684→    get().addAdminOverride({ adminId, targetUserId: userId, action: 'grant_coins',
+   632→   656→   685→      beforeState: {}, afterState: { amount }, reason, auditId: '' });
+   633→   657→   686→    return txId;
+   634→   658→   687→  },
+   635→   659→   688→
+   636→   660→   689→  adminGrantReward: (adminId, userId, amount, reason) => {
+   637→   661→   690→    const txId = get().addLedgerEntry({
+   638→   662→   691→      userId, source: 'admin_grant', destination: 'wallet', currency: 'SR', amount,
+   639→   663→   692→      type: 'admin_grant', status: 'completed', referenceId: '', campaignId: null,
+   640→   664→   693→      completedAt: now(), createdBy: adminId, riskStatus: 'low', metadata: { reason }, auditId: null,
+   641→   665→   694→    });
+   642→   666→   695→    get().addAdminOverride({ adminId, targetUserId: userId, action: 'grant_reward',
+   643→   667→   696→      beforeState: {}, afterState: { amount }, reason, auditId: '' });
+   644→   668→   697→    return txId;
+   645→   669→   698→  },
+   646→   670→   699→
+   647→   671→   700→  adminGrantPower: (adminId, userId, amount, reason) => {
+   648→   672→   701→    const txId = get().addLedgerEntry({
+   649→   673→   702→      userId, source: 'admin_grant', destination: 'wallet', currency: 'SP', amount,
+   650→   674→   703→      type: 'admin_grant', status: 'completed', referenceId: '', campaignId: null,
+   651→   675→   704→      completedAt: now(), createdBy: adminId, riskStatus: 'low', metadata: { reason }, auditId: null,
+   652→   676→   705→    });
+   653→   677→   706→    get().addAdminOverride({ adminId, targetUserId: userId, action: 'grant_power',
+   654→   678→   707→      beforeState: {}, afterState: { amount }, reason, auditId: '' });
+   655→   679→   708→    return txId;
+   656→   680→   709→  },
+   657→   681→   710→
+   658→   682→   711→  adminEnableCashout: (adminId, userId, reason) => {
+   659→   683→   712→    get().addAdminOverride({ adminId, targetUserId: userId, action: 'enable_cashout',
+   660→   684→   713→      beforeState: { cashoutEnabled: false }, afterState: { cashoutEnabled: true }, reason, auditId: '' });
+   661→   685→   714→  },
+   662→   686→   715→
+   663→   687→   716→  adminDisableCashout: (adminId, userId, reason) => {
+   664→   688→   717→    get().addAdminOverride({ adminId, targetUserId: userId, action: 'disable_cashout',
+   665→   689→   718→      beforeState: { cashoutEnabled: true }, afterState: { cashoutEnabled: false }, reason, auditId: '' });
+   666→   690→   719→  },
+   667→   691→   720→
+   668→   692→   721→  adminFreezeCashout: (adminId, userId, reason) => {
+   669→   693→   722→    get().addAdminOverride({ adminId, targetUserId: userId, action: 'freeze_cashout',
+   670→   694→   723→      beforeState: { frozen: false }, afterState: { frozen: true }, reason, auditId: '' });
+   671→   695→   724→  },
+   672→   696→   725→
+   673→   697→   726→  adminSultanSupported: (adminId, userId, data) => {
+   674→   698→   727→    get().addAdminOverride({ adminId, targetUserId: userId, action: 'sultan_supported',
+   675→   699→   728→      beforeState: {}, afterState: data, reason: data.reason, auditId: '' });
+   676→   700→   729→    get().addEconomyNotification({
+   677→   701→   730→      userId, type: 'support_received',
+   678→   702→   731→      title: 'دعم سلطان', body: 'حسابك يحظى بدعم ترويجي من سلطان',
+   679→   703→   732→      metadata: { adminId, ...data },
+   680→   704→   733→    });
+   681→   705→   734→  },
+   682→   706→   735→
+   683→   707→   736→  adminAddBadge: (adminId, userId, badge, reason) => {
+   684→   708→   737→    get().addAdminOverride({ adminId, targetUserId: userId, action: 'add_badge',
+   685→   709→   738→      beforeState: {}, afterState: { badge }, reason, auditId: '' });
+   686→   710→   739→  },
+   687→   711→   740→
+   688→   712→   741→  adminLaunchBoost: (adminId, params) => {
+   689→   713→   742→    const id = get().addCampaign({ ...params, creatorId: adminId, budgetSpent: 0, isSponsored: true });
+   690→   714→   743→    get().addAuditEntry({
+   691→   715→   744→      adminId, action: 'launch_boost', targetUser: params.targetId, targetTransaction: null,
+   692→   716→   745→      oldValue: {}, newValue: params, reason: 'إطلاق حملة تعزيز', category: 'campaign',
+   693→   717→   746→    });
+   694→   718→   747→    return id;
+   695→   719→   748→  },
+   696→   720→   749→
+   697→   721→   750→  // ─── Stats ─────────────────────────────────────────────────────────────────
+   698→   722→   751→  getEconomyStats: () => {
+   699→   723→   752→    const state = get();
+   700→   724→   753→    const ledger = state.ledger;
+   701→   725→   754→    const supportEvents = state.supportEvents;
+   702→   726→   755→
+   703→   727→   756→    const coinPurchases = ledger.filter((t) => t.type === 'coin_purchase');
+   704→   728→   757→    const supports = ledger.filter((t) => t.type === 'support_sent');
+   705→   729→   758→    const rewards = ledger.filter((t) => t.type.startsWith('reward'));
+   706→   730→   759→    const cashouts = state.cashoutRequests;
+   707→   731→   760→    const fees = ledger.filter((t) => t.type === 'commission_deducted');
+   708→   732→   761→
+   709→   733→   762→    return {
+   710→   734→   763→      totalCoinSales: coinPurchases.reduce((s, t) => s + t.amount, 0),
+   711→   735→   764→      coinsCirculating: ledger.filter((t) => t.currency === 'SC' && t.status === 'completed').reduce((s, t) => s + Math.abs(t.amount), 0) / 2,
+   712→   736→   765→      coinsSpent: supports.reduce((s, t) => s + Math.abs(t.amount), 0),
+   713→   737→   766→      coinsTransferred: supportEvents.reduce((s, e) => s + e.amount, 0),
+   714→   738→   767→      rewardsGenerated: rewards.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0),
+   715→   739→   768→      rewardsPending: rewards.filter((t) => t.status === 'pending').reduce((s, t) => s + t.amount, 0),
+   716→   740→   769→      rewardsPaid: cashouts.filter((c) => c.status === 'paid').reduce((s, c) => s + c.amount, 0),
+   717→   741→   770→      cashoutVolume: cashouts.reduce((s, c) => s + c.amount, 0),
+   718→   742→   771→      platformRevenue: fees.reduce((s, t) => s + Math.abs(t.amount), 0),
+   719→   743→   772→      fees: supportEvents.reduce((s, e) => s + e.fee, 0),
+   720→   744→   773→      refunds: ledger.filter((t) => t.type === 'refund_issued').reduce((s, t) => s + Math.abs(t.amount), 0),
+   721→   745→   774→      chargebacks: 0,
+   722→   746→   775→      fraudPrevented: 0,
+   723→   747→   776→      activeSupporters: new Set(supportEvents.map((e) => e.supporterId)).size,
+   724→   748→   777→      supportedUsers: new Set(supportEvents.map((e) => e.recipientId)).size,
+   725→   749→   778→    };
+   726→   750→   779→  },
+   727→   751→   780→}));
+   728→   752→   781→
