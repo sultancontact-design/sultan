@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  MessageCircle,
   Crown,
   Send,
   X,
@@ -17,6 +16,7 @@ import {
   Gift,
   Package,
 } from 'lucide-react';
+import { useSultanStore } from '@/lib/store';
 
 interface ChatMessage {
   id: string;
@@ -56,8 +56,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   {
     label: 'مكافآتي',
     icon: <Gift className="h-3.5 w-3.5" />,
-    response:
-      'لديك حالياً 250 عملة سلطان! يمكنك استبدالها بخصومات حصرية أو استخدامها لدعم المحتوى المفضل لديك. تابع تسجيل دخولك يومياً للحصول على مكافآت إضافية. 🎁',
+    response: '__COINS_PLACEHOLDER__',
   },
   {
     label: 'تتبع طلبي',
@@ -88,6 +87,8 @@ export default function SultanAIConcierge() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { isRTL, currentProfile } = useSultanStore();
+  const balance = currentProfile?.coinsBalance ?? 0;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -118,25 +119,23 @@ export default function SultanAIConcierge() {
   };
 
   const handleQuickAction = (action: QuickAction) => {
-    sendMessage(action.label);
-    const targetLabel = action.label;
-    const quickResponse = action.response;
+    if (isTyping) return;
+    const responseText = action.response === '__COINS_PLACEHOLDER__'
+      ? `لديك حالياً ${balance} عملة سلطان! يمكنك استبدالها بخصومات حصرية أو استخدامها لدعم المحتوى المفضل لديك. تابع تسجيل دخولك يومياً للحصول على مكافآت إضافية. 🎁`
+      : action.response;
+    setMessages((prev) => [
+      ...prev,
+      { id: `user-${Date.now()}`, role: 'user' as const, text: action.label },
+    ]);
+    setIsTyping(true);
+    const delay = 1000 + Math.random() * 1000;
     setTimeout(() => {
-      const genericText = getSimulatedResponse(targetLabel);
-      setMessages((prev) => {
-        const filtered = prev.filter(
-          (m) => !(m.role === 'assistant' && m.id.startsWith('ai-') && m.text === genericText)
-        );
-        return [
-          ...filtered,
-          {
-            id: `ai-quick-${Date.now()}`,
-            role: 'assistant' as const,
-            text: quickResponse,
-          },
-        ];
-      });
-    }, 1100 + Math.random() * 1000);
+      setIsTyping(false);
+      setMessages((prev) => [
+        ...prev,
+        { id: `ai-${Date.now()}`, role: 'assistant' as const, text: responseText },
+      ]);
+    }, delay);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -145,7 +144,7 @@ export default function SultanAIConcierge() {
   };
 
   return (
-    <div className="fixed bottom-20 left-6 z-50" dir="rtl">
+    <div className="fixed bottom-20 left-6 z-50" dir={isRTL ? 'rtl' : 'ltr'}>
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -170,7 +169,7 @@ export default function SultanAIConcierge() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="w-[370px] max-w-[calc(100vw-3rem)] origin-bottom-left"
+            className="w-[320px] max-w-[calc(100vw-3rem)] origin-bottom-left"
           >
             <Card className="overflow-hidden border-sultan/20 shadow-2xl">
               {/* Header */}

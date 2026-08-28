@@ -65,7 +65,9 @@ export default function Page() {
       case 'profile':
         return <ProfileView />;
       case 'admin':
-        return <AdminView />;
+        return useSultanStore.getState().currentProfile?.role === 'admin'
+          ? <AdminView />
+          : <PlaceholderView title="ممنوع الوصول" description="هذه الصفحة متاحة للمسؤولين فقط" />;
       case 'listing':
         return <ListingDetail />;
       case 'messages':

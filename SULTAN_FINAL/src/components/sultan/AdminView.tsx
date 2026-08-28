@@ -11,7 +11,8 @@ import { motion } from 'framer-motion';
 import AdminCommandCenter from './admin/AdminCommandCenter';
 
 export default function AdminView() {
-  const { goBack, addToast } = useSultanStore();
+  const { currentProfile, goBack, addToast } = useSultanStore();
+  if (currentProfile?.role !== 'admin') return null;
   const [showAIOS, setShowAIOS] = useState(false);
 
   const chartData = Array.from({ length: 30 }, (_, i) => ({
@@ -151,7 +152,7 @@ export default function AdminView() {
                 <span className="text-sm">{f.label}</span>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-[9px]">{f.category}</Badge>
-                  <div className={`w-8 h-4 rounded-full ${f.value ? 'bg-sultan' : 'bg-muted'} relative cursor-pointer`}>
+                  <div className={`w-8 h-4 rounded-full ${f.value ? 'bg-sultan' : 'bg-muted'} relative cursor-pointer`} onClick={() => addToast(f.value ? `تم تعطيل ${f.label}` : `تم تفعيل ${f.label}`, 'success')}>
                     <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${f.value ? 'start-0.5' : 'end-0.5'}`} />
                   </div>
                 </div>

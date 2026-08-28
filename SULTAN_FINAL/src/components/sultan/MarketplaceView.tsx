@@ -1,19 +1,19 @@
 'use client';
 import { useSultanStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { categories, listings, cities } from '@/lib/seed-data';
+import { categories, cities } from '@/lib/seed-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Grid3X3, List, SlidersHorizontal, X, Heart, Eye, MapPin, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 
 export default function MarketplaceView() {
   const {
-    currentView, locale, selectedCategory, setSelectedCategory, selectedCity, setSelectedCity,
-    condition, setCondition, sortBy, setSortBy, searchQuery, priceRange,
-    setPriceRange, clearFilters, selectListing, viewParams, goBack,
+    currentView, locale, filteredListings, searchQuery, selectedCategory, selectedCity,
+    priceRange, condition, sortBy, setSearchQuery, setSelectedCategory, setSelectedCity,
+    setPriceRange, setCondition, setSortBy, clearFilters, selectListing, viewParams, goBack,
   } = useSultanStore();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [liked, setLiked] = useState<Set<string>>(new Set());
@@ -25,24 +25,7 @@ export default function MarketplaceView() {
 
   const activeCategory = currentView === 'motors' ? 'c-motors' : currentView === 'realestate' ? 'c-realestate' : selectedCategory;
 
-  const filtered = useMemo(() => {
-    let result = [...listings];
-    if (activeCategory) result = result.filter(l => l.categoryId === activeCategory);
-    if (selectedCity) result = result.filter(l => l.city === selectedCity);
-    if (searchQuery) result = result.filter(l => l.title.includes(searchQuery) || l.description.includes(searchQuery));
-    if (condition && condition !== 'all') result = result.filter(l => l.condition === condition);
-    if (priceRange[0] > 0) result = result.filter(l => l.price >= priceRange[0]);
-    if (priceRange[1] < 10000000) result = result.filter(l => l.price <= priceRange[1]);
-    switch (sortBy) {
-      case 'price_asc': result.sort((a, b) => a.price - b.price); break;
-      case 'price_desc': result.sort((a, b) => b.price - a.price); break;
-      case 'popular': result.sort((a, b) => b.viewsCount - a.viewsCount); break;
-      default: result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-    return result;
-  }, [activeCategory, selectedCity, searchQuery, condition, priceRange, sortBy]);
-
-  const visible = filtered.slice(0, visibleCount);
+  const visible = filteredListings.slice(0, visibleCount);
   const viewTitles: Record<string, string> = {
     marketplace: 'السوق', motors: 'السيارات', realestate: 'العقارات', food: 'الطعام', services: 'الخدمات', jobs: 'الوظائف', auctions: 'المزادات',
   };
@@ -60,7 +43,7 @@ export default function MarketplaceView() {
       <div className="flex items-center gap-3 py-4">
         <Button variant="ghost" size="icon" onClick={goBack} className="shrink-0"><ArrowRight className="h-5 w-5" /></Button>
         <h1 className="text-xl font-bold">{viewTitles[currentView] || 'السوق'}</h1>
-        <Badge variant="secondary" className="ms-auto">{filtered.length} إعلان</Badge>
+        <Badge variant="secondary" className="ms-auto">{filteredListings.length} إعلان</Badge>
       </div>
 
       {/* Filters Bar */}
@@ -190,7 +173,7 @@ export default function MarketplaceView() {
       )}
 
       {/* Load More */}
-      {visibleCount < filtered.length && (
+      {visibleCount < filteredListings.length && (
         <div className="text-center mt-8">
           <Button variant="outline" onClick={function() { setVisibleCount(function(prev) { return prev + 20; }); }} className="rounded-xl">تحميل المزيد</Button>
         </div>

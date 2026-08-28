@@ -1,7 +1,7 @@
 'use client';
 import { useSultanStore } from '@/lib/store';
 import { t, langMeta } from '@/lib/i18n';
-import { Search, Bell, MessageCircle, Sun, Moon, Globe, Menu, X, User, LogOut, Settings, Wallet, ChevronDown, Shield } from 'lucide-react';
+import { Search, Bell, MessageCircle, Sun, Moon, Globe, Menu, X, User, LogOut, Settings, Wallet, ChevronDown, Shield, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function TopNav() {
-  const { locale, setLocale, theme, toggleTheme, isRTL, navigate, toggleSearch, notificationCount, messageCount, currentProfile, isAuthenticated, toggleMobileMenu, isMobileMenuOpen, setSearchQuery, searchQuery } = useSultanStore();
+  const { locale, setLocale, theme, toggleTheme, isRTL, navigate, toggleSearch, notificationCount, messageCount, currentProfile, isAuthenticated, logout, toggleMobileMenu, isMobileMenuOpen, setSearchQuery, searchQuery } = useSultanStore();
   const [showNotifs, setShowNotifs] = useState(false);
   const langs = langMeta;
 
@@ -92,6 +92,20 @@ export default function TopNav() {
           <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSearch}>
             <Search className="h-5 w-5" />
           </Button>
+
+          {/* WhatsApp */}
+          <a href="https://wa.me/212600000000" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" size="icon">
+              <MessageCircle className="h-5 w-5 text-green-400" />
+            </Button>
+          </a>
+
+          {/* Phone */}
+          <a href="tel:+212600000000">
+            <Button variant="ghost" size="icon">
+              <Phone className="h-5 w-5" />
+            </Button>
+          </a>
 
           {/* Notifications */}
           <div className="relative">
@@ -186,10 +200,12 @@ export default function TopNav() {
                 </div>
                 <DropdownMenuItem onClick={() => navigate('profile')} className="gap-2"><User className="h-4 w-4" /> الملف الشخصي</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('profile', { tab: 'wallet' })} className="gap-2"><Wallet className="h-4 w-4" /> المحفظة</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('admin')} className="gap-2"><Shield className="h-4 w-4" /> لوحة التحكم</DropdownMenuItem>
+                {currentProfile?.role === 'admin' && (
+                  <DropdownMenuItem onClick={() => navigate('admin')} className="gap-2"><Shield className="h-4 w-4" /> لوحة التحكم</DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('profile', { tab: 'settings' })} className="gap-2"><Settings className="h-4 w-4" /> الإعدادات</DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 text-destructive"><LogOut className="h-4 w-4" /> تسجيل الخروج</DropdownMenuItem>
+                <DropdownMenuItem onClick={logout} className="gap-2 text-destructive"><LogOut className="h-4 w-4" /> تسجيل الخروج</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -255,7 +271,9 @@ export default function TopNav() {
                 <button onClick={() => { navigate('charity'); toggleMobileMenu(); }} className="w-full text-start px-4 py-3 rounded-lg hover:bg-secondary/50 transition-colors text-sm">{t('charity', locale)}</button>
                 <button onClick={() => { navigate('news'); toggleMobileMenu(); }} className="w-full text-start px-4 py-3 rounded-lg hover:bg-secondary/50 transition-colors text-sm">{t('news', locale)}</button>
                 <button onClick={() => { navigate('zawaj'); toggleMobileMenu(); }} className="w-full text-start px-4 py-3 rounded-lg hover:bg-secondary/50 transition-colors text-sm">{t('zawaj', locale)}</button>
-                <button onClick={() => { navigate('admin'); toggleMobileMenu(); }} className="w-full text-start px-4 py-3 rounded-lg hover:bg-secondary/50 transition-colors text-sm">لوحة التحكم</button>
+                {currentProfile?.role === 'admin' && (
+                  <button onClick={() => { navigate('admin'); toggleMobileMenu(); }} className="w-full text-start px-4 py-3 rounded-lg hover:bg-secondary/50 transition-colors text-sm">لوحة التحكم</button>
+                )}
               </nav>
             </motion.div>
           </>

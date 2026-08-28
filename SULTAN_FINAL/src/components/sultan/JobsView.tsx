@@ -29,7 +29,7 @@ export default function JobsView() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 pb-8">
       <div className="flex items-center gap-3 px-2 sm:px-4">
-        <Briefcase className="h-6 w-6 text-[#D4AF37]" />
+        <Briefcase className="h-6 w-6 text-amber-500" />
         <div>
           <h1 className="text-xl font-bold">{t('jobs', locale)}</h1>
           <p className="text-sm text-muted-foreground">فرص العمل المتاحة في المغرب</p>
@@ -41,8 +41,8 @@ export default function JobsView() {
           <motion.div
             key={job.id}
             whileHover={{ scale: 1.01 }}
-            className="rounded-xl border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:border-[#D4AF37]/40 transition-colors"
-            onClick={() => addToast('سيتم فتح صفحة الوظيفة قريباً', 'info')}
+            className="rounded-xl border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:border-amber-500/40 transition-colors"
+            onClick={() => addToast('تم فتح وظيفة: ' + job.title, 'info')}
           >
             <div className="flex-1 min-w-0 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -59,8 +59,8 @@ export default function JobsView() {
               <Badge className={cn('text-[10px] border', typeColors[job.type])}>
                 {typeLabels[job.type]}
               </Badge>
-              <span className="text-[#D4AF37] font-semibold text-sm">{job.salary}</span>
-              <Button size="sm" className="bg-[#D4AF37] text-[#0A1628] hover:bg-[#E8C84A] text-xs hidden sm:flex">
+              <span className="text-amber-500 font-semibold text-sm">{job.salary}</span>
+              <Button size="sm" onClick={(e) => { e.stopPropagation(); addToast('تم تقديم طلبك بنجاح', 'success'); }} className="bg-amber-500 text-slate-900 hover:bg-[#E8C84A] text-xs hidden sm:flex">
                 قدّم الآن
               </Button>
             </div>

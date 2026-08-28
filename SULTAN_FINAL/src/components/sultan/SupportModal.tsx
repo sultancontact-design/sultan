@@ -8,20 +8,26 @@ import { Coins } from 'lucide-react';
 import { useState } from 'react';
 
 export default function SupportModal() {
-  const { isSupportModalOpen, closeSupportModal, supportTarget, addToast } = useSultanStore();
+  const { isSupportModalOpen, closeSupportModal, supportTarget, addToast, currentProfile, deductCoins } = useSultanStore();
   const [amount, setAmount] = useState(100);
   const [message, setMessage] = useState('');
   const [customAmount, setCustomAmount] = useState('');
 
   const presets = [50, 100, 500, 1000, 5000, 10000];
-  const fee = Math.round(amount * 0.05);
-  const total = amount + fee;
+  const activeAmount = customAmount ? parseInt(customAmount) || 0 : amount;
+  const fee = Math.round(activeAmount * 0.05);
+  const total = activeAmount + fee;
 
   const handleSupport = () => {
     const finalAmount = customAmount ? parseInt(customAmount) : amount;
     if (!finalAmount || finalAmount <= 0) return;
+    const finalFee = Math.round(finalAmount * 0.05);
+    const finalTotal = finalAmount + finalFee;
+    deductCoins(finalTotal);
     closeSupportModal();
     addToast(`تم دعم ${supportTarget?.title || 'المستخدم'} بـ ${finalAmount.toLocaleString()} SC`, 'success');
+    const newBalance = (currentProfile?.coinsBalance ?? 0) - finalTotal;
+    addToast(`رصيدك الجديد: ${Math.max(0, newBalance).toLocaleString()} SC`, 'info');
     setMessage(''); setCustomAmount(''); setAmount(100);
   };
 
@@ -48,7 +54,7 @@ export default function SupportModal() {
           <Input placeholder="مبلغ مخصص" type="number" value={customAmount} onChange={(e) => { setCustomAmount(e.target.value); if (e.target.value) setAmount(0); }} />
           <Textarea placeholder="رسالة اختيارية..." value={message} onChange={(e) => setMessage(e.target.value)} rows={2} />
           <div className="text-xs text-muted-foreground space-y-1 bg-secondary/30 rounded-lg p-3">
-            <div className="flex justify-between"><span>المبلغ</span><span>{(customAmount ? parseInt(customAmount) || 0 : amount).toLocaleString()} SC</span></div>
+            <div className="flex justify-between"><span>المبلغ</span><span>{activeAmount.toLocaleString()} SC</span></div>
             <div className="flex justify-between"><span>الرسوم (5%)</span><span>{fee.toLocaleString()} SC</span></div>
             <div className="flex justify-between font-semibold text-foreground pt-1 border-t border-border/50"><span>الإجمالي</span><span>{total.toLocaleString()} SC</span></div>
           </div>

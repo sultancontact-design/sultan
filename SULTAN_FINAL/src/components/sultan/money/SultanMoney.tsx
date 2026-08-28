@@ -1,6 +1,5 @@
 'use client';
 import { useSultanStore } from '@/lib/store';
-import { walletHistory } from '@/lib/seed-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -34,13 +33,13 @@ const statusMap: Record<string, { label: string; cls: string; icon: any }> = {
 const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
 
 export default function SultanMoney() {
-  const { navigate, addToast } = useSultanStore();
+  const { goBack, addToast, currentProfile } = useSultanStore();
 
   return (
     <div className="max-w-4xl mx-auto px-4 pb-20">
       {/* Header */}
       <div className="flex items-center gap-3 py-4">
-        <button onClick={() => navigate('home')} className="p-2 rounded-lg hover:bg-secondary transition-colors"><ArrowRight className="h-5 w-5" /></button>
+        <button onClick={() => goBack()} className="p-2 rounded-lg hover:bg-secondary transition-colors"><ArrowRight className="h-5 w-5" /></button>
         <h1 className="text-xl font-bold">محفظة سلطان</h1>
         <Badge variant="outline" className="border-sultan/30 text-sultan text-xs flex items-center gap-1"><Wallet className="h-3 w-3" />MAD</Badge>
       </div>
@@ -52,7 +51,7 @@ export default function SultanMoney() {
         <div className="relative z-10 p-6">
           <p className="text-sm text-muted-foreground mb-1">الرصيد الحالي</p>
           <div className="flex items-end gap-2">
-            <h2 className="text-4xl font-bold text-gradient-sultan">2,500</h2>
+            <h2 className="text-4xl font-bold text-gradient-sultan">{currentProfile?.coinsBalance.toLocaleString() || '0'}</h2>
             <span className="text-lg text-sultan/70 mb-1">درهم</span>
           </div>
           <p className="text-xs text-muted-foreground mt-2">آخر تحديث: 19 أغسطس 2026 — [DEMO]</p>

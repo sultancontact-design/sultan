@@ -2,22 +2,31 @@ import { create } from 'zustand'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type UserRole = 'guest' | 'user' | 'admin' | 'moderator'
+
 export interface UserProfile {
   id: string
   username: string
   displayName: string
   avatar: string
+  email: string
+  phone: string
   city: string
+  role: UserRole
   coinsBalance: number
   rewardsBalance: number
   pendingRewards: number
   sultanPower: number
   trustScore: number
+  reputationScore: number
   isVerified: boolean
   isBusiness: boolean
   isSultanSupported: boolean
   isRising: boolean
   isFeatured: boolean
+  followerCount: number
+  followingCount: number
+  listingCount: number
 }
 
 export interface Toast {
@@ -87,28 +96,61 @@ export interface SultanState {
   closePublishModal: () => void
   openSupportModal: (target?: any) => void
   closeSupportModal: () => void
+  deductCoins: (amount: number) => void
   addToast: (message: string, type?: 'success' | 'error' | 'info') => void
   removeToast: (id: string) => void
 }
 
 // ─── Demo Profile ────────────────────────────────────────────────────────────
 
-const DEMO_PROFILE: UserProfile = {
+const DEMO_ADMIN: UserProfile = {
+  id: 'admin-001',
+  username: 'sultan_admin',
+  displayName: 'مدير سلطان',
+  avatar: '',
+  email: 'admin@sultan.ma',
+  phone: '+212600000000',
+  city: 'الدار البيضاء',
+  role: 'admin',
+  coinsBalance: 99999,
+  rewardsBalance: 0,
+  pendingRewards: 0,
+  sultanPower: 9999,
+  trustScore: 100,
+  reputationScore: 100,
+  isVerified: true,
+  isBusiness: false,
+  isSultanSupported: true,
+  isRising: false,
+  isFeatured: true,
+  followerCount: 15200,
+  followingCount: 340,
+  listingCount: 0,
+}
+
+const DEMO_USER: UserProfile = {
   id: 'demo-001',
   username: 'youssef_sultan',
   displayName: 'يوسف بنعلي',
   avatar: '',
+  email: 'youssef@example.com',
+  phone: '+212661234567',
   city: 'الدار البيضاء',
+  role: 'user',
   coinsBalance: 2500,
   rewardsBalance: 750,
   pendingRewards: 200,
   sultanPower: 1200,
   trustScore: 85,
+  reputationScore: 72,
   isVerified: true,
   isBusiness: false,
   isSultanSupported: false,
   isRising: true,
   isFeatured: false,
+  followerCount: 245,
+  followingCount: 85,
+  listingCount: 12,
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -240,14 +282,20 @@ export const useSultanStore = create<SultanState>()((set, get) => ({
     }),
 
   // ─── Auth ─────────────────────────────────────────────────────────────
-  isAuthenticated: true,
-  currentProfile: { ...DEMO_PROFILE },
+  isAuthenticated: false,
+  currentProfile: null,
 
-  login: () =>
-    set({ isAuthenticated: true, currentProfile: { ...DEMO_PROFILE } }),
+  login: (role?: UserRole) =>
+    set({
+      isAuthenticated: true,
+      currentProfile: { ...(role === 'admin' ? DEMO_ADMIN : DEMO_USER) },
+    }),
+
+  loginAsGuest: () =>
+    set({ isAuthenticated: false, currentProfile: null }),
 
   logout: () =>
-    set({ isAuthenticated: false, currentProfile: null }),
+    set({ isAuthenticated: false, currentProfile: null, currentView: 'home' }),
 
   // ─── Theme ─────────────────────────────────────────────────────────────
   theme: 'dark',
@@ -403,6 +451,14 @@ export const useSultanStore = create<SultanState>()((set, get) => ({
     set({ isSupportModalOpen: true, supportTarget: target ?? null }),
   closeSupportModal: () =>
     set({ isSupportModalOpen: false, supportTarget: null }),
+
+  deductCoins: (amount: number) =>
+    set((state) => {
+      if (!state.currentProfile) return state;
+      return {
+        currentProfile: { ...state.currentProfile, coinsBalance: Math.max(0, state.currentProfile.coinsBalance - amount) },
+      };
+    }),
 
   addToast: (message, type = 'info') => {
     const id = crypto.randomUUID()

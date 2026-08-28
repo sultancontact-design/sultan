@@ -20,7 +20,7 @@ const demoProfiles = [
 const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
 
 export default function MarriageView() {
-  const { navigate, addToast } = useSultanStore();
+  const { goBack, addToast } = useSultanStore();
   const [filterCity, setFilterCity] = useState('all');
   const [filterEdu, setFilterEdu] = useState('all');
   const [ageRange, setAgeRange] = useState<[number, number]>([20, 45]);
@@ -45,7 +45,7 @@ export default function MarriageView() {
     <div className="max-w-4xl mx-auto px-4 pb-20">
       {/* Header */}
       <div className="flex items-center gap-3 py-4">
-        <button onClick={() => navigate('home')} className="p-2 rounded-lg hover:bg-secondary transition-colors"><ArrowRight className="h-5 w-5" /></button>
+        <button onClick={() => goBack()} className="p-2 rounded-lg hover:bg-secondary transition-colors"><ArrowRight className="h-5 w-5" /></button>
         <h1 className="text-xl font-bold">الزواج والتعارف</h1>
         <Badge variant="outline" className="border-sultan/30 text-sultan text-xs flex items-center gap-1"><Heart className="h-3 w-3" />بخطاب</Badge>
       </div>

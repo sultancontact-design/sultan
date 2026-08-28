@@ -1,7 +1,7 @@
 'use client';
 import { useSultanStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { categories, listings, auctions, charityCases, restaurants, services, jobs, newsArticles, cities } from '@/lib/seed-data';
+import { categories, auctions, charityCases, restaurants, services, jobs, newsArticles, cities } from '@/lib/seed-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,13 +40,13 @@ function CountdownTimer({ endsAt }: { endsAt: string }) {
 }
 
 export default function HomeView() {
-  const { navigate, locale, setSelectedCategory, setSearchQuery, selectListing, searchQuery, openSupportModal } = useSultanStore();
+  const { navigate, locale, listings: storeListings, setSelectedCategory, setSearchQuery, selectListing, searchQuery, openSupportModal } = useSultanStore();
   const [liked, setLiked] = useState<Set<string>>(new Set());
 
-  const featuredListings = listings.filter(l => l.isFeatured).slice(0, 10);
-  const recentListings = [...listings].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8);
+  const featuredListings = storeListings.filter(l => l.isFeatured).slice(0, 10);
+  const recentListings = [...storeListings].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8);
   const topCategories = categories.filter(c => !['c-marketplace', 'c-zawaj', 'c-social'].includes(c.id)).slice(0, 10);
-  const categoryCount = (catId: string) => listings.filter(l => l.categoryId === catId).length;
+  const categoryCount = (catId: string) => storeListings.filter(l => l.categoryId === catId).length;
 
   const toggleLike = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -150,7 +150,7 @@ export default function HomeView() {
                 <button onClick={(e) => toggleLike(listing.id, e)} className="absolute top-2 end-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors">
                   <Heart className={`h-4 w-4 ${liked.has(listing.id) ? 'fill-red-500 text-red-500' : 'text-white'}`} />
                 </button>
-                <Badge className="absolute bottom-2 start-2 bg-black/60 text-white text-[10px] backdrop-blur-sm">DEM0</Badge>
+                <Badge className="absolute bottom-2 start-2 bg-black/60 text-white text-[10px] backdrop-blur-sm">DEMO</Badge>
               </div>
               <div className="p-3">
                 <p className="text-sultan font-bold text-base">{listing.price.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">درهم</span></p>
@@ -233,7 +233,7 @@ export default function HomeView() {
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <Badge className={`${urgencyColors[c.urgency]} text-white text-[10px]`}>{urgencyLabels[c.urgency]}</Badge>
-                    <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">DEM0</Badge>
+                    <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">DEMO</Badge>
                   </div>
                   <h3 className="font-semibold mb-2 line-clamp-1">{c.title}</h3>
                   <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{c.description}</p>
@@ -388,7 +388,7 @@ export default function HomeView() {
         <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><MapPin className="h-5 w-5 text-sultan" /> استكشف حسب المدينة</h2>
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
           {cities.slice(0, 10).map((city) => {
-            const count = listings.filter(l => l.city === city.nameAr).length;
+            const count = storeListings.filter(l => l.city === city.nameAr).length;
             return (
               <button key={city.id} onClick={() => { useSultanStore.getState().setSelectedCity(city.nameAr); navigate('marketplace'); }}
                 className="shrink-0 px-5 py-3 rounded-xl bg-card border border-border/50 hover:border-sultan/30 transition-all text-center group"
