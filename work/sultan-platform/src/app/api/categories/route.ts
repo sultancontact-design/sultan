@@ -1,26 +1,22 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
+
+export const runtime = 'edge'
 
 export async function GET() {
   try {
-    const categories = await db.category.findMany({
-      where: { isActive: true },
-      orderBy: { order: 'asc' },
-      include: {
-        _count: { select: { listings: { where: { status: 'active' } } } },
-        children: {
-          where: { isActive: true },
-          orderBy: { order: 'asc' },
-          include: {
-            _count: { select: { listings: { where: { status: 'active' } } } },
-          },
-        },
-      },
-    });
+    const { data: categories, error } = await supabase
+      .from('Category')
+      .select('*, children:Category!CategoryHierarchy_children(*)')
+      .eq('isActive', true)
+      .is('parentId', null)
+      .order('order', { ascending: true })
 
-    return NextResponse.json({ categories });
-  } catch (error) {
-    console.error('Categories API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    if (error) throw error
+
+    return NextResponse.json({ categories: categories || [] })
+  } catch (error: any) {
+    console.error('Categories API error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

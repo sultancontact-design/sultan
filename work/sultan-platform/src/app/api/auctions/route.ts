@@ -1,29 +1,39 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
+
+export const runtime = 'edge'
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || 'active';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status') || 'active'
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
-    const where: Record<string, unknown> = {};
-    if (status !== 'all') where.status = status;
+    let query = supabase
+      .from('Auction')
+      .select('*', { count: 'exact' })
+      .order('createdAt', { ascending: false })
 
-    const [auctions, total] = await Promise.all([
-      db.auction.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      db.auction.count({ where }),
-    ]);
+    if (status !== 'all') {
+      query = query.eq('status', status)
+    }
 
-    return NextResponse.json({ auctions, total, page, totalPages: Math.ceil(total / limit) });
-  } catch (error) {
-    console.error('Auctions API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const from = (page - 1) * limit
+    query = query.range(from, from + limit - 1)
+
+    const { data: auctions, count: total, error } = await query
+
+    if (error) throw error
+
+    return NextResponse.json({
+      auctions: auctions || [],
+      total: total || 0,
+      page,
+      totalPages: Math.ceil((total || 0) / limit),
+    })
+  } catch (error: any) {
+    console.error('Auctions API error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

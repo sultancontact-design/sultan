@@ -1,7 +1,6 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSultanStore } from '@/lib/store';
-import { listings } from '@/lib/seed-data';
 import TopNav from '@/components/sultan/TopNav';
 import BottomNav from '@/components/sultan/BottomNav';
 import HomeView from '@/components/sultan/HomeView';
@@ -19,14 +18,66 @@ import PlaceholderView from '@/components/sultan/PlaceholderView';
 import SupportModal from '@/components/sultan/SupportModal';
 import PublishWizard from '@/components/sultan/PublishWizard';
 
+// Fallback: import static seed data in case API is unavailable
+import { listings as fallbackListings } from '@/lib/seed-data';
+
 export default function Page() {
   const { currentView, isRTL, locale, setListings } = useSultanStore();
   const initialized = useRef(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(function() {
     if (!initialized.current) {
-      setListings(listings);
       initialized.current = true;
+
+      // Fetch real listings from API (Supabase)
+      fetch('/api/listings?limit=100')
+        .then(res => res.json())
+        .then(data => {
+          if (data.listings && data.listings.length > 0) {
+            // Map API data to store format
+            const mapped = data.listings.map((l: any) => ({
+              id: l.id,
+              title: l.title,
+              description: l.description,
+              price: l.price,
+              currency: l.currency || 'MAD',
+              category: l.category?.nameAr || l.categoryId || '',
+              categoryId: l.categoryId,
+              condition: l.condition,
+              city: l.city,
+              region: l.region,
+              views: l.viewsCount,
+              likes: l.likesCount,
+              isFeatured: l.isFeatured,
+              isUrgent: l.isUrgent,
+              negotiation: l.negotiation,
+              delivery: l.delivery,
+              images: typeof l.images === 'string' ? JSON.parse(l.images || '[]') : (l.images || []),
+              createdAt: l.createdAt,
+              seller: l.profile ? {
+                id: l.profile.id,
+                name: l.profile.displayName,
+                avatar: l.profile.avatar,
+                city: l.profile.city,
+                verified: l.profile.isVerified,
+                trust: l.profile.trustScore,
+              } : null,
+            }));
+            setListings(mapped);
+            console.log('[SULTAN] Loaded ' + mapped.length + ' listings from Supabase');
+          } else {
+            // Fallback to static data
+            setListings(fallbackListings);
+            console.log('[SULTAN] Using fallback static data');
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('[SULTAN] API fetch error, using fallback:', err);
+          setListings(fallbackListings);
+          setLoading(false);
+        });
     }
   }, []);
 
@@ -70,10 +121,26 @@ export default function Page() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black" dir="rtl">
+        <div className="text-center">
+          <div className="text-4xl mb-4" style={{color:'#D4AF37'}}>
+            <svg className="animate-spin h-12 w-12 mx-auto" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#D4AF37" strokeWidth="3"/>
+              <path className="opacity-75" fill="#D4AF37" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          </div>
+          <p className="text-lg" style={{color:'#D4AF37'}}>سلطان | SULTAN</p>
+          <p className="text-sm text-zinc-500 mt-2">جاري تحميل البيانات...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <TopNav />
-      <main className="flex-1">{renderView()}</main>
+      <TopNav />\n      <main className="flex-1">{renderView()}</main>
       <BottomNav />
       <SupportModal />
       <PublishWizard />

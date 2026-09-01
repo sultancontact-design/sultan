@@ -1,49 +1,47 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
+
+export const runtime = 'edge'
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search');
-    const city = searchParams.get('city');
-    const role = searchParams.get('role');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const { searchParams } = new URL(request.url)
+    const search = searchParams.get('search')
+    const city = searchParams.get('city')
+    const role = searchParams.get('role')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
 
-    const where: Record<string, unknown> = {};
+    let query = supabase
+      .from('Profile')
+      .select('*, listings(count)', { count: 'exact' })
+      .order('createdAt', { ascending: false })
 
     if (search) {
-      where.OR = [
-        { displayName: { contains: search } },
-        { username: { contains: search } },
-        { email: { contains: search } },
-      ];
+      query = query.or(`displayName.ilike.%${search}%,username.ilike.%${search}%,email.ilike.%${search}%`)
     }
-    if (city) where.city = city;
-    if (role) where.role = role;
+    if (city) {
+      query = query.eq('city', city)
+    }
+    if (role) {
+      query = query.eq('role', role)
+    }
 
-    const [profiles, total] = await Promise.all([
-      db.profile.findMany({
-        where,
-        select: {
-          id: true, userId: true, username: true, displayName: true, email: true,
-          phone: true, avatar: true, bio: true, city: true, region: true,
-          role: true, isVerified: true, isBusiness: true, trustScore: true,
-          reputationScore: true, sultanPower: true, coinsBalance: true,
-          isRising: true, isFeatured: true, listingCount: true, saleCount: true,
-          followerCount: true, followingCount: true, createdAt: true,
-          _count: { select: { listings: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      db.profile.count({ where }),
-    ]);
+    const from = (page - 1) * limit
+    query = query.range(from, from + limit - 1)
 
-    return NextResponse.json({ profiles, total, page, totalPages: Math.ceil(total / limit) });
-  } catch (error) {
-    console.error('Profiles API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const { data: profiles, count: total, error } = await query
+
+    if (error) throw error
+
+    return NextResponse.json({
+      profiles: profiles || [],
+      total: total || 0,
+      page,
+      totalPages: Math.ceil((total || 0) / limit),
+    })
+  } catch (error: any) {
+    console.error('Profiles API error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
