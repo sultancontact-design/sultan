@@ -1,0 +1,714 @@
+     1→'use client'
+     2→
+     3→import { motion } from 'framer-motion'
+     4→import {
+     5→  Users,
+     6→  FileText,
+     7→  Gavel,
+     8→  Banknote,
+     9→  DollarSign,
+    10→  Activity,
+    11→  HeartPulse,
+    12→  TicketCheck,
+    13→  AlertTriangle,
+    14→  TrendingUp,
+    15→  TrendingDown,
+    16→  ArrowUpRight,
+    17→  UserPlus,
+    18→  FilePlus2,
+    19→  GavelIcon,
+    20→  Wallet,
+    21→  Flag,
+    22→  Settings,
+    23→  Clock,
+    24→  Zap,
+    25→  Wifi,
+    26→  WifiOff,
+    27→  Server,
+    28→  Database,
+    29→  HardDrive,
+    30→  Mail,
+    31→  Bell,
+    32→  Search,
+    33→  Shield,
+    34→  Eye,
+    35→  Trash2,
+    36→  Ban,
+    37→  Star,
+    38→  UserCheck,
+    39→  ChevronLeft,
+    40→} from 'lucide-react'
+    41→import {
+    42→  AreaChart,
+    43→  Area,
+    44→  XAxis,
+    45→  YAxis,
+    46→  CartesianGrid,
+    47→  Tooltip as RechartsTooltip,
+    48→  ResponsiveContainer,
+    49→} from 'recharts'
+    50→import { Badge } from '@/components/ui/badge'
+    51→import { Progress } from '@/components/ui/progress'
+    52→import {
+    53→  adminStats,
+    54→  adminChartData,
+    55→  adminSystemHealth,
+    56→  adminAuditLog,
+    57→  adminReports,
+    58→} from '@/lib/seed-data'
+    59→import { useSultanStore } from '@/lib/store'
+    60→
+    61→/* ------------------------------------------------------------------ */
+    62→/*  Helpers                                                            */
+    63→/* ------------------------------------------------------------------ */
+    64→const fmt = (n: number) => n.toLocaleString('ar-EG')
+    65→
+    66→const pendingReports = adminReports.filter(
+    67→  (r) => r.status === 'pending' || r.status === 'under_review'
+    68→).length
+    69→
+    70→const latestRevenue = adminChartData.revenue[adminChartData.revenue.length - 1]
+    71→const prevRevenue = adminChartData.revenue[adminChartData.revenue.length - 2]
+    72→const revenueTrend =
+    73→  prevRevenue
+    74→    ? (((latestRevenue.amount - prevRevenue.amount) / prevRevenue.amount) * 100).toFixed(1)
+    75→    : '0'
+    76→
+    77→const relativeTime = (iso: string) => {
+    78→  const diff = Date.now() - new Date(iso).getTime()
+    79→  const mins = Math.floor(diff / 60000)
+    80→  if (mins < 1) return 'الآن'
+    81→  if (mins < 60) return `منذ ${fmt(mins)} دقيقة`
+    82→  const hrs = Math.floor(mins / 60)
+    83→  if (hrs < 24) return `منذ ${fmt(hrs)} ساعة`
+    84→  const days = Math.floor(hrs / 24)
+    85→  return `منذ ${fmt(days)} يوم`
+    86→}
+    87→
+    88→const severityConfig: Record<
+    89→  string,
+    90→  { color: string; bg: string; icon: React.ElementType }
+    91→> = {
+    92→  high: { color: 'text-red-400', bg: 'bg-red-500/15', icon: Trash2 },
+    93→  medium: { color: 'text-amber-400', bg: 'bg-amber-500/15', icon: Shield },
+    94→  low: { color: 'text-emerald-400', bg: 'bg-emerald-500/15', icon: Star },
+    95→}
+    96→
+    97→const serviceIcons: Record<string, React.ElementType> = {
+    98→  'الخادم الرئيسي': Server,
+    99→  'قاعدة البيانات': Database,
+   100→  التخزين: HardDrive,
+   101→  'البريد الإلكتروني': Mail,
+   102→  الإشعارات: Bell,
+   103→  البحث: Search,
+   104→}
+   105→
+   106→const serviceColorMap: Record<string, string> = {
+   107→  operational: 'bg-emerald-500',
+   108→  degraded: 'bg-amber-500',
+   109→  down: 'bg-red-500',
+   110→}
+   111→
+   112→const barColors = [
+   113→  '#D4AF37',
+   114→  '#34d399',
+   115→  '#F59E0B',
+   116→  '#D4AF37',
+   117→  '#34d399',
+   118→  '#F59E0B',
+   119→  '#D4AF37',
+   120→  '#34d399',
+   121→]
+   122→
+   123→/* ------------------------------------------------------------------ */
+   124→/*  Types                                                              */
+   125→/* ------------------------------------------------------------------ */
+   126→interface OverviewPanelProps {
+   127→  onNavigate?: (panel: string) => void
+   128→}
+   129→
+   130→/* ------------------------------------------------------------------ */
+   131→/*  KPI Data                                                           */
+   132→/* ------------------------------------------------------------------ */
+   133→const kpiCards = [
+   134→  {
+   135→    label: 'إجمالي المستخدمين',
+   136→    value: fmt(adminStats.totalUsers),
+   137→    icon: Users,
+   138→    iconBg: 'bg-[#D4AF37]/15',
+   139→    iconColor: 'text-[#D4AF37]',
+   140→    trend: '+12.5%',
+   141→    trendUp: true,
+   142→    sub: 'مستخدم مسجّل',
+   143→  },
+   144→  {
+   145→    label: 'إجمالي الإعلانات',
+   146→    value: fmt(adminStats.totalListings),
+   147→    icon: FileText,
+   148→    iconBg: 'bg-emerald-500/15',
+   149→    iconColor: 'text-emerald-400',
+   150→    trend: `+${fmt(adminStats.todayListings)} اليوم`,
+   151→    trendUp: true,
+   152→    sub: 'إعلان منشور',
+   153→  },
+   154→  {
+   155→    label: 'المزادات النشطة',
+   156→    value: fmt(adminStats.activeAuctions),
+   157→    icon: Gavel,
+   158→    iconBg: 'bg-amber-500/15',
+   159→    iconColor: 'text-amber-400',
+   160→    trend: null,
+   161→    trendUp: true,
+   162→    sub: 'مزاد جارٍ',
+   163→  },
+   164→  {
+   165→    label: 'طلبات السحب',
+   166→    value: fmt(adminStats.pendingCashouts),
+   167→    icon: Banknote,
+   168→    iconBg: 'bg-orange-500/15',
+   169→    iconColor: 'text-orange-400',
+   170→    trend: 'بانتظار المراجعة',
+   171→    trendUp: false,
+   172→    sub: 'طلب معلّق',
+   173→  },
+   174→  {
+   175→    label: 'الإيرادات الشهرية',
+   176→    value: `${fmt(latestRevenue.amount)} ر.م`,
+   177→    icon: DollarSign,
+   178→    iconBg: 'bg-[#F0D060]/15',
+   179→    iconColor: 'text-[#F0D060]',
+   180→    trend: `+${revenueTrend}%`,
+   181→    trendUp: true,
+   182→    sub: 'درهم',
+   183→  },
+   184→  {
+   185→    label: 'المستخدمون النشطون',
+   186→    value: fmt(adminStats.activeUsers),
+   187→    icon: Activity,
+   188→    iconBg: 'bg-emerald-500/15',
+   189→    iconColor: 'text-emerald-400',
+   190→    trend: `${((adminStats.activeUsers / adminStats.totalUsers) * 100).toFixed(1)}%`,
+   191→    trendUp: true,
+   192→    sub: 'نشط هذا الشهر',
+   193→  },
+   194→  {
+   195→    label: 'صحة الاقتصاد',
+   196→    value: `${adminStats.economyHealth}%`,
+   197→    icon: HeartPulse,
+   198→    iconBg: 'bg-emerald-500/15',
+   199→    iconColor: 'text-emerald-400',
+   200→    trend: 'ممتاز',
+   201→    trendUp: true,
+   202→    sub: 'مؤشر الصحة',
+   203→  },
+   204→  {
+   205→    label: 'تذاكر الدعم',
+   206→    value: fmt(adminStats.openTickets),
+   207→    icon: TicketCheck,
+   208→    iconBg: 'bg-amber-500/15',
+   209→    iconColor: 'text-amber-400',
+   210→    trend: adminStats.openTickets > 50 ? 'مرتفع' : 'طبيعي',
+   211→    trendUp: adminStats.openTickets <= 50,
+   212→    sub: 'تذكرة مفتوحة',
+   213→  },
+   214→]
+   215→
+   216→/* ------------------------------------------------------------------ */
+   217→/*  Quick Actions                                                      */
+   218→/* ------------------------------------------------------------------ */
+   219→const quickActions = [
+   220→  { label: 'المستخدمون', icon: Users, panel: 'users' },
+   221→  { label: 'الإعلانات', icon: FileText, panel: 'listings' },
+   222→  { label: 'المزادات', icon: GavelIcon, panel: 'auctions' },
+   223→  { label: 'المالية', icon: Wallet, panel: 'finance' },
+   224→  { label: 'البلاغات', icon: Flag, panel: 'reports' },
+   225→  { label: 'الإعدادات', icon: Settings, panel: 'settings' },
+   226→]
+   227→
+   228→/* ------------------------------------------------------------------ */
+   229→/*  Conversion Funnel                                                  */
+   230→/* ------------------------------------------------------------------ */
+   231→const funnelSteps = [
+   232→  { label: 'الزوار', value: 45230, color: '#D4AF37' },
+   233→  { label: 'التسجيلات', value: 48520, color: '#F0D060' },
+   234→  { label: 'الإعلانات', value: 32150, color: '#34d399' },
+   235→  { label: 'الصفقات', value: 8420, color: '#F59E0B' },
+   236→]
+   237→const funnelMax = Math.max(...funnelSteps.map((s) => s.value))
+   238→
+   239→/* ------------------------------------------------------------------ */
+   240→/*  Custom Tooltip                                                     */
+   241→/* ------------------------------------------------------------------ */
+   242→function DarkTooltip({
+   243→  active,
+   244→  payload,
+   245→  label,
+   246→}: {
+   247→  active?: boolean
+   248→  payload?: Array<{ value: number; dataKey: string; color: string }>
+   249→  label?: string
+   250→}) {
+   251→  if (!active || !payload?.length) return null
+   252→  return (
+   253→    <div className="rounded-lg border border-white/10 bg-zinc-900/95 px-4 py-3 shadow-2xl backdrop-blur-md">
+   254→      <p className="mb-1 text-xs text-zinc-400">{label}</p>
+   255→      {payload.map((p) => (
+   256→        <p key={p.dataKey} className="text-sm font-medium" style={{ color: p.color }}>
+   257→          {p.dataKey === 'users' ? 'المستخدمون' : 'الإعلانات'}:{' '}
+   258→          {fmt(p.value)}
+   259→        </p>
+   260→      ))}
+   261→    </div>
+   262→  )
+   263→}
+   264→
+   265→/* ------------------------------------------------------------------ */
+   266→/*  Component                                                          */
+   267→/* ------------------------------------------------------------------ */
+   268→export default function OverviewPanel({ onNavigate }: OverviewPanelProps) {
+   269→  const addToast = useSultanStore((s) => s.addToast)
+   270→
+   271→  return (
+   272→    <div className="space-y-6">
+   273→      {/* ── Alert Banner ─────────────────────────────────────────── */}
+   274→      {pendingReports > 0 && (
+   275→        <motion.div
+   276→          initial={{ opacity: 0, y: -12 }}
+   277→          animate={{ opacity: 1, y: 0 }}
+   278→          className="admin-card-gold flex items-center justify-between gap-4 border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4"
+   279→        >
+   280→          <div className="flex items-center gap-3">
+   281→            <div className="pulse-gold flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#D4AF37]/20">
+   282→              <AlertTriangle className="h-5 w-5 text-[#D4AF37]" />
+   283→            </div>
+   284→            <div>
+   285→              <p className="font-semibold text-[#F0D060]">
+   286→                {fmt(pendingReports)} بلاغات بانتظار المراجعة
+   287→              </p>
+   288→              <p className="text-sm text-zinc-400">
+   289→                هناك تقارير تحتاج إلى تدخل فوري من الإدارة
+   290→              </p>
+   291→            </div>
+   292→          </div>
+   293→          <button
+   294→            onClick={() => {
+   295→              onNavigate?.('reports')
+   296→              addToast({ type: 'info', message: 'تم التوجيه إلى البلاغات' })
+   297→            }}
+   298→            className="press-effect shrink-0 rounded-lg bg-[#D4AF37]/20 px-5 py-2 text-sm font-semibold text-[#D4AF37] transition-colors hover:bg-[#D4AF37]/30"
+   299→          >
+   300→            مراجعة البلاغات
+   301→          </button>
+   302→        </motion.div>
+   303→      )}
+   304→
+   305→      {/* ── KPI Cards (4×2) ──────────────────────────────────────── */}
+   306→      <div className="stagger-children grid grid-cols-2 gap-4 lg:grid-cols-4">
+   307→        {kpiCards.map((kpi, idx) => {
+   308→          const Icon = kpi.icon
+   309→          return (
+   310→            <motion.div
+   311→              key={kpi.label}
+   312→              initial={{ opacity: 0, y: 24 }}
+   313→              animate={{ opacity: 1, y: 0 }}
+   314→              transition={{ duration: 0.4, delay: idx * 0.06 }}
+   315→              className="admin-card group relative overflow-hidden p-5"
+   316→            >
+   317→              {/* subtle glow on hover */}
+   318→              <div className="pointer-events-none absolute -inset-1 rounded-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-[#D4AF37]/5 to-transparent" />
+   319→
+   320→              <div className="relative flex items-start justify-between">
+   321→                <div
+   322→                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${kpi.iconBg}`}
+   323→                >
+   324→                  <Icon className={`h-5 w-5 ${kpi.iconColor}`} />
+   325→                </div>
+   326→                {kpi.trend && (
+   327→                  <Badge
+   328→                    variant="outline"
+   329→                    className={`text-[11px] font-medium ${
+   330→                      kpi.trendUp
+   331→                        ? 'border-emerald-500/30 text-emerald-400'
+   332→                        : 'border-amber-500/30 text-amber-400'
+   333→                    }`}
+   334→                  >
+   335→                    {kpi.trendUp ? (
+   336→                      <TrendingUp className="ml-1 h-3 w-3" />
+   337→                    ) : (
+   338→                      <TrendingDown className="ml-1 h-3 w-3" />
+   339→                    )}
+   340→                    {kpi.trend}
+   341→                  </Badge>
+   342→                )}
+   343→              </div>
+   344→
+   345→              <div className="relative mt-4">
+   346→                <p className="text-2xl font-bold tracking-tight text-white lg:text-[1.7rem]">
+   347→                  {kpi.value}
+   348→                </p>
+   349→                <p className="mt-0.5 text-sm text-zinc-400">{kpi.label}</p>
+   350→                <p className="mt-0.5 text-xs text-zinc-500">{kpi.sub}</p>
+   351→              </div>
+   352→            </motion.div>
+   353→          )
+   354→        })}
+   355→      </div>
+   356→
+   357→      {/* ── Charts Row ───────────────────────────────────────────── */}
+   358→      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+   359→        {/* LEFT — Area Chart: User & Listing Growth */}
+   360→        <motion.div
+   361→          initial={{ opacity: 0, y: 20 }}
+   362→          animate={{ opacity: 1, y: 0 }}
+   363→          transition={{ duration: 0.5, delay: 0.25 }}
+   364→          className="admin-card col-span-1 p-5 lg:col-span-2"
+   365→        >
+   366→          <h3 className="mb-4 text-base font-semibold text-white">
+   367→            نمو المستخدمين والإعلانات
+   368→          </h3>
+   369→          <div className="h-72">
+   370→            <ResponsiveContainer width="100%" height="100%">
+   371→              <AreaChart
+   372→                data={adminChartData.userGrowth}
+   373→                margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
+   374→              >
+   375→                <defs>
+   376→                  <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+   377→                    <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.35} />
+   378→                    <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+   379→                  </linearGradient>
+   380→                  <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
+   381→                    <stop offset="5%" stopColor="#34d399" stopOpacity={0.3} />
+   382→                    <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
+   383→                  </linearGradient>
+   384→                </defs>
+   385→                <CartesianGrid
+   386→                  strokeDasharray="3 3"
+   387→                  stroke="rgba(255,255,255,0.06)"
+   388→                  vertical={false}
+   389→                />
+   390→                <XAxis
+   391→                  dataKey="date"
+   392→                  tick={{ fill: '#71717a', fontSize: 11 }}
+   393→                  tickFormatter={(v: string) => v.slice(5)}
+   394→                  axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+   395→                  tickLine={false}
+   396→                />
+   397→                <YAxis
+   398→                  tick={{ fill: '#71717a', fontSize: 11 }}
+   399→                  axisLine={false}
+   400→                  tickLine={false}
+   401→                />
+   402→                <RechartsTooltip
+   403→                  content={<DarkTooltip />}
+   404→                  cursor={{ stroke: 'rgba(212,175,55,0.2)', strokeWidth: 1 }}
+   405→                />
+   406→                <Area
+   407→                  type="monotone"
+   408→                  dataKey="users"
+   409→                  stroke="#D4AF37"
+   410→                  strokeWidth={2}
+   411→                  fill="url(#goldGrad)"
+   412→                  dot={false}
+   413→                  activeDot={{ r: 4, strokeWidth: 0, fill: '#D4AF37' }}
+   414→                />
+   415→                <Area
+   416→                  type="monotone"
+   417→                  dataKey="listings"
+   418→                  stroke="#34d399"
+   419→                  strokeWidth={2}
+   420→                  fill="url(#emeraldGrad)"
+   421→                  dot={false}
+   422→                  activeDot={{ r: 4, strokeWidth: 0, fill: '#34d399' }}
+   423→                />
+   424→              </AreaChart>
+   425→            </ResponsiveContainer>
+   426→          </div>
+   427→          <div className="mt-3 flex items-center justify-center gap-6 text-xs text-zinc-400">
+   428→            <span className="flex items-center gap-1.5">
+   429→              <span className="h-2.5 w-2.5 rounded-full bg-[#D4AF37]" />
+   430→              المستخدمون
+   431→            </span>
+   432→            <span className="flex items-center gap-1.5">
+   433→              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+   434→              الإعلانات
+   435→            </span>
+   436→          </div>
+   437→        </motion.div>
+   438→
+   439→        {/* RIGHT — Category Distribution Bars */}
+   440→        <motion.div
+   441→          initial={{ opacity: 0, y: 20 }}
+   442→          animate={{ opacity: 1, y: 0 }}
+   443→          transition={{ duration: 0.5, delay: 0.35 }}
+   444→          className="admin-card p-5"
+   445→        >
+   446→          <h3 className="mb-4 text-base font-semibold text-white">
+   447→            توزيع الفئات
+   448→          </h3>
+   449→          <div className="scrollbar-thin space-y-3 overflow-y-auto" style={{ maxHeight: '17rem' }}>
+   450→            {adminChartData.categoryDistribution.slice(0, 8).map((cat, idx) => {
+   451→              const maxCount = adminChartData.categoryDistribution[0].count
+   452→              const pct = (cat.count / maxCount) * 100
+   453→              return (
+   454→                <div key={cat.name}>
+   455→                  <div className="mb-1 flex items-center justify-between text-sm">
+   456→                    <span className="text-zinc-300">{cat.name}</span>
+   457→                    <span className="text-xs text-zinc-500">{fmt(cat.count)}</span>
+   458→                  </div>
+   459→                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/5">
+   460→                    <motion.div
+   461→                      initial={{ width: 0 }}
+   462→                      animate={{ width: `${pct}%` }}
+   463→                      transition={{ duration: 0.7, delay: 0.4 + idx * 0.07 }}
+   464→                      className="h-full rounded-full"
+   465→                      style={{ backgroundColor: barColors[idx] || '#D4AF37' }}
+   466→                    />
+   467→                  </div>
+   468→                </div>
+   469→              )
+   470→            })}
+   471→          </div>
+   472→        </motion.div>
+   473→      </div>
+   474→
+   475→      {/* ── Bottom Row (3 columns) ───────────────────────────────── */}
+   476→      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+   477→        {/* Revenue Trend */}
+   478→        <motion.div
+   479→          initial={{ opacity: 0, y: 20 }}
+   480→          animate={{ opacity: 1, y: 0 }}
+   481→          transition={{ duration: 0.5, delay: 0.4 }}
+   482→          className="admin-card p-5"
+   483→        >
+   484→          <div className="mb-1 flex items-center justify-between">
+   485→            <h3 className="text-base font-semibold text-white">الإيرادات الشهرية</h3>
+   486→            <Badge
+   487→              variant="outline"
+   488→              className="border-emerald-500/30 text-emerald-400"
+   489→            >
+   490→              <TrendingUp className="ml-1 h-3 w-3" />
+   491→              +{revenueTrend}%
+   492→            </Badge>
+   493→          </div>
+   494→          <p className="mb-4 text-xs text-zinc-500">
+   495→            {latestRevenue.month}: {fmt(latestRevenue.amount)} ر.م
+   496→          </p>
+   497→          <div className="h-44">
+   498→            <ResponsiveContainer width="100%" height="100%">
+   499→              <AreaChart
+   500→                data={adminChartData.revenue}
+   501→                margin={{ top: 5, right: 5, left: -25, bottom: 0 }}
+   502→              >
+   503→                <defs>
+   504→                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+   505→                    <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.4} />
+   506→                    <stop offset="95%" stopColor="#D4AF37" stopOpacity={0} />
+   507→                  </linearGradient>
+   508→                </defs>
+   509→                <XAxis
+   510→                  dataKey="month"
+   511→                  tick={{ fill: '#71717a', fontSize: 10 }}
+   512→                  axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+   513→                  tickLine={false}
+   514→                  interval={1}
+   515→                />
+   516→                <YAxis
+   517→                  tick={{ fill: '#71717a', fontSize: 10 }}
+   518→                  axisLine={false}
+   519→                  tickLine={false}
+   520→                  tickFormatter={(v: number) =>
+   521→                    v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)
+   522→                  }
+   523→                />
+   524→                <RechartsTooltip
+   525→                  contentStyle={{
+   526→                    backgroundColor: 'rgba(24,24,27,0.95)',
+   527→                    border: '1px solid rgba(255,255,255,0.1)',
+   528→                    borderRadius: '8px',
+   529→                    color: '#D4AF37',
+   530→                    fontSize: '13px',
+   531→                  }}
+   532→                  formatter={(value: number) => [
+   533→                    `${fmt(value)} ر.م`,
+   534→                    'الإيرادات',
+   535→                  ]}
+   536→                  labelStyle={{ color: '#a1a1aa' }}
+   537→                />
+   538→                <Area
+   539→                  type="monotone"
+   540→                  dataKey="amount"
+   541→                  stroke="#D4AF37"
+   542→                  strokeWidth={2}
+   543→                  fill="url(#revGrad)"
+   544→                  dot={false}
+   545→                  activeDot={{ r: 4, strokeWidth: 0, fill: '#D4AF37' }}
+   546→                />
+   547→              </AreaChart>
+   548→            </ResponsiveContainer>
+   549→          </div>
+   550→        </motion.div>
+   551→
+   552→        {/* Quick Actions */}
+   553→        <motion.div
+   554→          initial={{ opacity: 0, y: 20 }}
+   555→          animate={{ opacity: 1, y: 0 }}
+   556→          transition={{ duration: 0.5, delay: 0.45 }}
+   557→          className="admin-card p-5"
+   558→        >
+   559→          <h3 className="mb-4 text-base font-semibold text-white">
+   560→            إجراءات سريعة
+   561→          </h3>
+   562→          <div className="grid grid-cols-2 gap-3">
+   563→            {quickActions.map((qa, idx) => {
+   564→              const Icon = qa.icon
+   565→              return (
+   566→                <motion.button
+   567→                  key={qa.panel}
+   568→                  initial={{ opacity: 0, scale: 0.9 }}
+   569→                  animate={{ opacity: 1, scale: 1 }}
+   570→                  transition={{ duration: 0.3, delay: 0.5 + idx * 0.05 }}
+   571→                  whileHover={{ scale: 1.04 }}
+   572→                  whileTap={{ scale: 0.97 }}
+   573→                  onClick={() => onNavigate?.(qa.panel)}
+   574→                  className="press-effect flex flex-col items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] py-5 transition-colors hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/5"
+   575→                >
+   576→                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#D4AF37]/10">
+   577→                    <Icon className="h-5 w-5 text-[#D4AF37]" />
+   578→                  </div>
+   579→                  <span className="text-sm font-medium text-zinc-300">
+   580→                    {qa.label}
+   581→                  </span>
+   582→                </motion.button>
+   583→              )
+   584→            })}
+   585→          </div>
+   586→        </motion.div>
+   587→
+   588→        {/* System Health */}
+   589→        <motion.div
+   590→          initial={{ opacity: 0, y: 20 }}
+   591→          animate={{ opacity: 1, y: 0 }}
+   592→          transition={{ duration: 0.5, delay: 0.5 }}
+   593→          className="admin-card p-5"
+   594→        >
+   595→          <h3 className="mb-4 text-base font-semibold text-white">
+   596→            صحة النظام
+   597→          </h3>
+   598→
+   599→          {/* Key metrics */}
+   600→          <div className="mb-4 grid grid-cols-2 gap-3">
+   601→            <HealthPill
+   602→              label="وقت التشغيل"
+   603→              value={`${adminSystemHealth.uptime}%`}
+   604→              status="good"
+   605→            />
+   606→            <HealthPill
+   607→              label="زمن الاستجابة"
+   608→              value={`${adminSystemHealth.responseTime}ms`}
+   609→              status={adminSystemHealth.responseTime < 200 ? 'good' : 'warn'}
+   610→            />
+   611→            <HealthPill
+   612→              label="الجلسات النشطة"
+   613→              value={fmt(adminSystemHealth.activeSessions)}
+   614→              status="good"
+   615→            />
+   616→            <HealthPill
+   617→              label="معدل الأخطاء"
+   618→              value={`${adminSystemHealth.errorRate}%`}
+   619→              status={
+   620→                adminSystemHealth.errorRate < 0.5
+   621→                  ? 'good'
+   622→                  : adminSystemHealth.errorRate < 2
+   623→                    ? 'warn'
+   624→                    : 'bad'
+   625→              }
+   626→            />
+   627→          </div>
+   628→
+   629→          {/* Services list */}
+   630→          <div className="scrollbar-thin space-y-2 overflow-y-auto" style={{ maxHeight: '11rem' }}>
+   631→            {adminSystemHealth.services.map((svc) => {
+   632→              const SvcIcon = serviceIcons[svc.name] || Zap
+   633→              return (
+   634→                <div
+   635→                  key={svc.name}
+   636→                  className="flex items-center justify-between rounded-lg bg-white/[0.03] px-3 py-2"
+   637→                >
+   638→                  <div className="flex items-center gap-2.5">
+   639→                    <SvcIcon className="h-4 w-4 text-zinc-400" />
+   640→                    <span className="text-sm text-zinc-300">{svc.name}</span>
+   641→                  </div>
+   642→                  <div className="flex items-center gap-2">
+   643→                    <span className="text-xs text-zinc-500">
+   644→                      {svc.latency}ms
+   645→                    </span>
+   646→                    <span
+   647→                      className={`h-2 w-2 rounded-full ${serviceColorMap[svc.status]}`}
+   648→                    />
+   649→                  </div>
+   650→                </div>
+   651→              )
+   652→            })}
+   653→          </div>
+   654→        </motion.div>
+   655→      </div>
+   656→
+   657→      {/* ── Live Activity Feed + Conversion Funnel ───────────────── */}
+   658→      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+   659→        {/* Activity Feed */}
+   660→        <motion.div
+   661→          initial={{ opacity: 0, y: 20 }}
+   662→          animate={{ opacity: 1, y: 0 }}
+   663→          transition={{ duration: 0.5, delay: 0.55 }}
+   664→          className="admin-card p-5"
+   665→        >
+   666→          <div className="mb-4 flex items-center justify-between">
+   667→            <h3 className="text-base font-semibold text-white">
+   668→              النشاط المباشر
+   669→            </h3>
+   670→            <span className="pulse-gold flex items-center gap-1.5 text-xs text-emerald-400">
+   671→              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+   672→              مباشر
+   673→            </span>
+   674→          </div>
+   675→          <div className="scrollbar-thin space-y-3 overflow-y-auto" style={{ maxHeight: '22rem' }}>
+   676→            {adminAuditLog.slice(0, 6).map((log, idx) => {
+   677→              const sev = severityConfig[log.severity] ?? severityConfig.low
+   678→              const SevIcon = sev.icon
+   679→              return (
+   680→                <motion.div
+   681→                  key={log.id}
+   682→                  initial={{ opacity: 0, x: 16 }}
+   683→                  animate={{ opacity: 1, x: 0 }}
+   684→                  transition={{ duration: 0.3, delay: 0.6 + idx * 0.06 }}
+   685→                  className="flex gap-3 rounded-lg bg-white/[0.02] p-3 transition-colors hover:bg-white/[0.04]"
+   686→                >
+   687→                  <div
+   688→                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${sev.bg}`}
+   689→                  >
+   690→                    <SevIcon className={`h-4 w-4 ${sev.color}`} />
+   691→                  </div>
+   692→                  <div className="min-w-0 flex-1">
+   693→                    <p className="truncate text-sm font-medium text-zinc-200">
+   694→                      {log.action}
+   695→                    </p>
+   696→                    <p className="mt-0.5 text-xs text-zinc-500">
+   697→                      {log.admin} · {relativeTime(log.createdAt)}
+   698→                    </p>
+   699→                  </div>
+   700→                </motion.div>
+   701→              )
+   702→            })}
+   703→          </div>
+   704→        </motion.div>
+   705→
+   706→        {/* Conversion Funnel */}
+   707→        <motion.div
+   708→          initial={{ opacity: 0, y: 20 }}
+   709→          animate={{ opacity: 1, y: 0 }}
+   710→          transition={{ duration: 0.5, delay: 0.6 }}
+   711→          className="admin-card p-5"
+   712→        >
+   713→          <h3 className="mb-4 text-base font-semibold text-white">
+   714→          </h3>

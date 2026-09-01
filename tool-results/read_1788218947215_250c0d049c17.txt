@@ -1,0 +1,235 @@
+     1→   162→export const auctions = [
+     2→   163→  { id: 'a-1', title: 'ساعة رولكس ديتونا أصلية', description: 'ساعة رولكس ديتونا من الفولاذ المقاوم للصدأ مع لوحة أرقام سوداء. موديل 2022 مع جميع الأوراق والضمان. [DEMO]', startPrice: 85000, currentBid: 127000, endsAt: '2026-08-22T20:00:00Z', images: g('from-yellow-700/50 to-amber-600/20'), bidCount: 23, status: 'active' },
+     3→   164→  { id: 'a-2', title: 'لوحة زيتية لفنان مغربي مشهور', description: 'لوحة زيتية أصلية بريشة الفنان المغربي أحمد الشرقاوي. تمثل مشهد من حياة المدينة القديمة. [DEMO]', startPrice: 15000, currentBid: 28000, endsAt: '2026-08-21T18:00:00Z', images: g('from-amber-600/50 to-orange-500/20'), bidCount: 15, status: 'active' },
+     4→   165→  { id: 'a-3', title: 'طقم جواهر أميراتي فاخر', description: 'طقم جواهر يتضمن قلادة وأسورة وأقراط من الأحجار الكريمة المغربية مع إطار ذهب عيار 18. [DEMO]', startPrice: 25000, currentBid: 42000, endsAt: '2026-08-23T21:00:00Z', images: g('from-rose-600/50 to-pink-500/20'), bidCount: 18, status: 'active' },
+     5→   166→  { id: 'a-4', title: 'سيارة كلاسيكية مرسيدس 1965', description: 'سيارة مرسيدس بنز W111 موديل 1965 بحالة ممتازة. تم ترميمها بالكامل مع المحرك الأصلي. قطعة استثنائية. [DEMO]', startPrice: 200000, currentBid: 350000, endsAt: '2026-08-25T20:00:00Z', images: g('from-slate-700/50 to-slate-500/20'), bidCount: 8, status: 'active' },
+     6→   167→  { id: 'a-5', title: 'مخطوطة قرآنية قديمة', description: 'مخطوطة قرآنية بخط مغربي أصلي عمرها أكثر من 300 سنة. محفوظة بحالة جيدة مع تجليد جلدي عتيق. [DEMO]', startPrice: 50000, currentBid: 89000, endsAt: '2026-08-24T19:00:00Z', images: g('from-amber-800/50 to-yellow-600/20'), bidCount: 12, status: 'active' },
+     7→   168→];
+     8→   169→
+     9→   170→export const charityCases = [
+    10→   171→  { id: 'ch-1', title: 'إعادة بناء مدرسة في الأطلس', description: 'مدرسة ابتدائية تضررت من الفيضانات تحتاج إعادة بناء كاملة لتستقبل 200 تلميذ. المبلغ يشمل البناء والتجهيز. [DEMO]', goalAmount: 500000, collectedAmount: 287000, urgency: 'critical', donors: 156, status: 'active' },
+    11→   172→  { id: 'ch-2', title: 'عملية جراحية لطفلة', description: 'طفلة عمرها 4 سنوات تحتاج عملية جراحية عاجلة في القلب بتكلفة 120 ألف درهم. العائلة لا تستطيع تحمل التكاليف. [DEMO]', goalAmount: 120000, collectedAmount: 95000, urgency: 'high', donors: 89, status: 'active' },
+    12→   173→  { id: 'ch-3', title: 'تزويد قرية نائية بالماء الصالح', description: 'قرية في جبال الأطلس تفتقر للماء الصالح للشرب. المشروع يهدف لحفر بئر وتركيب خزانات ونظام تنقية. [DEMO]', goalAmount: 300000, collectedAmount: 145000, urgency: 'high', donors: 112, status: 'active' },
+    13→   174→  { id: 'ch-4', title: 'رعاية 50 يتيم', description: 'برنامج رعاية شاملة لـ 50 يتيما يشمل التعليم والملبس والغذاء على مدار سنة كاملة. [DEMO]', goalAmount: 250000, collectedAmount: 198000, urgency: 'medium', donors: 234, status: 'active' },
+    14→   175→  { id: 'ch-5', title: 'زراعة 1000 شجرة زيتون', description: 'مشروع تشجير بمنطقة سوس لزراعة 1000 شجرة زيتون يوفر فرص عمل للشباب المحلي ويحارب التصحر. [DEMO]', goalAmount: 180000, collectedAmount: 67000, urgency: 'low', donors: 45, status: 'active' },
+    15→   176→];
+    16→   177→
+    17→   178→export const restaurants = [
+    18→   179→  { id: 'r-1', name: 'مطعم دار يوسف', cuisine: 'مغربي تقليدي', rating: 4.8, deliveryTime: '30-45', minOrder: 50, city: 'الدار البيضاء', featured: true },
+    19→   180→  { id: 'r-2', name: 'بيت الطاجين', cuisine: 'مغربي', rating: 4.6, deliveryTime: '35-50', minOrder: 40, city: 'مراكش', featured: true },
+    20→   181→  { id: 'r-3', name: 'الحوت الذهبي', cuisine: 'مأكولات بحرية', rating: 4.9, deliveryTime: '25-40', minOrder: 80, city: 'الدار البيضاء', featured: true },
+    21→   182→  { id: 'r-4', name: 'لو بيتي ريكادو', cuisine: 'مغربي فرنسي', rating: 4.7, deliveryTime: '40-55', minOrder: 60, city: 'الرباط', featured: false },
+    22→   183→  { id: 'r-5', name: 'حلال بيتزا', cuisine: 'بيتزا وجبات سريعة', rating: 4.3, deliveryTime: '20-35', minOrder: 30, city: 'فاس', featured: false },
+    23→   184→  { id: 'r-6', name: 'البربر', cuisine: 'مغربي أصيل', rating: 4.5, deliveryTime: '35-50', minOrder: 45, city: 'مراكش', featured: true },
+    24→   185→  { id: 'r-7', name: 'شانديلير', cuisine: 'فرنسي عالمي', rating: 4.4, deliveryTime: '45-60', minOrder: 100, city: 'الدار البيضاء', featured: false },
+    25→   186→  { id: 'r-8', name: 'سوشي طنجة', cuisine: 'ياباني', rating: 4.2, deliveryTime: '30-45', minOrder: 70, city: 'طنجة', featured: false },
+    26→   187→  { id: 'r-9', name: 'النخلة', cuisine: 'مشرقي', rating: 4.6, deliveryTime: '25-40', minOrder: 35, city: 'أكادير', featured: false },
+    27→   188→  { id: 'r-10', name: 'السلطان', cuisine: 'مغربي فاخر', rating: 4.8, deliveryTime: '40-55', minOrder: 90, city: 'الدار البيضاء', featured: true },
+    28→   189→];
+    29→   190→
+    30→   191→export const services = [
+    31→   192→  { id: 's-1', title: 'تصوير أعراس وفيديو', provider: 'استوديو النور', category: 'تصوير', rating: 4.9, price: 5000, city: 'مراكش', area: 'مراكش', experience: '8 سنوات' },
+    32→   193→  { id: 's-2', title: 'تنظيف منازل احترافي', provider: 'شركة النظافة البيضاء', category: 'تنظيف', rating: 4.7, price: 300, city: 'الدار البيضاء', area: 'الدار البيضاء', experience: '5 سنوات' },
+    33→   194→  { id: 's-3', title: 'سباكة وصيانة', provider: 'فني الخبير', category: 'إصلاح', rating: 4.5, price: 200, city: 'الدار البيضاء', area: 'الدار البيضاء-سطات', experience: '12 سنة' },
+    34→   195→  { id: 's-4', title: 'دروس خصوصية رياضيات', provider: 'أستاذ كريم', category: 'تعليم', rating: 4.8, price: 150, city: 'الرباط', area: 'الرباط', experience: '15 سنة' },
+    35→   196→  { id: 's-5', title: 'تزيين أعراس وفعاليات', provider: 'دار الزينة', category: 'أعراس', rating: 4.6, price: 8000, city: 'الدار البيضاء', area: 'الدار البيضاء', experience: '6 سنوات' },
+    36→   197→  { id: 's-6', title: 'تصميم جرافيك وهوية بصرية', provider: 'ميديا آرت', category: 'تقنية', rating: 4.7, price: 2500, city: 'الدار البيضاء', area: 'عن بعد', experience: '7 سنوات' },
+    37→   198→  { id: 's-7', title: 'محاسبة وضريبة للمقاولات', provider: 'مكتب الأمانة', category: 'محاسبة', rating: 4.4, price: 1000, city: 'الرباط', area: 'الرباط-سلا-القنيطرة', experience: '10 سنوات' },
+    38→   199→  { id: 's-8', title: 'فلاحة وحديقة', provider: 'بستاني الحديقة', category: 'خدمات منزلية', rating: 4.3, price: 250, city: 'مراكش', area: 'مراكش', experience: '20 سنة' },
+    39→   200→  { id: 's-9', title: 'موسيقى لحفلات الأعراس', provider: 'فرقة النغم', category: 'موسيقى', rating: 4.8, price: 6000, city: 'فاس', area: 'فاس-مكناس', experience: '10 سنوات' },
+    40→   201→  { id: 's-10', title: 'نجارة وأثاث مخصص', provider: 'نجار الصناع', category: 'حرف', rating: 4.6, price: 500, city: 'طنجة', area: 'طنجة', experience: '18 سنة' },
+    41→   202→  { id: 's-11', title: 'دورات تدريبية في البرمجة', provider: 'أكاديمية كود', category: 'تعليم', rating: 4.5, price: 3000, city: 'الدار البيضاء', area: 'عن بعد', experience: '4 سنوات' },
+    42→   203→  { id: 's-12', title: 'نقل أثاث وديكور', provider: 'شركة النقل السريع', category: 'نقل', rating: 4.2, price: 800, city: 'الدار البيضاء', area: 'الدار البيضاء', experience: '8 سنوات' },
+    43→   204→  { id: 's-13', title: 'تصليح هواتف ذكية', provider: 'موبايل كير', category: 'إصلاح', rating: 4.4, price: 150, city: 'فاس', area: 'فاس', experience: '6 سنوات' },
+    44→   205→  { id: 's-14', title: 'ترجمة معتمدة', provider: 'مكتب الترجمة', category: 'خدمات لغوية', rating: 4.7, price: 200, city: 'الرباط', area: 'الرباط', experience: '12 سنة' },
+    45→   206→  { id: 's-15', title: 'رعاية الحيوانات الأليفة', provider: 'بيت الحيوان', category: 'حيوانات', rating: 4.8, price: 100, city: 'الدار البيضاء', area: 'الدار البيضاء', experience: '5 سنوات' },
+    46→   207→];
+    47→   208→
+    48→   209→export const jobs = [
+    49→   210→  { id: 'j-1', title: 'مطور ويب Full-Stack', company: 'شركة سلطان تيك', type: 'fulltime', salary: '15000-25000 MAD', city: 'الدار البيضاء', requirements: 'React, Node.js, TypeScript, 3+ سنوات خبرة' },
+    50→   211→  { id: 'j-2', title: 'مدير تسويق رقمي', company: 'أجنسية ديجيتال مارك', type: 'fulltime', salary: '18000-30000 MAD', city: 'مراكش', requirements: 'Google Ads, Social Media, SEO, 5+ سنوات' },
+    51→   212→  { id: 'j-3', title: 'مصمم UI/UX', company: 'ستوديو كرييتيف', type: 'freelance', salary: '500-1000 MAD/يوم', city: 'عن بعد', requirements: 'Figma, Adobe XD, Portfolio قوي' },
+    52→   213→  { id: 'j-4', title: 'محاسب أول', company: 'مكتب المحاسبة الحديث', type: 'fulltime', salary: '12000-18000 MAD', city: 'الرباط', requirements: 'بكالوريوس محاسبة, Excel, SAP, 3+ سنوات' },
+    53→   214→  { id: 'j-5', title: 'ممثل خدمة عملاء', company: 'كول سنتر المغرب', type: 'fulltime', salary: '5000-7000 MAD', city: 'طنجة', requirements: 'عربي وفرنسية بطلاقة، مهارات تواصل جيدة' },
+    54→   215→  { id: 'j-6', title: 'مطور تطبيقات موبايل', company: 'أبلاي تيك', type: 'remote', salary: '20000-35000 MAD', city: 'عن بعد', requirements: 'Flutter أو React Native, 2+ سنوات خبرة' },
+    55→   216→  { id: 'j-7', title: 'كاتب محتوى', company: 'منصة المحتوى', type: 'freelance', salary: '300-600 MAD/مقال', city: 'عن بعد', requirements: 'كتابة إبداعية, عربي ممتاز, SEO أساسيات' },
+    56→   217→  { id: 'j-8', title: 'مهندس شبكات', company: 'تيليكوم المغرب', type: 'fulltime', salary: '15000-22000 MAD', city: 'الدار البيضاء', requirements: 'CCNA, إدارة شبكات مؤسسية, 4+ سنوات' },
+    57→   218→  { id: 'j-9', title: 'طبيب بيطري', company: 'عيادة الحيوان', type: 'parttime', salary: '200-400 MAD/ساعة', city: 'مراكش', requirements: 'دبلوم بيطرية, خبرة في علاج الحيوانات الأليفة' },
+    58→   219→  { id: 'j-10', title: 'مدير مشروع IT', company: 'بنك المغرب', type: 'fulltime', salary: '25000-40000 MAD', city: 'الرباط', requirements: 'PMP, Agile, 7+ سنوات خبرة في إدارة المشاريع' },
+    59→   220→];
+    60→   221→
+    61→   222→export const newsArticles = [
+    62→   223→  { id: 'n-1', title: 'المغرب يتصدر مؤشر النمو الاقتصادي في إفريقيا', excerpt: 'حقق المغرب معدل نمو اقتصادي بلغ 4.5% في الربع الأول من 2026 متفوقا على معظم الدول الإفريقية بفضل قطاعي السياحة والتصنيع. [DEMO]', source: 'المساء', date: '2026-08-19', category: 'اقتصاد' },
+    63→   224→  { id: 'n-2', title: 'افتتاح خط قطار فائق السرعة بين طنجة وأكادير', excerpt: 'أعلنت وزارة النقل عن إطلاق المشروع التوسعي لخط الأفق عالي السرعة ليربط شمال المغرب بجنوبه عبر 6 محطات جديدة. [DEMO]', source: 'العلم', date: '2026-08-18', category: 'بنية تحتية' },
+    64→   225→  { id: 'n-3', title: 'تطبيق مغربي يحصد جائزة أفضل تطبيق عربي', excerpt: 'فاز تطبيق سلطان بجائزة أفضل منصة رقمية عربية في مؤتمر ليبيكوم 2026 تقديرا لابتكاره في دمج التجارة والخدمات في منصة واحدة. [DEMO]', source: 'سايت إينفو', date: '2026-08-17', category: 'تكنولوجيا' },
+    65→   226→  { id: 'n-4', title: 'مهرجان فاس للموسيقى العالمية في نسخته الـ 30', description: '', source: 'Le360', date: '2026-08-16', category: 'ثقافة' },
+    66→   227→  { id: 'n-5', title: 'ارتفاع الطلب على العقارات الفاخرة في الدار البيضاء بنسبة 25%', excerpt: 'شهد سوق العقارات الفاخرة بالدار البيضاء طفرة كبيرة في الطلب خلال النصف الأول من 2026 مدفوعا بالثقة في الاقتصاد الوطني. [DEMO]', source: 'هسبريس', date: '2026-08-15', category: 'عقارات' },
+    67→   228→];
+    68→   229→
+    69→   230→export const adminStats = {
+    70→   231→  totalUsers: 48520,
+    71→   232→  totalListings: 32150,
+    72→   233→  activeUsers: 8920,
+    73→   234→  todayListings: 342,
+    74→   235→  totalRevenue: 2840000,
+    75→   236→  monthlyGrowth: 12.5,
+    76→   237→  activeAuctions: 28,
+    77→   238→  pendingCashouts: 15,
+    78→   239→  openTickets: 42,
+    79→   240→  economyHealth: 94,
+    80→   241→  totalCoins: 12500000,
+    81→   242→  totalSupport: 4200000,
+    82→   243→  totalCashouts: 1800000,
+    83→   244→};
+    84→   245→
+    85→   246→export const featureFlags = [
+    86→   247→  { key: 'economy_enabled', value: true, label: 'نظام العملات', category: 'اقتصاد' },
+    87→   248→  { key: 'support_enabled', value: true, label: 'زر الدعم', category: 'اقتصاد' },
+    88→   249→  { key: 'rewards_enabled', value: true, label: 'نظام المكافآت', category: 'اقتصاد' },
+    89→   250→  { key: 'cashout_enabled', value: true, label: 'السحب', category: 'مالية' },
+    90→   251→  { key: 'zawaj_taaruf_enabled', value: true, label: 'الزواج والتعارف', category: 'اجتماعي' },
+    91→   252→  { key: 'social_enabled', value: true, label: 'السوشيال', category: 'اجتماعي' },
+    92→   253→  { key: 'live_streaming_enabled', value: false, label: 'البث المباشر', category: 'ترفيه' },
+    93→   254→  { key: 'ar_vr_enabled', value: false, label: 'الواقع المعزز', category: 'تكنولوجيا' },
+    94→   255→  { key: 'ai_assistant_enabled', value: true, label: 'المساعد الذكي', category: 'تكنولوجيا' },
+    95→   256→  { key: 'blockchain_enabled', value: false, label: 'البلوكتشين', category: 'تكنولوجيا' },
+    96→   257→  { key: 'grants_enabled', value: true, label: 'المنح', category: 'فرص' },
+    97→   258→  { key: 'challenges_enabled', value: true, label: 'التحديات', category: 'فرص' },
+    98→   259→  { key: 'bounties_enabled', value: true, label: 'المكافآت', category: 'فرص' },
+    99→   260→  { key: 'tasks_enabled', value: true, label: 'المهام الصغيرة', category: 'فرص' },
+   100→   261→  { key: 'growth_campaigns_enabled', value: true, label: 'حملات النمو', category: 'تسويق' },
+   101→   262→  { key: 'news_rewards_enabled', value: false, label: 'مكافآت الأخبار', category: 'محتوى' },
+   102→   263→  { key: 'business_boost_enabled', value: true, label: 'تعزيز الأعمال', category: 'تسويق' },
+   103→   264→  { key: 'diaspora_enabled', value: true, label: 'الجالية المغربية', category: 'توسع' },
+   104→   265→];
+   105→   266→
+   106→   267→export const walletHistory = [
+   107→   268→  { id: 'w-1', type: 'purchase', amount: 500, currency: 'SC', description: 'شراء عملات سلطان', date: '2026-08-19', status: 'completed' },
+   108→   269→  { id: 'w-2', type: 'support', amount: -100, currency: 'SC', description: 'دعم @fatima_zahra', date: '2026-08-18', status: 'completed' },
+   109→   270→  { id: 'w-3', type: 'reward', amount: 50, currency: 'SR', description: 'مكافأة نشر إعلان مميز', date: '2026-08-17', status: 'completed' },
+   110→   271→  { id: 'w-4', type: 'support_received', amount: 200, currency: 'SC', description: 'دعم من @karim_m', date: '2026-08-16', status: 'completed' },
+   111→   272→  { id: 'w-5', type: 'cashout', amount: -500, currency: 'SR', description: 'طلب سحب إلى الحساب البنكي', date: '2026-08-15', status: 'pending' },
+   112→   273→  { id: 'w-6', type: 'boost', amount: -50, currency: 'SC', description: 'تعزيز إعلان: آيفون 15 برو ماكس', date: '2026-08-14', status: 'completed' },
+   113→   274→  { id: 'w-7', type: 'reward', amount: 25, currency: 'SR', description: 'مكافأة إكمال الملف الشخصي', date: '2026-08-13', status: 'completed' },
+   114→   275→  { id: 'w-8', type: 'support', amount: -50, currency: 'SC', description: 'دعم حالة تضامن: إعادة بناء مدرسة', date: '2026-08-12', status: 'completed' },
+   115→   276→];
+   116→   277→
+   117→   278→// ═══════════════════════════════════════════════════════════════════════
+   118→   279→// ADMIN PANEL — Rich Demo Data (Professional Grade)
+   119→   280→// ═══════════════════════════════════════════════════════════════════════
+   120→   281→
+   121→   282→export const adminUsers = [
+   122→   283→  { id: 'u-1', displayName: 'يوسف بنعلي', email: 'youssef@sultan.ma', phone: '+212 661-234567', city: 'الدار البيضاء', role: 'super_admin', isVerified: true, isRising: true, isBanned: false, trustScore: 92, listingsCount: 24, bidsCount: 18, reportsCount: 0, lastSeen: '2026-09-01T08:30:00Z', createdAt: '2025-12-01T10:00:00Z', banReason: '' },
+   123→   284→  { id: 'u-2', displayName: 'فاطمة الزهراء العلوي', email: 'fatima@sultan.ma', phone: '+212 662-345678', city: 'الرباط', role: 'admin', isVerified: true, isRising: false, isBanned: false, trustScore: 88, listingsCount: 15, bidsCount: 7, reportsCount: 2, lastSeen: '2026-09-01T07:15:00Z', createdAt: '2025-12-15T14:00:00Z', banReason: '' },
+   124→   285→  { id: 'u-3', displayName: 'كريم المنصوري', email: 'karim@email.com', phone: '+212 663-456789', city: 'مراكش', role: 'user', isVerified: false, isRising: true, isBanned: false, trustScore: 65, listingsCount: 8, bidsCount: 22, reportsCount: 1, lastSeen: '2026-08-31T22:00:00Z', createdAt: '2026-01-10T09:00:00Z', banReason: '' },
+   125→   286→  { id: 'u-4', displayName: 'أمينة بوزيد', email: 'amina@email.com', phone: '+212 664-567890', city: 'فاس', role: 'user', isVerified: true, isRising: false, isBanned: false, trustScore: 95, listingsCount: 42, bidsCount: 5, reportsCount: 0, lastSeen: '2026-09-01T06:45:00Z', createdAt: '2026-01-05T11:00:00Z', banReason: '' },
+   126→   287→  { id: 'u-5', displayName: 'رشيد الفاسي', email: 'rashid@email.com', phone: '+212 665-678901', city: 'طنجة', role: 'user', isVerified: true, isRising: true, isBanned: false, trustScore: 78, listingsCount: 11, bidsCount: 30, reportsCount: 0, lastSeen: '2026-08-31T18:30:00Z', createdAt: '2026-02-01T08:00:00Z', banReason: '' },
+   127→   288→  { id: 'u-6', displayName: 'سارة بنحدو', email: 'sara@email.com', phone: '+212 666-789012', city: 'أكادير', role: 'user', isVerified: false, isRising: false, isBanned: true, trustScore: 55, listingsCount: 3, bidsCount: 2, reportsCount: 5, lastSeen: '2026-08-20T12:00:00Z', createdAt: '2026-03-10T15:00:00Z', banReason: 'نشر محتوى مخالف متكرر' },
+   128→   289→  { id: 'u-7', displayName: 'محمد الإدريسي', email: 'mohamed@email.com', phone: '+212 667-890123', city: 'الدار البيضاء', role: 'user', isVerified: true, isRising: false, isBanned: false, trustScore: 90, listingsCount: 31, bidsCount: 14, reportsCount: 1, lastSeen: '2026-09-01T09:00:00Z', createdAt: '2026-01-20T10:00:00Z', banReason: '' },
+   129→   290→  { id: 'u-8', displayName: 'نورة التطوانية', email: 'noura@email.com', phone: '+212 668-901234', city: 'تطوان', role: 'user', isVerified: false, isRising: true, isBanned: false, trustScore: 60, listingsCount: 5, bidsCount: 8, reportsCount: 0, lastSeen: '2026-08-30T20:00:00Z', createdAt: '2026-04-05T12:00:00Z', banReason: '' },
+   130→   291→  { id: 'u-9', displayName: 'حمزة الرباطي', email: 'hamza@email.com', phone: '+212 669-012345', city: 'الرباط', role: 'user', isVerified: true, isRising: false, isBanned: false, trustScore: 82, listingsCount: 19, bidsCount: 11, reportsCount: 0, lastSeen: '2026-08-31T16:00:00Z', createdAt: '2026-02-15T09:00:00Z', banReason: '' },
+   131→   292→  { id: 'u-10', displayName: 'خديجة المراكشية', email: 'khadija@email.com', phone: '+212 670-123456', city: 'مراكش', role: 'user', isVerified: true, isRising: false, isBanned: false, trustScore: 97, listingsCount: 56, bidsCount: 3, reportsCount: 0, lastSeen: '2026-09-01T07:00:00Z', createdAt: '2025-11-20T08:00:00Z', banReason: '' },
+   132→   293→  { id: 'u-11', displayName: 'عمر البيضاوي', email: 'omar@email.com', phone: '+212 671-234567', city: 'الدار البيضاء', role: 'user', isVerified: false, isRising: false, isBanned: true, trustScore: 45, listingsCount: 2, bidsCount: 1, reportsCount: 8, lastSeen: '2026-08-10T10:00:00Z', createdAt: '2026-05-01T14:00:00Z', banReason: 'محاولة احتيال على المستخدمين' },
+   133→   294→  { id: 'u-12', displayName: 'ليلى وجدية', email: 'layla@email.com', phone: '+212 672-345678', city: 'مكناس', role: 'user', isVerified: true, isRising: true, isBanned: false, trustScore: 86, listingsCount: 14, bidsCount: 9, reportsCount: 0, lastSeen: '2026-08-31T21:00:00Z', createdAt: '2026-03-01T10:00:00Z', banReason: '' },
+   134→   295→  { id: 'u-13', displayName: 'ياسين الشاوي', email: 'yassine@email.com', phone: '+212 673-456789', city: 'وجدة', role: 'moderator', isVerified: true, isRising: false, isBanned: false, trustScore: 85, listingsCount: 7, bidsCount: 4, reportsCount: 12, lastSeen: '2026-09-01T08:00:00Z', createdAt: '2026-01-15T11:00:00Z', banReason: '' },
+   135→   296→  { id: 'u-14', displayName: 'إيمان الفاطمي', email: 'imane@email.com', phone: '+212 674-567890', city: 'القنيطرة', role: 'user', isVerified: false, isRising: false, isBanned: false, trustScore: 50, listingsCount: 1, bidsCount: 0, reportsCount: 0, lastSeen: '2026-08-25T15:00:00Z', createdAt: '2026-07-01T09:00:00Z', banReason: '' },
+   136→   297→  { id: 'u-15', displayName: 'عبد الرحمن الحسني', email: 'abderrahman@email.com', phone: '+212 675-678901', city: 'سلا', role: 'user', isVerified: true, isRising: true, isBanned: false, trustScore: 73, listingsCount: 9, bidsCount: 16, reportsCount: 0, lastSeen: '2026-09-01T05:30:00Z', createdAt: '2026-04-20T08:00:00Z', banReason: '' },
+   137→   298→];
+   138→   299→
+   139→   300→export const adminAuditLog = [
+   140→   301→  { id: 'al-1', action: 'حذف إعلان مخالف', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'آيفون 14 مزيف', targetType: 'listing', targetId: 'l-99', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'high', createdAt: '2026-09-01T08:25:00Z' },
+   141→   302→  { id: 'al-2', action: 'موافقة على سحب 500 درهم', admin: 'فاطمة الزهراء', adminRole: 'admin', target: 'طلب سحب #w-5', targetType: 'cashout', targetId: 'w-5', ip: '196.21.45.15', userAgent: 'Safari/18 iOS', severity: 'medium', createdAt: '2026-09-01T08:10:00Z' },
+   142→   303→  { id: 'al-3', action: 'تفعيل ميزة الزواج والتعارف', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'zawaj_taaruf_enabled', targetType: 'feature_flag', targetId: 'ff-5', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'low', createdAt: '2026-09-01T07:30:00Z' },
+   143→   304→  { id: 'al-4', action: 'حظر حساب مخالف', admin: 'ياسين الشاوي', adminRole: 'moderator', target: 'عمر البيضاوي', targetType: 'user', targetId: 'u-11', ip: '41.143.22.8', userAgent: 'Firefox/127 Windows', severity: 'high', createdAt: '2026-09-01T07:00:00Z' },
+   144→   305→  { id: 'al-5', action: 'تعديل عمولة فئة الإلكترونيات', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'عمولة الإلكترونيات: 3% → 5%', targetType: 'setting', targetId: 's-fee-electronics', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'medium', createdAt: '2026-09-01T06:15:00Z' },
+   145→   306→  { id: 'al-6', action: 'ترقية حساب إلى بائع مميز', admin: 'فاطمة الزهراء', adminRole: 'admin', target: 'خديجة المراكشية', targetType: 'user', targetId: 'u-10', ip: '196.21.45.15', userAgent: 'Safari/18 iOS', severity: 'low', createdAt: '2026-08-31T22:00:00Z' },
+   146→   307→  { id: 'al-7', action: 'حذف تقرير مكرر', admin: 'ياسين الشاوي', adminRole: 'moderator', target: 'بلاغ #r-42', targetType: 'report', targetId: 'r-42', ip: '41.143.22.8', userAgent: 'Firefox/127 Windows', severity: 'low', createdAt: '2026-08-31T20:30:00Z' },
+   147→   308→  { id: 'al-8', action: 'تمييز إعلان', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'ماك بوك برو M3', targetType: 'listing', targetId: 'l-3', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'low', createdAt: '2026-08-31T19:00:00Z' },
+   148→   309→  { id: 'al-9', action: 'إنشاء حملة تضامن جديدة', admin: 'فاطمة الزهراء', adminRole: 'admin', target: 'حملة إعادة بناء مدرسة', targetType: 'charity', targetId: 'ch-3', ip: '196.21.45.15', userAgent: 'Safari/18 iOS', severity: 'low', createdAt: '2026-08-31T17:00:00Z' },
+   149→   310→  { id: 'al-10', action: 'تعديل إعدادات النظام', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'وضع الصيانة', targetType: 'setting', targetId: 's-maintenance', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'high', createdAt: '2026-08-31T15:00:00Z' },
+   150→   311→  { id: 'al-11', action: 'رفض إعلان لعدم الامتثال', admin: 'ياسين الشاوي', adminRole: 'moderator', target: 'إعلان بدون صور', targetType: 'listing', targetId: 'l-55', ip: '41.143.22.8', userAgent: 'Firefox/127 Windows', severity: 'medium', createdAt: '2026-08-31T14:00:00Z' },
+   151→   312→  { id: 'al-12', action: 'إلغاء حظر مستخدم', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'سارة بنحدو', targetType: 'user', targetId: 'u-6', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'medium', createdAt: '2026-08-31T12:00:00Z' },
+   152→   313→];
+   153→   314→
+   154→   315→export const adminTransactions = [
+   155→   316→  { id: 'tx-1', type: 'fee', amount: 620, description: 'عمولة إعلان آيفون 15 برو ماكس', userName: 'يوسف بنعلي', date: '2026-09-01T08:00:00Z', status: 'completed' },
+   156→   317→  { id: 'tx-2', type: 'purchase', amount: 12400, description: 'شراء آيفون 15 برو ماكس', userName: 'محمد الإدريسي', date: '2026-09-01T07:30:00Z', status: 'completed' },
+   157→   318→  { id: 'tx-3', type: 'withdrawal', amount: 2500, description: 'سحب أرباح إلى الحساب البنكي', userName: 'أمينة بوزيد', date: '2026-09-01T06:00:00Z', status: 'pending' },
+   158→   319→  { id: 'tx-4', type: 'fee', amount: 350, description: 'رسوم تمييز إعلان', userName: 'خديجة المراكشية', date: '2026-08-31T22:00:00Z', status: 'completed' },
+   159→   320→  { id: 'tx-5', type: 'deposit', amount: 5000, description: 'إيداع في محفظة سلطان', userName: 'رشيد الفاسي', date: '2026-08-31T20:00:00Z', status: 'completed' },
+   160→   321→  { id: 'tx-6', type: 'fee', amount: 180, description: 'عمولة مزاد ساعة رولكس', userName: 'كريم المنصوري', date: '2026-08-31T18:00:00Z', status: 'completed' },
+   161→   322→  { id: 'tx-7', type: 'refund', amount: 800, description: 'استرداد ثمن إعلان ملغي', userName: 'حمزة الرباطي', date: '2026-08-31T16:00:00Z', status: 'completed' },
+   162→   323→  { id: 'tx-8', type: 'withdrawal', amount: 1200, description: 'سحب أرباح', userName: 'فاطمة الزهراء العلوي', date: '2026-08-31T14:00:00Z', status: 'completed' },
+   163→   324→  { id: 'tx-9', type: 'fee', amount: 450, description: 'عمولة إعلان سامسونغ S24', userName: 'محمد الإدريسي', date: '2026-08-31T12:00:00Z', status: 'completed' },
+   164→   325→  { id: 'tx-10', type: 'purchase', amount: 8500, description: 'شراء ماك بوك برو M3', userName: 'ليلى وجدية', date: '2026-08-31T10:00:00Z', status: 'completed' },
+   165→   326→  { id: 'tx-11', type: 'withdrawal', amount: 3500, description: 'سحب أرباح', userName: 'خديجة المراكشية', date: '2026-08-30T22:00:00Z', status: 'failed' },
+   166→   327→  { id: 'tx-12', type: 'deposit', amount: 10000, description: 'إيداع في محفظة سلطان', userName: 'أمينة بوزيد', date: '2026-08-30T18:00:00Z', status: 'completed' },
+   167→   328→  { id: 'tx-13', type: 'fee', amount: 220, description: 'عمولة إعلان أثاث', userName: 'نورة التطوانية', date: '2026-08-30T15:00:00Z', status: 'completed' },
+   168→   329→  { id: 'tx-14', type: 'purchase', amount: 3200, description: 'شراء دراجة هوائية', userName: 'عبد الرحمن الحسني', date: '2026-08-30T12:00:00Z', status: 'completed' },
+   169→   330→  { id: 'tx-15', type: 'withdrawal', amount: 1800, description: 'سحب أرباح', userName: 'يوسف بنعلي', date: '2026-08-30T10:00:00Z', status: 'pending' },
+   170→   331→];
+   171→   332→
+   172→   333→export const adminReports = [
+   173→   334→  { id: 'r-1', reason: 'محتوى مخالف', listingTitle: 'آيفون 14 مزيف', reporterName: 'كريم المنصوري', reportedName: 'عمر البيضاوي', status: 'resolved', createdAt: '2026-09-01T08:00:00Z', resolvedBy: 'يوسف بنعلي', resolution: 'حذف الإعلان وحظر البائع' },
+   174→   335→  { id: 'r-2', reason: 'صور غير مرتبطة', listingTitle: 'أريكة حديثة', reporterName: 'فاطمة الزهراء', reportedName: 'سارة بنحدو', status: 'pending', createdAt: '2026-09-01T07:00:00Z', resolvedBy: null, resolution: '' },
+   175→   336→  { id: 'r-3', reason: 'سعر غير واقعي', listingTitle: 'مرسيدس C200 بمبلغ 100 درهم', reporterName: 'محمد الإدريسي', reportedName: 'مستخدم جديد', status: 'under_review', createdAt: '2026-08-31T22:00:00Z', resolvedBy: null, resolution: '' },
+   176→   337→  { id: 'r-4', reason: 'إزعاج ورسائل مزعجة', listingTitle: null, reporterName: 'أمينة بوزيد', reportedName: 'عمر البيضاوي', status: 'resolved', createdAt: '2026-08-31T20:00:00Z', resolvedBy: 'ياسين الشاوي', resolution: 'تحذير ثم حظر' },
+   177→   338→  { id: 'r-5', reason: 'إعلان مكرر', listingTitle: 'سامسونغ S24 Ultra', reporterName: 'رشيد الفاسي', reportedName: 'نورة التطوانية', status: 'pending', createdAt: '2026-08-31T18:00:00Z', resolvedBy: null, resolution: '' },
+   178→   339→  { id: 'r-6', reason: 'احتيال', listingTitle: 'تذاكر concert مزيفة', reporterName: 'حمزة الرباطي', reportedName: 'حساب مشبوه #442', status: 'under_review', createdAt: '2026-08-31T15:00:00Z', resolvedBy: null, resolution: '' },
+   179→   340→  { id: 'r-7', reason: 'معلومات كاذبة', listingTitle: 'أرض للبيع في مراكش', reporterName: 'خديجة المراكشية', reportedName: 'مستخدم جديد #518', status: 'resolved', createdAt: '2026-08-31T12:00:00Z', resolvedBy: 'يوسف بنعلي', resolution: 'حذف الإعلان وتحذير' },
+   180→   341→];
+   181→   342→
+   182→   343→export const adminChartData = {
+   183→   344→  userGrowth: Array.from({ length: 30 }, (_, i) => ({
+   184→   345→    date: new Date(2026, 7, i + 2).toISOString().split('T')[0],
+   185→   346→    users: Math.floor(80 + Math.random() * 120 + (i > 20 ? 40 : 0)),
+   186→   347→    listings: Math.floor(40 + Math.random() * 80 + (i > 15 ? 20 : 0)),
+   187→   348→  })),
+   188→   349→  revenue: Array.from({ length: 12 }, (_, i) => ({
+   189→   350→    month: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][i],
+   190→   351→    amount: Math.floor(180000 + Math.random() * 150000 + i * 15000),
+   191→   352→    expenses: Math.floor(80000 + Math.random() * 50000),
+   192→   353→  })),
+   193→   354→  categoryDistribution: [
+   194→   355→    { name: 'إلكترونيات', count: 4520 },
+   195→   356→    { name: 'السيارات', count: 3210 },
+   196→   357→    { name: 'العقارات', count: 2890 },
+   197→   358→    { name: 'أثاث', count: 2340 },
+   198→   359→    { name: 'أزياء', count: 1980 },
+   199→   360→    { name: 'الخدمات', count: 1560 },
+   200→   361→    { name: 'الوظائف', count: 1200 },
+   201→   362→    { name: 'هوايات', count: 980 },
+   202→   363→    { name: 'حيوانات', count: 720 },
+   203→   364→    { name: 'الطعام', count: 650 },
+   204→   365→  ],
+   205→   366→}
+   206→   367→
+   207→   368→export const adminSystemHealth = {
+   208→   369→  uptime: 99.97,
+   209→   370→  responseTime: 87,
+   210→   371→  errorRate: 0.12,
+   211→   372→  activeSessions: 892,
+   212→   373→  pageViews: 45230,
+   213→   374→  dbSize: '24.8 MB',
+   214→   375→  storageUsed: '3.2 GB',
+   215→   376→  storageTotal: '10 GB',
+   216→   377→  cacheHitRate: 94.5,
+   217→   378→  lastBackup: '2026-09-01T03:00:00Z',
+   218→   379→  lastCron: '2026-09-01T08:00:00Z',
+   219→   380→  services: [
+   220→   381→    { name: 'الخادم الرئيسي', status: 'operational' as const, latency: 45 },
+   221→   382→    { name: 'قاعدة البيانات', status: 'operational' as const, latency: 12 },
+   222→   383→    { name: 'التخزين', status: 'operational' as const, latency: 78 },
+   223→   384→    { name: 'البريد الإلكتروني', status: 'degraded' as const, latency: 350 },
+   224→   385→    { name: 'الإشعارات', status: 'operational' as const, latency: 95 },
+   225→   386→    { name: 'البحث', status: 'operational' as const, latency: 23 },
+   226→   387→  ],
+   227→   388→}
+   228→   389→
+   229→   390→export const adminSettings = {
+   230→   391→  general: { siteName: 'سلطان', siteDesc: 'منصة التجارة الإلكترونية الأولى في المغرب', defaultCity: 'الدار البيضاء', maintenanceMode: false, contactEmail: 'admin@sultan.ma', maxListingsPerUser: 50, maxImagesPerListing: 10, maxTitleLength: 100, maxDescLength: 2000 },
+   231→   392→  security: { maxLoginAttempts: 5, sessionTimeout: 60, rateLimiting: true, maxRequestsPerMinute: 100, twoFactorAuth: false },
+   232→   393→  notifications: { emailEnabled: true, pushEnabled: true, notifyNewUser: true, notifyNewListing: true, notifyNewBid: true, notifyReport: true, notifyAuctionEnding: true },
+   233→   394→  fees: { listingFee: 0, featuredFee: 50, auctionCommission: 5, withdrawalFee: 2 },
+   234→   395→}
+   235→   396→

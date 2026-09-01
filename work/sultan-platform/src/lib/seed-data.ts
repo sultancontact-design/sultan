@@ -274,3 +274,122 @@ export const walletHistory = [
   { id: 'w-7', type: 'reward', amount: 25, currency: 'SR', description: 'مكافأة إكمال الملف الشخصي', date: '2026-08-13', status: 'completed' },
   { id: 'w-8', type: 'support', amount: -50, currency: 'SC', description: 'دعم حالة تضامن: إعادة بناء مدرسة', date: '2026-08-12', status: 'completed' },
 ];
+
+// ═══════════════════════════════════════════════════════════════════════
+// ADMIN PANEL — Rich Demo Data (Professional Grade)
+// ═══════════════════════════════════════════════════════════════════════
+
+export const adminUsers = [
+  { id: 'u-1', displayName: 'يوسف بنعلي', email: 'youssef@sultan.ma', phone: '+212 661-234567', city: 'الدار البيضاء', role: 'super_admin', isVerified: true, isRising: true, isBanned: false, trustScore: 92, listingsCount: 24, bidsCount: 18, reportsCount: 0, lastSeen: '2026-09-01T08:30:00Z', createdAt: '2025-12-01T10:00:00Z', banReason: '' },
+  { id: 'u-2', displayName: 'فاطمة الزهراء العلوي', email: 'fatima@sultan.ma', phone: '+212 662-345678', city: 'الرباط', role: 'admin', isVerified: true, isRising: false, isBanned: false, trustScore: 88, listingsCount: 15, bidsCount: 7, reportsCount: 2, lastSeen: '2026-09-01T07:15:00Z', createdAt: '2025-12-15T14:00:00Z', banReason: '' },
+  { id: 'u-3', displayName: 'كريم المنصوري', email: 'karim@email.com', phone: '+212 663-456789', city: 'مراكش', role: 'user', isVerified: false, isRising: true, isBanned: false, trustScore: 65, listingsCount: 8, bidsCount: 22, reportsCount: 1, lastSeen: '2026-08-31T22:00:00Z', createdAt: '2026-01-10T09:00:00Z', banReason: '' },
+  { id: 'u-4', displayName: 'أمينة بوزيد', email: 'amina@email.com', phone: '+212 664-567890', city: 'فاس', role: 'user', isVerified: true, isRising: false, isBanned: false, trustScore: 95, listingsCount: 42, bidsCount: 5, reportsCount: 0, lastSeen: '2026-09-01T06:45:00Z', createdAt: '2026-01-05T11:00:00Z', banReason: '' },
+  { id: 'u-5', displayName: 'رشيد الفاسي', email: 'rashid@email.com', phone: '+212 665-678901', city: 'طنجة', role: 'user', isVerified: true, isRising: true, isBanned: false, trustScore: 78, listingsCount: 11, bidsCount: 30, reportsCount: 0, lastSeen: '2026-08-31T18:30:00Z', createdAt: '2026-02-01T08:00:00Z', banReason: '' },
+  { id: 'u-6', displayName: 'سارة بنحدو', email: 'sara@email.com', phone: '+212 666-789012', city: 'أكادير', role: 'user', isVerified: false, isRising: false, isBanned: true, trustScore: 55, listingsCount: 3, bidsCount: 2, reportsCount: 5, lastSeen: '2026-08-20T12:00:00Z', createdAt: '2026-03-10T15:00:00Z', banReason: 'نشر محتوى مخالف متكرر' },
+  { id: 'u-7', displayName: 'محمد الإدريسي', email: 'mohamed@email.com', phone: '+212 667-890123', city: 'الدار البيضاء', role: 'user', isVerified: true, isRising: false, isBanned: false, trustScore: 90, listingsCount: 31, bidsCount: 14, reportsCount: 1, lastSeen: '2026-09-01T09:00:00Z', createdAt: '2026-01-20T10:00:00Z', banReason: '' },
+  { id: 'u-8', displayName: 'نورة التطوانية', email: 'noura@email.com', phone: '+212 668-901234', city: 'تطوان', role: 'user', isVerified: false, isRising: true, isBanned: false, trustScore: 60, listingsCount: 5, bidsCount: 8, reportsCount: 0, lastSeen: '2026-08-30T20:00:00Z', createdAt: '2026-04-05T12:00:00Z', banReason: '' },
+  { id: 'u-9', displayName: 'حمزة الرباطي', email: 'hamza@email.com', phone: '+212 669-012345', city: 'الرباط', role: 'user', isVerified: true, isRising: false, isBanned: false, trustScore: 82, listingsCount: 19, bidsCount: 11, reportsCount: 0, lastSeen: '2026-08-31T16:00:00Z', createdAt: '2026-02-15T09:00:00Z', banReason: '' },
+  { id: 'u-10', displayName: 'خديجة المراكشية', email: 'khadija@email.com', phone: '+212 670-123456', city: 'مراكش', role: 'user', isVerified: true, isRising: false, isBanned: false, trustScore: 97, listingsCount: 56, bidsCount: 3, reportsCount: 0, lastSeen: '2026-09-01T07:00:00Z', createdAt: '2025-11-20T08:00:00Z', banReason: '' },
+  { id: 'u-11', displayName: 'عمر البيضاوي', email: 'omar@email.com', phone: '+212 671-234567', city: 'الدار البيضاء', role: 'user', isVerified: false, isRising: false, isBanned: true, trustScore: 45, listingsCount: 2, bidsCount: 1, reportsCount: 8, lastSeen: '2026-08-10T10:00:00Z', createdAt: '2026-05-01T14:00:00Z', banReason: 'محاولة احتيال على المستخدمين' },
+  { id: 'u-12', displayName: 'ليلى وجدية', email: 'layla@email.com', phone: '+212 672-345678', city: 'مكناس', role: 'user', isVerified: true, isRising: true, isBanned: false, trustScore: 86, listingsCount: 14, bidsCount: 9, reportsCount: 0, lastSeen: '2026-08-31T21:00:00Z', createdAt: '2026-03-01T10:00:00Z', banReason: '' },
+  { id: 'u-13', displayName: 'ياسين الشاوي', email: 'yassine@email.com', phone: '+212 673-456789', city: 'وجدة', role: 'moderator', isVerified: true, isRising: false, isBanned: false, trustScore: 85, listingsCount: 7, bidsCount: 4, reportsCount: 12, lastSeen: '2026-09-01T08:00:00Z', createdAt: '2026-01-15T11:00:00Z', banReason: '' },
+  { id: 'u-14', displayName: 'إيمان الفاطمي', email: 'imane@email.com', phone: '+212 674-567890', city: 'القنيطرة', role: 'user', isVerified: false, isRising: false, isBanned: false, trustScore: 50, listingsCount: 1, bidsCount: 0, reportsCount: 0, lastSeen: '2026-08-25T15:00:00Z', createdAt: '2026-07-01T09:00:00Z', banReason: '' },
+  { id: 'u-15', displayName: 'عبد الرحمن الحسني', email: 'abderrahman@email.com', phone: '+212 675-678901', city: 'سلا', role: 'user', isVerified: true, isRising: true, isBanned: false, trustScore: 73, listingsCount: 9, bidsCount: 16, reportsCount: 0, lastSeen: '2026-09-01T05:30:00Z', createdAt: '2026-04-20T08:00:00Z', banReason: '' },
+];
+
+export const adminAuditLog = [
+  { id: 'al-1', action: 'حذف إعلان مخالف', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'آيفون 14 مزيف', targetType: 'listing', targetId: 'l-99', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'high', createdAt: '2026-09-01T08:25:00Z' },
+  { id: 'al-2', action: 'موافقة على سحب 500 درهم', admin: 'فاطمة الزهراء', adminRole: 'admin', target: 'طلب سحب #w-5', targetType: 'cashout', targetId: 'w-5', ip: '196.21.45.15', userAgent: 'Safari/18 iOS', severity: 'medium', createdAt: '2026-09-01T08:10:00Z' },
+  { id: 'al-3', action: 'تفعيل ميزة الزواج والتعارف', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'zawaj_taaruf_enabled', targetType: 'feature_flag', targetId: 'ff-5', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'low', createdAt: '2026-09-01T07:30:00Z' },
+  { id: 'al-4', action: 'حظر حساب مخالف', admin: 'ياسين الشاوي', adminRole: 'moderator', target: 'عمر البيضاوي', targetType: 'user', targetId: 'u-11', ip: '41.143.22.8', userAgent: 'Firefox/127 Windows', severity: 'high', createdAt: '2026-09-01T07:00:00Z' },
+  { id: 'al-5', action: 'تعديل عمولة فئة الإلكترونيات', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'عمولة الإلكترونيات: 3% → 5%', targetType: 'setting', targetId: 's-fee-electronics', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'medium', createdAt: '2026-09-01T06:15:00Z' },
+  { id: 'al-6', action: 'ترقية حساب إلى بائع مميز', admin: 'فاطمة الزهراء', adminRole: 'admin', target: 'خديجة المراكشية', targetType: 'user', targetId: 'u-10', ip: '196.21.45.15', userAgent: 'Safari/18 iOS', severity: 'low', createdAt: '2026-08-31T22:00:00Z' },
+  { id: 'al-7', action: 'حذف تقرير مكرر', admin: 'ياسين الشاوي', adminRole: 'moderator', target: 'بلاغ #r-42', targetType: 'report', targetId: 'r-42', ip: '41.143.22.8', userAgent: 'Firefox/127 Windows', severity: 'low', createdAt: '2026-08-31T20:30:00Z' },
+  { id: 'al-8', action: 'تمييز إعلان', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'ماك بوك برو M3', targetType: 'listing', targetId: 'l-3', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'low', createdAt: '2026-08-31T19:00:00Z' },
+  { id: 'al-9', action: 'إنشاء حملة تضامن جديدة', admin: 'فاطمة الزهراء', adminRole: 'admin', target: 'حملة إعادة بناء مدرسة', targetType: 'charity', targetId: 'ch-3', ip: '196.21.45.15', userAgent: 'Safari/18 iOS', severity: 'low', createdAt: '2026-08-31T17:00:00Z' },
+  { id: 'al-10', action: 'تعديل إعدادات النظام', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'وضع الصيانة', targetType: 'setting', targetId: 's-maintenance', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'high', createdAt: '2026-08-31T15:00:00Z' },
+  { id: 'al-11', action: 'رفض إعلان لعدم الامتثال', admin: 'ياسين الشاوي', adminRole: 'moderator', target: 'إعلان بدون صور', targetType: 'listing', targetId: 'l-55', ip: '41.143.22.8', userAgent: 'Firefox/127 Windows', severity: 'medium', createdAt: '2026-08-31T14:00:00Z' },
+  { id: 'al-12', action: 'إلغاء حظر مستخدم', admin: 'يوسف بنعلي', adminRole: 'super_admin', target: 'سارة بنحدو', targetType: 'user', targetId: 'u-6', ip: '196.21.45.12', userAgent: 'Chrome/128 macOS', severity: 'medium', createdAt: '2026-08-31T12:00:00Z' },
+];
+
+export const adminTransactions = [
+  { id: 'tx-1', type: 'fee', amount: 620, description: 'عمولة إعلان آيفون 15 برو ماكس', userName: 'يوسف بنعلي', date: '2026-09-01T08:00:00Z', status: 'completed' },
+  { id: 'tx-2', type: 'purchase', amount: 12400, description: 'شراء آيفون 15 برو ماكس', userName: 'محمد الإدريسي', date: '2026-09-01T07:30:00Z', status: 'completed' },
+  { id: 'tx-3', type: 'withdrawal', amount: 2500, description: 'سحب أرباح إلى الحساب البنكي', userName: 'أمينة بوزيد', date: '2026-09-01T06:00:00Z', status: 'pending' },
+  { id: 'tx-4', type: 'fee', amount: 350, description: 'رسوم تمييز إعلان', userName: 'خديجة المراكشية', date: '2026-08-31T22:00:00Z', status: 'completed' },
+  { id: 'tx-5', type: 'deposit', amount: 5000, description: 'إيداع في محفظة سلطان', userName: 'رشيد الفاسي', date: '2026-08-31T20:00:00Z', status: 'completed' },
+  { id: 'tx-6', type: 'fee', amount: 180, description: 'عمولة مزاد ساعة رولكس', userName: 'كريم المنصوري', date: '2026-08-31T18:00:00Z', status: 'completed' },
+  { id: 'tx-7', type: 'refund', amount: 800, description: 'استرداد ثمن إعلان ملغي', userName: 'حمزة الرباطي', date: '2026-08-31T16:00:00Z', status: 'completed' },
+  { id: 'tx-8', type: 'withdrawal', amount: 1200, description: 'سحب أرباح', userName: 'فاطمة الزهراء العلوي', date: '2026-08-31T14:00:00Z', status: 'completed' },
+  { id: 'tx-9', type: 'fee', amount: 450, description: 'عمولة إعلان سامسونغ S24', userName: 'محمد الإدريسي', date: '2026-08-31T12:00:00Z', status: 'completed' },
+  { id: 'tx-10', type: 'purchase', amount: 8500, description: 'شراء ماك بوك برو M3', userName: 'ليلى وجدية', date: '2026-08-31T10:00:00Z', status: 'completed' },
+  { id: 'tx-11', type: 'withdrawal', amount: 3500, description: 'سحب أرباح', userName: 'خديجة المراكشية', date: '2026-08-30T22:00:00Z', status: 'failed' },
+  { id: 'tx-12', type: 'deposit', amount: 10000, description: 'إيداع في محفظة سلطان', userName: 'أمينة بوزيد', date: '2026-08-30T18:00:00Z', status: 'completed' },
+  { id: 'tx-13', type: 'fee', amount: 220, description: 'عمولة إعلان أثاث', userName: 'نورة التطوانية', date: '2026-08-30T15:00:00Z', status: 'completed' },
+  { id: 'tx-14', type: 'purchase', amount: 3200, description: 'شراء دراجة هوائية', userName: 'عبد الرحمن الحسني', date: '2026-08-30T12:00:00Z', status: 'completed' },
+  { id: 'tx-15', type: 'withdrawal', amount: 1800, description: 'سحب أرباح', userName: 'يوسف بنعلي', date: '2026-08-30T10:00:00Z', status: 'pending' },
+];
+
+export const adminReports = [
+  { id: 'r-1', reason: 'محتوى مخالف', listingTitle: 'آيفون 14 مزيف', reporterName: 'كريم المنصوري', reportedName: 'عمر البيضاوي', status: 'resolved', createdAt: '2026-09-01T08:00:00Z', resolvedBy: 'يوسف بنعلي', resolution: 'حذف الإعلان وحظر البائع' },
+  { id: 'r-2', reason: 'صور غير مرتبطة', listingTitle: 'أريكة حديثة', reporterName: 'فاطمة الزهراء', reportedName: 'سارة بنحدو', status: 'pending', createdAt: '2026-09-01T07:00:00Z', resolvedBy: null, resolution: '' },
+  { id: 'r-3', reason: 'سعر غير واقعي', listingTitle: 'مرسيدس C200 بمبلغ 100 درهم', reporterName: 'محمد الإدريسي', reportedName: 'مستخدم جديد', status: 'under_review', createdAt: '2026-08-31T22:00:00Z', resolvedBy: null, resolution: '' },
+  { id: 'r-4', reason: 'إزعاج ورسائل مزعجة', listingTitle: null, reporterName: 'أمينة بوزيد', reportedName: 'عمر البيضاوي', status: 'resolved', createdAt: '2026-08-31T20:00:00Z', resolvedBy: 'ياسين الشاوي', resolution: 'تحذير ثم حظر' },
+  { id: 'r-5', reason: 'إعلان مكرر', listingTitle: 'سامسونغ S24 Ultra', reporterName: 'رشيد الفاسي', reportedName: 'نورة التطوانية', status: 'pending', createdAt: '2026-08-31T18:00:00Z', resolvedBy: null, resolution: '' },
+  { id: 'r-6', reason: 'احتيال', listingTitle: 'تذاكر concert مزيفة', reporterName: 'حمزة الرباطي', reportedName: 'حساب مشبوه #442', status: 'under_review', createdAt: '2026-08-31T15:00:00Z', resolvedBy: null, resolution: '' },
+  { id: 'r-7', reason: 'معلومات كاذبة', listingTitle: 'أرض للبيع في مراكش', reporterName: 'خديجة المراكشية', reportedName: 'مستخدم جديد #518', status: 'resolved', createdAt: '2026-08-31T12:00:00Z', resolvedBy: 'يوسف بنعلي', resolution: 'حذف الإعلان وتحذير' },
+];
+
+export const adminChartData = {
+  userGrowth: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(2026, 7, i + 2).toISOString().split('T')[0],
+    users: Math.floor(80 + Math.random() * 120 + (i > 20 ? 40 : 0)),
+    listings: Math.floor(40 + Math.random() * 80 + (i > 15 ? 20 : 0)),
+  })),
+  revenue: Array.from({ length: 12 }, (_, i) => ({
+    month: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][i],
+    amount: Math.floor(180000 + Math.random() * 150000 + i * 15000),
+    expenses: Math.floor(80000 + Math.random() * 50000),
+  })),
+  categoryDistribution: [
+    { name: 'إلكترونيات', count: 4520 },
+    { name: 'السيارات', count: 3210 },
+    { name: 'العقارات', count: 2890 },
+    { name: 'أثاث', count: 2340 },
+    { name: 'أزياء', count: 1980 },
+    { name: 'الخدمات', count: 1560 },
+    { name: 'الوظائف', count: 1200 },
+    { name: 'هوايات', count: 980 },
+    { name: 'حيوانات', count: 720 },
+    { name: 'الطعام', count: 650 },
+  ],
+}
+
+export const adminSystemHealth = {
+  uptime: 99.97,
+  responseTime: 87,
+  errorRate: 0.12,
+  activeSessions: 892,
+  pageViews: 45230,
+  dbSize: '24.8 MB',
+  storageUsed: '3.2 GB',
+  storageTotal: '10 GB',
+  cacheHitRate: 94.5,
+  lastBackup: '2026-09-01T03:00:00Z',
+  lastCron: '2026-09-01T08:00:00Z',
+  services: [
+    { name: 'الخادم الرئيسي', status: 'operational' as const, latency: 45 },
+    { name: 'قاعدة البيانات', status: 'operational' as const, latency: 12 },
+    { name: 'التخزين', status: 'operational' as const, latency: 78 },
+    { name: 'البريد الإلكتروني', status: 'degraded' as const, latency: 350 },
+    { name: 'الإشعارات', status: 'operational' as const, latency: 95 },
+    { name: 'البحث', status: 'operational' as const, latency: 23 },
+  ],
+}
+
+export const adminSettings = {
+  general: { siteName: 'سلطان', siteDesc: 'منصة التجارة الإلكترونية الأولى في المغرب', defaultCity: 'الدار البيضاء', maintenanceMode: false, contactEmail: 'admin@sultan.ma', maxListingsPerUser: 50, maxImagesPerListing: 10, maxTitleLength: 100, maxDescLength: 2000 },
+  security: { maxLoginAttempts: 5, sessionTimeout: 60, rateLimiting: true, maxRequestsPerMinute: 100, twoFactorAuth: false },
+  notifications: { emailEnabled: true, pushEnabled: true, notifyNewUser: true, notifyNewListing: true, notifyNewBid: true, notifyReport: true, notifyAuctionEnding: true },
+  fees: { listingFee: 0, featuredFee: 50, auctionCommission: 5, withdrawalFee: 2 },
+}

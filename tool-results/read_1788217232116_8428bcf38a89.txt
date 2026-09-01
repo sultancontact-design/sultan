@@ -1,0 +1,756 @@
+     1→'use client'
+     2→
+     3→import { useState, useMemo, useCallback } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import {
+     6→  Users, UserCheck, ShieldCheck, ShieldBan, TrendingUp,
+     7→  ChevronLeft, ChevronRight, MoreVertical, Eye,
+     8→  CheckCircle2, Ban, UserCog, Download, Trash2,
+     9→  Shield, Search, ArrowUpDown, ListChecks, FileSpreadsheet,
+    10→  UserMinus, Star,
+    11→} from 'lucide-react'
+    12→import {
+    13→  BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip,
+    14→  ResponsiveContainer,
+    15→} from 'recharts'
+    16→import {
+    17→  useReactTable, getCoreRowModel, getFilteredRowModel,
+    18→  getPaginationRowModel, getSortedRowModel, flexRender,
+    19→  type ColumnDef, type SortingState,
+    20→} from '@tanstack/react-table'
+    21→import { Badge } from '@/components/ui/badge'
+    22→import { Button } from '@/components/ui/button'
+    23→import { Input } from '@/components/ui/input'
+    24→import { Progress } from '@/components/ui/progress'
+    25→import { Checkbox } from '@/components/ui/checkbox'
+    26→import { Skeleton } from '@/components/ui/skeleton'
+    27→import {
+    28→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    29→} from '@/components/ui/select'
+    30→import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+    31→import { ScrollArea } from '@/components/ui/scroll-area'
+    32→import {
+    33→  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+    34→} from '@/components/ui/dialog'
+    35→import {
+    36→  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+    37→  DropdownMenuTrigger, DropdownMenuSeparator,
+    38→} from '@/components/ui/dropdown-menu'
+    39→import { adminUsers, adminChartData } from '@/lib/seed-data'
+    40→import { useSultanStore } from '@/lib/store'
+    41→
+    42→/* ------------------------------------------------------------------ */
+    43→/*  Types                                                              */
+    44→/* ------------------------------------------------------------------ */
+    45→type AdminUser = (typeof adminUsers)[number]
+    46→type UserTab = 'all' | 'verified' | 'banned' | 'rising' | 'moderator'
+    47→
+    48→interface UsersPanelProps {
+    49→  onNavigate?: (panel: string) => void
+    50→}
+    51→
+    52→/* ------------------------------------------------------------------ */
+    53→/*  Helpers                                                            */
+    54→/* ------------------------------------------------------------------ */
+    55→const fmt = (n: number) => n.toLocaleString('ar-EG')
+    56→
+    57→const roleLabels: Record<string, string> = {
+    58→  super_admin: 'سوبر أدمن',
+    59→  admin: 'أدمن',
+    60→  moderator: 'مشرف',
+    61→  user: 'مستخدم',
+    62→}
+    63→
+    64→const roleColors: Record<string, string> = {
+    65→  super_admin: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    66→  admin: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    67→  moderator: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    68→  user: 'bg-white/10 text-gray-300 border-white/10',
+    69→}
+    70→
+    71→const statusLabel = (u: AdminUser) => {
+    72→  if (u.isBanned) return 'محظور'
+    73→  if (u.isVerified) return 'موثق'
+    74→  if (u.isRising) return 'صاعد'
+    75→  return 'جديد'
+    76→}
+    77→
+    78→const statusColors: Record<string, string> = {
+    79→  موثق: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    80→  صاعد: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    81→  محظور: 'bg-red-500/15 text-red-400 border-red-500/30',
+    82→  جديد: 'bg-white/10 text-gray-400 border-white/10',
+    83→}
+    84→
+    85→/* ------------------------------------------------------------------ */
+    86→/*  Weekly aggregation (last 8 weeks)                                  */
+    87→/* ------------------------------------------------------------------ */
+    88→const weeklyData = useMemo(() => {
+    89→  const raw = adminChartData.userGrowth
+    90→  const weeks: { label: string; users: number }[] = []
+    91→  for (let w = 0; w < 8; w++) {
+    92→    const start = w * 7
+    93→    const slice = raw.slice(start, start + 7)
+    94→    const total = slice.reduce((s, d) => s + d.users, 0)
+    95→    const first = slice[0]
+    96→    const weekNum = Math.ceil((new Date(first.date).getDate()) / 7)
+    97→    weeks.push({ label: `أسبوع ${weekNum}`, users: total })
+    98→  }
+    99→  return weeks
+   100→}, [])
+   101→
+   102→/* ------------------------------------------------------------------ */
+   103→/*  Component                                                          */
+   104→/* ------------------------------------------------------------------ */
+   105→export default function UsersPanel({ onNavigate }: UsersPanelProps) {
+   106→  const { addToast } = useSultanStore()
+   107→
+   108→  const [users, setUsers] = useState<AdminUser[]>([...adminUsers])
+   109→  const [globalFilter, setGlobalFilter] = useState('')
+   110→  const [sorting, setSorting] = useState<SortingState>([])
+   111→  const [roleFilter, setRoleFilter] = useState('all')
+   112→  const [activeTab, setActiveTab] = useState<UserTab>('all')
+   113→  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+   114→  const [detailUser, setDetailUser] = useState<AdminUser | null>(null)
+   115→  const [banReason, setBanReason] = useState('')
+   116→  const [banModalOpen, setBanModalOpen] = useState(false)
+   117→  const [banTarget, setBanTarget] = useState<AdminUser | null>(null)
+   118→
+   119→  /* ── Derived counts ── */
+   120→  const counts = useMemo(() => ({
+   121→    all: users.length,
+   122→    verified: users.filter((u) => u.isVerified).length,
+   123→    banned: users.filter((u) => u.isBanned).length,
+   124→    rising: users.filter((u) => u.isRising).length,
+   125→    moderator: users.filter((u) => u.role === 'moderator').length,
+   126→  }), [users])
+   127→
+   128→  const avgTrust = useMemo(
+   129→    () => Math.round(users.reduce((s, u) => s + u.trustScore, 0) / users.length),
+   130→    [users],
+   131→  )
+   132→
+   133→  const newThisWeek = 3
+   134→
+   135→  /* ── Filtered data for table ── */
+   136→  const filteredData = useMemo(() => {
+   137→    let data = users
+   138→    if (activeTab === 'verified') data = data.filter((u) => u.isVerified)
+   139→    else if (activeTab === 'banned') data = data.filter((u) => u.isBanned)
+   140→    else if (activeTab === 'rising') data = data.filter((u) => u.isRising)
+   141→    else if (activeTab === 'moderator') data = data.filter((u) => u.role === 'moderator')
+   142→    if (roleFilter !== 'all') data = data.filter((u) => u.role === roleFilter)
+   143→    return data
+   144→  }, [users, activeTab, roleFilter])
+   145→
+   146→  /* ── Tab config ── */
+   147→  const tabs: { key: UserTab; label: string; count: number }[] = [
+   148→    { key: 'all', label: 'الكل', count: counts.all },
+   149→    { key: 'verified', label: 'موثق', count: counts.verified },
+   150→    { key: 'banned', label: 'محظور', count: counts.banned },
+   151→    { key: 'rising', label: 'صاعد', count: counts.rising },
+   152→    { key: 'moderator', label: 'مشرف', count: counts.moderator },
+   153→  ]
+   154→
+   155→  /* ── Columns ── */
+   156→  const columns = useMemo<ColumnDef<AdminUser>[]>(
+   157→    () => [
+   158→      {
+   159→        id: 'select',
+   160→        header: ({ table }) => (
+   161→          <Checkbox
+   162→            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+   163→            onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+   164→            className="border-white/20 data-[state=checked]:bg-[#D4AF37] data-[state=checked]:border-[#D4AF37]"
+   165→          />
+   166→        ),
+   167→        cell: ({ row }) => (
+   168→          <Checkbox
+   169→            checked={row.getIsSelected()}
+   170→            onCheckedChange={(v) => row.toggleSelected(!!v)}
+   171→            className="border-white/20 data-[state=checked]:bg-[#D4AF37] data-[state=checked]:border-[#D4AF37]"
+   172→          />
+   173→        ),
+   174→        size: 40,
+   175→      },
+   176→      {
+   177→        accessorKey: 'displayName',
+   178→        header: ({ column }) => (
+   179→          <Button variant="ghost" size="sm" className="text-xs text-white/70 hover:text-white h-8 px-2"
+   180→            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+   181→            الاسم <ArrowUpDown className="size-3 mr-1" />
+   182→          </Button>
+   183→        ),
+   184→        cell: ({ row }) => {
+   185→          const u = row.original
+   186→          const initial = u.displayName.charAt(0)
+   187→          return (
+   188→            <div className="flex items-center gap-3 min-w-[180px]">
+   189→              <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+   190→                style={{ background: `linear-gradient(135deg, ${u.isVerified ? 'rgba(52,211,153,0.25)' : 'rgba(212,175,55,0.2)'}, transparent)`,
+   191→                  border: `1px solid ${u.isVerified ? 'rgba(52,211,153,0.3)' : 'rgba(212,175,55,0.2)'}` }}>
+   192→                {initial}
+   193→              </div>
+   194→              <div className="min-w-0">
+   195→                <p className="text-sm font-medium text-white truncate">{u.displayName}</p>
+   196→                <p className="text-xs text-white/40 truncate">{u.email}</p>
+   197→              </div>
+   198→            </div>
+   199→          )
+   200→        },
+   201→        size: 220,
+   202→      },
+   203→      {
+   204→        accessorKey: 'city',
+   205→        header: 'المدينة',
+   206→        cell: ({ row }) => <span className="text-sm text-white/70">{row.original.city}</span>,
+   207→        size: 110,
+   208→      },
+   209→      {
+   210→        accessorKey: 'role',
+   211→        header: 'الدور',
+   212→        cell: ({ row }) => {
+   213→          const role = row.original.role
+   214→          return (
+   215→            <Badge variant="outline" className={`text-xs ${roleColors[role] || roleColors.user} border`}>
+   216→              {roleLabels[role] || role}
+   217→            </Badge>
+   218→          )
+   219→        },
+   220→        size: 110,
+   221→        filterFn: (row, _id, value) => value === 'all' || row.original.role === value,
+   222→      },
+   223→      {
+   224→        accessorKey: 'trustScore',
+   225→        header: ({ column }) => (
+   226→          <Button variant="ghost" size="sm" className="text-xs text-white/70 hover:text-white h-8 px-2"
+   227→            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+   228→            نقاط الثقة <ArrowUpDown className="size-3 mr-1" />
+   229→          </Button>
+   230→        ),
+   231→        cell: ({ row }) => {
+   232→          const score = row.original.trustScore
+   233→          const color = score >= 80 ? '#34d399' : score >= 60 ? '#D4AF37' : '#ef4444'
+   234→          return (
+   235→            <div className="flex items-center gap-2 min-w-[120px]">
+   236→              <Progress value={score} className="h-2 flex-1 bg-white/5 [&>div]:!bg-none"
+   237→                style={{ ['--progress-color' as string]: color }} />
+   238→              <style>{`[data-value="${score}"]>div{background:${color} !important}`}</style>
+   239→              <span className="text-xs text-white/60 w-7 text-left">{score}</span>
+   240→            </div>
+   241→          )
+   242→        },
+   243→        size: 140,
+   244→      },
+   245→      {
+   246→        id: 'status',
+   247→        header: 'الحالة',
+   248→        cell: ({ row }) => {
+   249→          const label = statusLabel(row.original)
+   250→          return (
+   251→            <Badge variant="outline" className={`text-xs ${statusColors[label]} border`}>
+   252→              {label}
+   253→            </Badge>
+   254→          )
+   255→        },
+   256→        size: 90,
+   257→      },
+   258→      {
+   259→        accessorKey: 'listingsCount',
+   260→        header: 'الإعلانات',
+   261→        cell: ({ row }) => (
+   262→          <span className="text-sm text-white/60 tabular-nums">{fmt(row.original.listingsCount)}</span>
+   263→        ),
+   264→        size: 80,
+   265→      },
+   266→      {
+   267→        id: 'actions',
+   268→        header: '',
+   269→        cell: ({ row }) => {
+   270→          const u = row.original
+   271→          return (
+   272→            <DropdownMenu>
+   273→              <DropdownMenuTrigger asChild>
+   274→                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white/50 hover:text-white">
+   275→                  <MoreVertical className="size-4" />
+   276→                </Button>
+   277→              </DropdownMenuTrigger>
+   278→              <DropdownMenuContent align="start" className="admin-glass min-w-[170px] border-white/10">
+   279→                <DropdownMenuItem className="text-white/80 focus:text-white focus:bg-white/5"
+   280→                  onClick={() => setDetailUser(u)}>
+   281→                  <Eye className="size-4 ml-2" /> عرض التفاصيل
+   282→                </DropdownMenuItem>
+   283→                <DropdownMenuItem className="text-emerald-400 focus:bg-emerald-500/10"
+   284→                  onClick={() => toggleVerify(u.id)}>
+   285→                  <CheckCircle2 className="size-4 ml-2" />
+   286→                  {u.isVerified ? 'إلغاء التوثيق' : 'توثيق الحساب'}
+   287→                </DropdownMenuItem>
+   288→                <DropdownMenuItem className="text-red-400 focus:bg-red-500/10"
+   289→                  onClick={() => { if (u.isBanned) toggleBan(u.id, '') ; else { setBanTarget(u); setBanModalOpen(true) } }}>
+   290→                  <Ban className="size-4 ml-2" />
+   291→                  {u.isBanned ? 'رفع الحظر' : 'حظر المستخدم'}
+   292→                </DropdownMenuItem>
+   293→                <DropdownMenuSeparator className="bg-white/10" />
+   294→                <DropdownMenuItem className="text-amber-400 focus:bg-amber-500/10"
+   295→                  onClick={() => cycleRole(u.id)}>
+   296→                  <UserCog className="size-4 ml-2" /> تغيير الدور
+   297→                </DropdownMenuItem>
+   298→              </DropdownMenuContent>
+   299→            </DropdownMenu>
+   300→          )
+   301→        },
+   302→        size: 50,
+   303→      },
+   304→    ],
+   305→    [],
+   306→  )
+   307→
+   308→  /* ── Table ── */
+   309→  const table = useReactTable({
+   310→    data: filteredData,
+   311→    columns,
+   312→    state: { globalFilter, sorting, rowSelection },
+   313→    onGlobalFilterChange: setGlobalFilter,
+   314→    onSortingChange: setSorting,
+   315→    onRowSelectionChange: setRowSelection,
+   316→    getCoreRowModel: getCoreRowModel(),
+   317→    getFilteredRowModel: getFilteredRowModel(),
+   318→    getPaginationRowModel: getPaginationRowModel(),
+   319→    getSortedRowModel: getSortedRowModel(),
+   320→    globalFilterFn: (row, _id, filterValue) => {
+   321→      const q = String(filterValue).toLowerCase()
+   322→      const u = row.original
+   323→      return u.displayName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.city.toLowerCase().includes(q)
+   324→    },
+   325→  })
+   326→
+   327→  const selectedIds = Object.keys(rowSelection).filter((k) => rowSelection[k])
+   328→  const selectedCount = selectedIds.length
+   329→
+   330→  /* ── Actions ── */
+   331→  const toggleVerify = useCallback((id: string) => {
+   332→    setUsers((prev) =>
+   333→      prev.map((u) => (u.id === id ? { ...u, isVerified: !u.isVerified } : u)),
+   334→    )
+   335→    addToast('تم تحديث حالة التوثيق', 'success')
+   336→  }, [addToast])
+   337→
+   338→  const toggleBan = useCallback((id: string, reason: string) => {
+   339→    setUsers((prev) =>
+   340→      prev.map((u) => (u.id === id ? { ...u, isBanned: !u.isBanned, banReason: reason || u.banReason } : u)),
+   341→    )
+   342→    addToast('تم تحديث حالة الحظر', 'success')
+   343→  }, [addToast])
+   344→
+   345→  const cycleRole = useCallback((id: string) => {
+   346→    const roles = ['user', 'moderator', 'admin', 'super_admin']
+   347→    setUsers((prev) =>
+   348→      prev.map((u) => {
+   349→        if (u.id !== id) return u
+   350→        const idx = roles.indexOf(u.role)
+   351→        const next = roles[(idx + 1) % roles.length]
+   352→        return { ...u, role: next }
+   353→      }),
+   354→    )
+   355→    addToast('تم تغيير الدور بنجاح', 'success')
+   356→  }, [addToast])
+   357→
+   358→  const handleConfirmBan = () => {
+   359→    if (banTarget) {
+   360→      toggleBan(banTarget.id, banReason)
+   361→      setBanTarget(null)
+   362→      setBanReason('')
+   363→      setBanModalOpen(false)
+   364→    }
+   365→  }
+   366→
+   367→  const batchVerify = () => {
+   368→    setUsers((prev) => prev.map((u) => (selectedIds.includes(u.id) ? { ...u, isVerified: true } : u)))
+   369→    setRowSelection({})
+   370→    addToast(`تم توثيق ${fmt(selectedCount)} حساب`, 'success')
+   371→  }
+   372→
+   373→  const batchBan = () => {
+   374→    setUsers((prev) => prev.map((u) => (selectedIds.includes(u.id) ? { ...u, isBanned: true, banReason: 'حظر جماعي' } : u)))
+   375→    setRowSelection({})
+   376→    addToast(`تم حظر ${fmt(selectedCount)} حساب`, 'success')
+   377→  }
+   378→
+   379→  const batchDelete = () => {
+   380→    setUsers((prev) => prev.filter((u) => !selectedIds.includes(u.id)))
+   381→    setRowSelection({})
+   382→    addToast(`تم حذف ${fmt(selectedCount)} حساب`, 'success')
+   383→  }
+   384→
+   385→  /* ── CSV Export ── */
+   386→  const exportCSV = () => {
+   387→    const rows = table.getFilteredRowModel().rows.map((r) => r.original)
+   388→    const headers = ['الاسم', 'البريد', 'الهاتف', 'المدينة', 'الدور', 'نقاط الثقة', 'الحالة', 'الإعلانات']
+   389→    const mapRow = (u: AdminUser) => [
+   390→      u.displayName, u.email, u.phone, u.city, roleLabels[u.role] || u.role,
+   391→      u.trustScore, statusLabel(u), u.listingsCount,
+   392→    ]
+   393→    const csv = '\uFEFF' + [headers.join(','), ...rows.map(mapRow).map((r) => r.map((c) => `"${c}"`).join(','))].join('\n')
+   394→    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+   395→    const url = URL.createObjectURL(blob)
+   396→    const a = document.createElement('a')
+   397→    a.href = url
+   398→    a.download = 'sultan-users.csv'
+   399→    a.click()
+   400→    URL.revokeObjectURL(url)
+   401→    addToast('تم تصدير الملف بنجاح', 'success')
+   402→  }
+   403→
+   404→  /* ── Stats Cards ── */
+   405→  const statsCards = [
+   406→    { icon: Users, label: 'إجمالي المستخدمين', value: counts.all, trend: '+12%', color: '#D4AF37' },
+   407→    { icon: UserCheck, label: 'جدد هذا الأسبوع', value: newThisWeek, trend: '+3', color: '#34d399' },
+   408→    { icon: ShieldCheck, label: 'نسبة التوثيق', value: `${Math.round((counts.verified / counts.all) * 100)}%`, trend: '+5%', color: '#34d399' },
+   409→    { icon: ShieldBan, label: 'محظورون', value: counts.banned, trend: '-2', color: '#ef4444' },
+   410→    { icon: Star, label: 'متوسط نقاط الثقة', value: avgTrust, trend: '+3', color: '#D4AF37' },
+   411→  ]
+   412→
+   413→  /* ── Detail modal computed ── */
+   414→  const trustColor = detailUser ? (detailUser.trustScore >= 80 ? '#34d399' : detailUser.trustScore >= 60 ? '#D4AF37' : '#ef4444') : '#D4AF37'
+   415→  const circumference = 2 * Math.PI * 40
+   416→  const trustOffset = detailUser ? circumference - (detailUser.trustScore / 100) * circumference : 0
+   417→
+   418→  return (
+   419→    <div className="space-y-6 pb-24">
+   420→      {/* ─── 1. Stats Cards Row ─── */}
+   421→      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+   422→        {statsCards.map((card, i) => (
+   423→          <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+   424→            transition={{ delay: i * 0.06 }} className="admin-card p-4">
+   425→            <div className="flex items-center gap-3">
+   426→              <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+   427→                style={{ background: `${card.color}15`, border: `1px solid ${card.color}25` }}>
+   428→                <card.icon className="size-5" style={{ color: card.color }} />
+   429→              </div>
+   430→              <div className="min-w-0 flex-1">
+   431→                <p className="text-lg font-bold text-white">{typeof card.value === 'number' ? fmt(card.value) : card.value}</p>
+   432→                <p className="text-xs text-white/40 truncate">{card.label}</p>
+   433→              </div>
+   434→            </div>
+   435→            <div className="mt-2 flex items-center gap-1">
+   436→              <TrendingUp className="size-3" style={{ color: card.color }} />
+   437→              <span className="text-xs" style={{ color: card.color }}>{card.trend}</span>
+   438→              <span className="text-xs text-white/30 mr-1">هذا الأسبوع</span>
+   439→            </div>
+   440→          </motion.div>
+   441→        ))}
+   442→      </div>
+   443→
+   444→      {/* ─── 2. Growth Chart ─── */}
+   445→      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+   446→        className="admin-card p-4">
+   447→        <div className="flex items-center justify-between mb-4">
+   448→          <h3 className="text-sm font-semibold text-white/80">نمو المستخدمين</h3>
+   449→          <Badge variant="outline" className="text-xs border-white/10 text-white/50">آخر 8 أسابيع</Badge>
+   450→        </div>
+   451→        <div className="h-48">
+   452→          <ResponsiveContainer width="100%" height="100%">
+   453→            <BarChart data={weeklyData} barCategoryGap="20%">
+   454→              <XAxis dataKey="label" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
+   455→              <YAxis tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
+   456→              <RechartsTooltip
+   457→                contentStyle={{ background: 'rgba(10,22,40,0.9)', border: '1px solid rgba(212,175,55,0.2)',
+   458→                  borderRadius: '0.5rem', color: '#fff', fontSize: 12 }}
+   459→                labelStyle={{ color: '#D4AF37' }}
+   460→                formatter={(v: number) => [fmt(v), 'مستخدمون']} />
+   461→              <Bar dataKey="users" fill="#D4AF37" radius={[4, 4, 0, 0]} opacity={0.85} />
+   462→            </BarChart>
+   463→          </ResponsiveContainer>
+   464→        </div>
+   465→      </motion.div>
+   466→
+   467→      {/* ─── 3. Segment Tabs ─── */}
+   468→      <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as UserTab); setRowSelection({}) }}>
+   469→        <TabsList className="bg-white/5 border border-white/10 h-auto p-1 gap-1 w-full overflow-x-auto scrollbar-thin">
+   470→          {tabs.map((t) => (
+   471→            <TabsTrigger key={t.key} value={t.key}
+   472→              className="data-[state=active]:bg-[#D4AF37]/15 data-[state=active]:text-[#D4AF37] data-[state=active]:border-[#D4AF37]/30 text-white/50 text-xs px-3 py-2 rounded-lg border border-transparent transition-all">
+   473→              {t.label}
+   474→              <Badge variant="outline" className="mr-2 text-[10px] px-1.5 border-white/10 text-white/40 data-[state=active]:border-[#D4AF37]/30">
+   475→                {t.count}
+   476→              </Badge>
+   477→            </TabsTrigger>
+   478→          ))}
+   479→        </TabsList>
+   480→      </Tabs>
+   481→
+   482→      {/* ─── 4. Search + Filters Bar ─── */}
+   483→      <div className="flex flex-col sm:flex-row gap-3">
+   484→        <div className="relative flex-1">
+   485→          <Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-white/30" />
+   486→          <Input placeholder="بحث بالاسم أو البريد أو المدينة..."
+   487→            value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)}
+   488→            className="pr-10 h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#D4AF37]/40" />
+   489→        </div>
+   490→        <Select value={roleFilter} onValueChange={setRoleFilter}>
+   491→          <SelectTrigger className="h-10 w-full sm:w-[160px] bg-white/5 border-white/10 text-white/70">
+   492→            <SelectValue placeholder="الدور" />
+   493→          </SelectTrigger>
+   494→          <SelectContent className="admin-glass border-white/10">
+   495→            <SelectItem value="all" className="text-white/80">الكل</SelectItem>
+   496→            <SelectItem value="user" className="text-white/80">مستخدم</SelectItem>
+   497→            <SelectItem value="moderator" className="text-white/80">مشرف</SelectItem>
+   498→            <SelectItem value="admin" className="text-white/80">أدمن</SelectItem>
+   499→            <SelectItem value="super_admin" className="text-white/80">سوبر أدمن</SelectItem>
+   500→          </SelectContent>
+   501→        </Select>
+   502→        <Select value={sorting[0]?.id || 'name'}
+   503→          onValueChange={(v) => setSorting([{ id: v === 'name' ? 'displayName' : v, desc: sorting[0]?.desc ?? false }])}>
+   504→          <SelectTrigger className="h-10 w-full sm:w-[160px] bg-white/5 border-white/10 text-white/70">
+   505→            <SelectValue placeholder="ترتيب حسب" />
+   506→          </SelectTrigger>
+   507→          <SelectContent className="admin-glass border-white/10">
+   508→            <SelectItem value="name" className="text-white/80">الاسم</SelectItem>
+   509→            <SelectItem value="city" className="text-white/80">المدينة</SelectItem>
+   510→            <SelectItem value="trustScore" className="text-white/80">نقاط الثقة</SelectItem>
+   511→            <SelectItem value="listingsCount" className="text-white/80">عدد الإعلانات</SelectItem>
+   512→          </SelectContent>
+   513→        </Select>
+   514→        <Button variant="outline" onClick={exportCSV}
+   515→          className="h-10 border-white/10 text-white/70 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 gap-2 shrink-0">
+   516→          <FileSpreadsheet className="size-4" /> تصدير CSV
+   517→        </Button>
+   518→      </div>
+   519→
+   520→      {/* ─── 5. TanStack Table ─── */}
+   521→      <div className="admin-card overflow-hidden">
+   522→        <ScrollArea className="max-h-[520px] scrollbar-thin">
+   523→          <table className="w-full text-sm">
+   524→            <thead className="sticky top-0 z-10">
+   525→              {table.getHeaderGroups().map((hg) => (
+   526→                <tr key={hg.id} className="border-b border-white/10 bg-[#0a1628]/90 backdrop-blur-md">
+   527→                  {hg.headers.map((h) => (
+   528→                    <th key={h.id} className="px-3 py-3 text-right font-medium text-white/50 whitespace-nowrap"
+   529→                      style={{ width: h.getSize() !== 150 ? h.getSize() : undefined }}>
+   530→                      {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+   531→                    </th>
+   532→                  ))}
+   533→                </tr>
+   534→              ))}
+   535→            </thead>
+   536→            <tbody>
+   537→              {table.getRowModel().rows.length === 0 ? (
+   538→                <tr><td colSpan={columns.length} className="py-12 text-center text-white/30">لا توجد نتائج</td></tr>
+   539→              ) : (
+   540→                table.getRowModel().rows.map((row) => (
+   541→                  <motion.tr key={row.id}
+   542→                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+   543→                    className="border-b border-white/5 hover:bg-white/[0.03] transition-colors">
+   544→                    {row.getVisibleCells().map((cell) => (
+   545→                      <td key={cell.id} className="px-3 py-3 whitespace-nowrap">
+   546→                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+   547→                      </td>
+   548→                    ))}
+   549→                  </motion.tr>
+   550→                ))
+   551→              )}
+   552→            </tbody>
+   553→          </table>
+   554→        </ScrollArea>
+   555→
+   556→        {/* ─── Pagination ─── */}
+   557→        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-white/10">
+   558→          <div className="flex items-center gap-2 text-xs text-white/40">
+   559→            <span>صفحة {fmt(table.getState().pagination.pageIndex + 1)} من {fmt(table.getPageCount())}</span>
+   560→            <span className="mx-1">·</span>
+   561→            <Select value={String(table.getState().pagination.pageSize)}
+   562→              onValueChange={(v) => table.setPageSize(Number(v))}>
+   563→              <SelectTrigger className="h-7 w-[70px] bg-white/5 border-white/10 text-xs text-white/60">
+   564→                <SelectValue />
+   565→              </SelectTrigger>
+   566→              <SelectContent className="admin-glass border-white/10">
+   567→                {[5, 10, 15, 20].map((s) => (
+   568→                  <SelectItem key={s} value={String(s)} className="text-white/80 text-xs">{s}</SelectItem>
+   569→                ))}
+   570→              </SelectContent>
+   571→            </Select>
+   572→            <span>لكل صفحة</span>
+   573→          </div>
+   574→          <div className="flex items-center gap-1">
+   575→            <Button variant="outline" size="sm" className="h-8 px-2 border-white/10 text-white/60"
+   576→              disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()}>
+   577→              <ChevronRight className="size-4" />
+   578→            </Button>
+   579→            {Array.from({ length: Math.min(table.getPageCount(), 5) }, (_, i) => {
+   580→              const page = i
+   581→              return (
+   582→                <Button key={page} variant={table.getState().pagination.pageIndex === page ? 'default' : 'outline'}
+   583→                  size="sm" className={`h-8 w-8 p-0 text-xs ${table.getState().pagination.pageIndex === page
+   584→                    ? 'bg-[#D4AF37] text-black hover:bg-[#D4AF37]/90 border-[#D4AF37]' : 'border-white/10 text-white/60'}`}
+   585→                  onClick={() => table.setPageIndex(page)}>
+   586→                  {fmt(page + 1)}
+   587→                </Button>
+   588→              )
+   589→            })}
+   590→            <Button variant="outline" size="sm" className="h-8 px-2 border-white/10 text-white/60"
+   591→              disabled={!table.getCanNextPage()} onClick={() => table.nextPage()}>
+   592→              <ChevronLeft className="size-4" />
+   593→            </Button>
+   594→          </div>
+   595→        </div>
+   596→      </div>
+   597→
+   598→      {/* ─── 7. Batch Operations Bar ─── */}
+   599→      <AnimatePresence>
+   600→        {selectedCount > 0 && (
+   601→          <motion.div
+   602→            initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+   603→            exit={{ y: 80, opacity: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+   604→            className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 admin-glass rounded-xl px-5 py-3 flex items-center gap-4 shadow-2xl border border-[#D4AF37]/20">
+   605→            <div className="flex items-center gap-2 text-sm">
+   606→              <ListChecks className="size-5 text-[#D4AF37]" />
+   607→              <span className="text-white/80">تم اختيار <strong className="text-[#D4AF37]">{fmt(selectedCount)}</strong></span>
+   608→            </div>
+   609→            <div className="w-px h-6 bg-white/10" />
+   610→            <div className="flex items-center gap-2">
+   611→              <Button size="sm" onClick={batchVerify}
+   612→                className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1">
+   613→                <CheckCircle2 className="size-3.5" /> توثيق الكل
+   614→              </Button>
+   615→              <Button size="sm" onClick={batchBan}
+   616→                className="h-8 px-3 text-xs bg-red-600 hover:bg-red-700 text-white gap-1">
+   617→                <Ban className="size-3.5" /> حظر الكل
+   618→              </Button>
+   619→              <Button size="sm" onClick={batchDelete}
+   620→                className="h-8 px-3 text-xs bg-white/10 hover:bg-red-600/20 text-red-400 gap-1">
+   621→                <Trash2 className="size-3.5" /> حذف
+   622→              </Button>
+   623→              <Button size="sm" variant="ghost" onClick={() => setRowSelection({})}
+   624→                className="h-8 px-3 text-xs text-white/50 hover:text-white">
+   625→                إلغاء
+   626→              </Button>
+   627→            </div>
+   628→          </motion.div>
+   629→        )}
+   630→      </AnimatePresence>
+   631→
+   632→      {/* ─── 6. Detail Modal ─── */}
+   633→      <Dialog open={!!detailUser} onOpenChange={(open) => !open && setDetailUser(null)}>
+   634→        <DialogContent className="admin-glass border-white/10 max-w-lg max-h-[90vh] overflow-y-auto scrollbar-thin">
+   635→          {detailUser && (
+   636→            <>
+   637→              {/* Gold gradient header bar */}
+   638→              <div className="absolute top-0 inset-x-0 h-1 sultan-gradient rounded-t-xl" />
+   639→              <DialogHeader className="pb-2">
+   640→                <DialogTitle className="text-white text-lg">تفاصيل المستخدم</DialogTitle>
+   641→              </DialogHeader>
+   642→
+   643→              {/* Trust score circle + info grid */}
+   644→              <div className="flex flex-col sm:flex-row gap-6 mt-2">
+   645→                <div className="flex flex-col items-center gap-2 shrink-0">
+   646→                  <div className="relative w-24 h-24">
+   647→                    <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
+   648→                      <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+   649→                      <motion.circle cx="50" cy="50" r="40" fill="none" stroke={trustColor} strokeWidth="8"
+   650→                        strokeLinecap="round" initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
+   651→                        animate={{ strokeDashoffset: trustOffset }} transition={{ duration: 1.2, ease: 'easeOut' }} />
+   652→                    </svg>
+   653→                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+   654→                      <span className="text-xl font-bold text-white">{detailUser.trustScore}</span>
+   655→                      <span className="text-[10px] text-white/40">نقاط الثقة</span>
+   656→                    </div>
+   657→                  </div>
+   658→                  <Badge variant="outline" className={`text-xs ${statusColors[statusLabel(detailUser)]} border`}>
+   659→                    {statusLabel(detailUser)}
+   660→                  </Badge>
+   661→                </div>
+   662→
+   663→                <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+   664→                  {[
+   665→                    ['الاسم', detailUser.displayName],
+   666→                    ['البريد', detailUser.email],
+   667→                    ['الهاتف', detailUser.phone],
+   668→                    ['المدينة', detailUser.city],
+   669→                    ['الدور', roleLabels[detailUser.role] || detailUser.role],
+   670→                    ['تاريخ الانضمام', new Date(detailUser.createdAt).toLocaleDateString('ar-EG')],
+   671→                    ['آخر ظهور', new Date(detailUser.lastSeen).toLocaleDateString('ar-EG')],
+   672→                    ['سبب الحظر', detailUser.banReason || '—'],
+   673→                  ].map(([label, value]) => (
+   674→                    <div key={label}>
+   675→                      <p className="text-xs text-white/30 mb-0.5">{label}</p>
+   676→                      <p className="text-white/80 truncate">{String(value)}</p>
+   677→                    </div>
+   678→                  ))}
+   679→                </div>
+   680→              </div>
+   681→
+   682→              {/* Activity stats */}
+   683→              <div className="grid grid-cols-3 gap-3 mt-4">
+   684→                {[
+   685→                  { label: 'الإعلانات', value: detailUser.listingsCount, icon: FileSpreadsheet, color: '#D4AF37' },
+   686→                  { label: 'المزايدات', value: detailUser.bidsCount, icon: TrendingUp, color: '#34d399' },
+   687→                  { label: 'البلاغات', value: detailUser.reportsCount, icon: Shield, color: '#ef4444' },
+   688→                ].map((s) => (
+   689→                  <div key={s.label} className="admin-card p-3 text-center">
+   690→                    <s.icon className="size-5 mx-auto mb-1" style={{ color: s.color }} />
+   691→                    <p className="text-lg font-bold text-white">{fmt(s.value)}</p>
+   692→                    <p className="text-xs text-white/40">{s.label}</p>
+   693→                  </div>
+   694→                ))}
+   695→              </div>
+   696→
+   697→              {/* Actions */}
+   698→              <DialogFooter className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
+   699→                <Button onClick={() => toggleVerify(detailUser.id)}
+   700→                  className="h-9 px-4 text-sm bg-emerald-600 hover:bg-emerald-700 text-white gap-2 press-effect">
+   701→                  <CheckCircle2 className="size-4" /> {detailUser.isVerified ? 'إلغاء التوثيق' : 'توثيق'}
+   702→                </Button>
+   703→                <Button onClick={() => {
+   704→                  if (detailUser.isBanned) { toggleBan(detailUser.id, ''); setDetailUser(null) }
+   705→                  else { setBanTarget(detailUser); setDetailUser(null); setBanModalOpen(true) }
+   706→                }}
+   707→                  className={`h-9 px-4 text-sm gap-2 press-effect ${detailUser.isBanned
+   708→                    ? 'bg-white/10 hover:bg-emerald-600/20 text-emerald-400'
+   709→                    : 'bg-red-600 hover:bg-red-700 text-white'}`}>
+   710→                  {detailUser.isBanned ? <><UserMinus className="size-4" /> رفع الحظر</> : <><Ban className="size-4" /> حظر</>}
+   711→                </Button>
+   712→                <Button onClick={() => { cycleRole(detailUser.id); setDetailUser({ ...detailUser, role: ['user','moderator','admin','super_admin'][(['user','moderator','admin','super_admin'].indexOf(detailUser.role) + 1) % 4] as AdminUser['role'] }) }}
+   713→                  className="h-9 px-4 text-sm bg-white/10 hover:bg-amber-600/20 text-amber-400 gap-2 press-effect">
+   714→                  <UserCog className="size-4" /> تغيير الدور
+   715→                </Button>
+   716→                <Button variant="ghost" onClick={() => setDetailUser(null)}
+   717→                  className="h-9 px-4 text-sm text-white/50 hover:text-white mr-auto">
+   718→                  إغلاق
+   719→                </Button>
+   720→              </DialogFooter>
+   721→            </>
+   722→          )}
+   723→        </DialogContent>
+   724→      </Dialog>
+   725→
+   726→      {/* ─── Ban Reason Modal ─── */}
+   727→      <Dialog open={banModalOpen} onOpenChange={setBanModalOpen}>
+   728→        <DialogContent className="admin-glass border-white/10 max-w-md">
+   729→          <DialogHeader>
+   730→            <DialogTitle className="text-white">حظر المستخدم</DialogTitle>
+   731→          </DialogHeader>
+   732→          {banTarget && (
+   733→            <>
+   734→              <p className="text-sm text-white/60">
+   735→                أدخل سبب حظر <span className="text-white font-medium">{banTarget.displayName}</span>
+   736→              </p>
+   737→              <Input placeholder="سبب الحظر..." value={banReason} onChange={(e) => setBanReason(e.target.value)}
+   738→                className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-red-500/40" />
+   739→              <DialogFooter className="gap-2 pt-2">
+   740→                <Button onClick={handleConfirmBan} disabled={!banReason.trim()}
+   741→                  className="h-9 px-4 text-sm bg-red-600 hover:bg-red-700 text-white press-effect">
+   742→                  تأكيد الحظر
+   743→                </Button>
+   744→                <Button variant="ghost" onClick={() => { setBanModalOpen(false); setBanTarget(null); setBanReason('') }}
+   745→                  className="h-9 px-4 text-sm text-white/50 hover:text-white">
+   746→                  إلغاء
+   747→                </Button>
+   748→              </DialogFooter>
+   749→            </>
+   750→          )}
+   751→        </DialogContent>
+   752→      </Dialog>
+   753→    </div>
+   754→  )
+   755→}
+   756→
