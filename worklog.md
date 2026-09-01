@@ -1,48 +1,30 @@
-# SULTAN Platform — Worklog
+# SULTAN Platform - Work Log
 
 ---
 Task ID: 1
-Agent: Main Agent
-Task: Diagnose and fix Cloudflare Pages build failures (red X marks on GitHub commits)
+Agent: Super Z (Main)
+Task: Migrate Sultan Platform to Supabase + Deploy to Cloudflare Pages
 
 Work Log:
-- Discovered Cloudflare Pages check-runs were failing for both commits (5de8f4a, dd604c7)
-- Root cause 1: `output: "standalone"` in next.config.ts incompatible with CF Pages
-- Root cause 2: `@cloudflare/next-on-pages@1.13.16` does NOT support Next.js 16 (max 15.5.2)
-- Root cause 3: API routes in src/app/api/ cannot be exported as static
-- Fixed by: switching to `output: "export"`, moving API routes to src/api-routes/api-stored/
-- Build now succeeds on Cloudflare Pages (green checkmark)
+- Prisma schema already converted to PostgreSQL (provider + URL)
+- Created .env.local and .env with Supabase credentials
+- Discovered PostgreSQL port (5432/6543) blocked from this environment
+- Discovered Prisma doesn't work on Cloudflare Pages Edge Runtime
+- Confirmed all 6 API routes already use @supabase/supabase-js with Edge runtime
+- Fixed supabase-client.ts to remove placeholder fallback keys
+- Created /api/seed endpoint for database initialization via Supabase REST API
+- Created supabase/tables.sql with full DDL for all 11 tables + indexes + RLS
+- Downgraded Next.js from 16.3.3 to 15.5.2 for @cloudflare/next-on-pages compatibility
+- Fixed package.json build script (next build) for CF Pages compatibility
+- Build verified: 8 Edge Functions + static assets generated successfully
+- Pushed to GitHub: sultancontact-design/sultan (commit f04a09a)
+- Cloudflare Pages auto-deploy triggered
+- Live site verified at https://sultan-1yj.pages.dev/
 
 Stage Summary:
-- Cloudflare Pages build: ✅ SUCCESS
-- All 30 DB tables confirmed in Supabase (via REST API check)
-- Site live at: https://sultancontact-design.pages.dev
-- API routes preserved in src/api-routes/api-stored/ for future backend deployment
-
----
-Task ID: 2
-Agent: Main Agent
-Task: Setup Supabase database and verify tables
-
-Work Log:
-- Direct DB connection (IPv6) not reachable from build environment
-- Pooler connection gave "tenant not found" error
-- Verified all 30 tables exist via Supabase REST API (all return HTTP 200)
-- Tables: Profile, Category, Listing, ListingSave, Message, WalletTransaction, SupportEvent, Auction, CharityCase, FeatureFlag, AuditLog, AiProvider, AiModel, ModelRoutingRule, StoredSecret, AgentInstance, AiTask, Workflow, ObservabilityEvent, ModelUsageMetric, MemoryEntry, KnowledgeEntry, PermissionPolicy, ScheduledTask, SocialAccount, SocialPost, MarriageProfile, Wallet, Transaction, TrustScoreRecord, TrendItem, BusinessProfile, CommandCenterSession
-
-Stage Summary:
-- All 30 tables exist and accessible via Supabase REST API
-- Prisma schema correctly configured for PostgreSQL/Supabase
-
----
-Task ID: 3
-Agent: Main Agent
-Task: setup-db.sh and documentation
-
-Work Log:
-- Updated supabase/setup-db.sh with fallback instructions for manual SQL execution
-- The script is a convenience tool for developers cloning the repo
-- Tables were already created; script serves as documentation + future setup tool
-
-Stage Summary:
-- setup-db.sh updated with clear instructions and manual fallback
+- Site live: https://sultan-1yj.pages.dev/ (200 OK, full Arabic RTL)
+- /api/categories returns 16 real categories from Supabase ✅
+- /api/listings and /api/auctions return empty arrays (tables exist, no data yet)
+- Remaining APIs deploying (propagation in progress)
+- User needs to: (1) run supabase/tables.sql in Supabase Dashboard, (2) visit /api/seed to populate data
+- All API routes use Edge runtime + Supabase JS client (no Prisma on CF Pages)
