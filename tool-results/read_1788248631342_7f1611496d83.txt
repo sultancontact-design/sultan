@@ -1,0 +1,1054 @@
+     1→'use client'
+     2→
+     3→import { useState, useMemo } from 'react'
+     4→import { motion, AnimatePresence } from 'framer-motion'
+     5→import {
+     6→  Search, Star, Eye, MoreHorizontal, CheckCircle2, XCircle,
+     7→  Crown, ShieldBan, Trash2, BarChart3, ChevronLeft, ChevronRight,
+     8→  ArrowUpDown, Package, Clock, DollarSign, TrendingUp, ImageOff,
+     9→  Sparkles, SlidersHorizontal, CalendarDays, User, LayoutGrid, List,
+    10→} from 'lucide-react'
+    11→import {
+    12→  useReactTable, getCoreRowModel, getFilteredRowModel,
+    13→  getPaginationRowModel, getSortedRowModel, flexRender,
+    14→  type ColumnDef, type SortingState,
+    15→} from '@tanstack/react-table'
+    16→import {
+    17→  BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip,
+    18→  ResponsiveContainer, PieChart, Pie, Cell,
+    19→} from 'recharts'
+    20→import { Badge } from '@/components/ui/badge'
+    21→import { Button } from '@/components/ui/button'
+    22→import { Input } from '@/components/ui/input'
+    23→import {
+    24→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    25→} from '@/components/ui/select'
+    26→import { Progress } from '@/components/ui/progress'
+    27→import {
+    28→  Dialog, DialogContent, DialogHeader, DialogTitle,
+    29→} from '@/components/ui/dialog'
+    30→import {
+    31→  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+    32→  DropdownMenuSeparator, DropdownMenuTrigger,
+    33→} from '@/components/ui/dropdown-menu'
+    34→import { Checkbox } from '@/components/ui/checkbox'
+    35→import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+    36→import { ScrollArea } from '@/components/ui/scroll-area'
+    37→import {
+    38→  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+    39→} from '@/components/ui/tooltip'
+    40→import { useSultanStore } from '@/lib/store'
+    41→import { listings as seedListings, categories, cities } from '@/lib/seed-data'
+    42→
+    43→/* ------------------------------------------------------------------ */
+    44→/*  Types & Helpers                                                     */
+    45→/* ------------------------------------------------------------------ */
+    46→const fmt = (n: number) => n.toLocaleString('ar-EG')
+    47→
+    48→interface Listing {
+    49→  id: string; title: string; description: string; price: number
+    50→  categoryId: string; city: string; status: string; viewsCount: number
+    51→  isFeatured: boolean; createdAt: string; images?: string
+    52→  profile: { displayName: string; city: string; trustScore: number }
+    53→}
+    54→
+    55→const catMap = Object.fromEntries(categories.map((c) => [c.id, c.nameAr]))
+    56→const PIE_COLORS = ['#34d399', '#F0D060', '#ef4444']
+    57→const GRADIENTS = [
+    58→  'from-amber-700/50 to-amber-500/20',
+    59→  'from-emerald-700/50 to-emerald-500/20',
+    60→  'from-rose-700/50 to-rose-500/20',
+    61→  'from-orange-700/40 to-orange-400/15',
+    62→  'from-teal-700/40 to-teal-400/15',
+    63→]
+    64→
+    65→const STATUS_CFG: Record<string, { label: string; cls: string; icon: React.ElementType }> = {
+    66→  active:  { label: 'نشط',   cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', icon: CheckCircle2 },
+    67→  pending: { label: 'معلّق', cls: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30', icon: Clock },
+    68→  banned:  { label: 'محظور', cls: 'bg-red-500/15 text-red-400 border-red-500/30', icon: ShieldBan },
+    69→}
+    70→
+    71→const qScore = (l: Listing) =>
+    72→  (l.images ? 25 : 0) +
+    73→  ((l.description?.length ?? 0) > 30 ? 25 : 0) +
+    74→  (l.price > 0 ? 25 : 0) +
+    75→  (l.categoryId && catMap[l.categoryId] ? 25 : 0)
+    76→
+    77→const qLabel = (s: number) =>
+    78→  s >= 75
+    79→    ? { t: 'جيد', c: 'text-emerald-400' }
+    80→    : s >= 50
+    81→      ? { t: 'متوسط', c: 'text-yellow-400' }
+    82→      : { t: 'ضعيف', c: 'text-red-400' }
+    83→
+    84→const qBreakdown = (l: Listing) => [
+    85→  { label: 'الصور', v: l.images ? 25 : 0 },
+    86→  { label: 'الوصف', v: (l.description?.length ?? 0) > 30 ? 25 : 0 },
+    87→  { label: 'السعر', v: l.price > 0 ? 25 : 0 },
+    88→  { label: 'القسم', v: l.categoryId && catMap[l.categoryId] ? 25 : 0 },
+    89→]
+    90→
+    91→/* ------------------------------------------------------------------ */
+    92→/*  Component                                                           */
+    93→/* ------------------------------------------------------------------ */
+    94→export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: string) => void }) {
+    95→  const [data, setData] = useState<Listing[]>(
+    96→    () => seedListings.map((l) => ({ ...l, profile: { ...l.profile } })) as Listing[]
+    97→  )
+    98→  const [sorting, setSorting] = useState<SortingState>([])
+    99→  const [globalFilter, setGlobalFilter] = useState('')
+   100→  const [statusFilter, setStatusFilter] = useState('all')
+   101→  const [catFilter, setCatFilter] = useState('all')
+   102→  const [cityFilter, setCityFilter] = useState('all')
+   103→  const [sortKey, setSortKey] = useState('newest')
+   104→  const [advOpen, setAdvOpen] = useState(false)
+   105→  const [priceMin, setPriceMin] = useState('')
+   106→  const [priceMax, setPriceMax] = useState('')
+   107→  const [tab, setTab] = useState('all')
+   108→  const [detailOpen, setDetailOpen] = useState(false)
+   109→  const [selListing, setSelListing] = useState<Listing | null>(null)
+   110→  const [rowSel, setRowSel] = useState<Record<string, boolean>>({})
+   111→  const [pageSize, setPageSize] = useState(10)
+   112→
+   113→  /* ---- Mutations ---- */
+   114→  const updateStatus = (id: string, status: string) =>
+   115→    setData((p) => p.map((l) => (l.id === id ? { ...l, status } : l)))
+   116→
+   117→  const toggleFeat = (id: string) =>
+   118→    setData((p) => p.map((l) => (l.id === id ? { ...l, isFeatured: !l.isFeatured } : l)))
+   119→
+   120→  const deleteOne = (id: string) => {
+   121→    setData((p) => p.filter((l) => l.id !== id))
+   122→    setRowSel((p) => { const n = { ...p }; delete n[id]; return n })
+   123→  }
+   124→
+   125→  const bulk = (action: string) => {
+   126→    setData((p) =>
+   127→      p
+   128→        .map((l) => {
+   129→          if (!rowSel[l.id]) return l
+   130→          if (action === 'approve') return { ...l, status: 'active' as const }
+   131→          if (action === 'feature') return { ...l, isFeatured: true }
+   132→          return l
+   133→        })
+   134→        .filter((l) => !(action === 'delete' && rowSel[l.id]))
+   135→    )
+   136→    if (action === 'delete') setRowSel({})
+   137→  }
+   138→
+   139→  /* ---- Derived data ---- */
+   140→  const filtered = useMemo(() => {
+   141→    let items = [...data]
+   142→    if (tab === 'pending') items = items.filter((l) => l.status === 'pending')
+   143→    else if (tab === 'featured') items = items.filter((l) => l.isFeatured)
+   144→    else if (tab === 'banned') items = items.filter((l) => l.status === 'banned')
+   145→    if (statusFilter !== 'all') items = items.filter((l) => l.status === statusFilter)
+   146→    if (catFilter !== 'all') items = items.filter((l) => l.categoryId === catFilter)
+   147→    if (cityFilter !== 'all') items = items.filter((l) => l.city === cityFilter)
+   148→    if (globalFilter.trim()) {
+   149→      const q = globalFilter.toLowerCase()
+   150→      items = items.filter(
+   151→        (l) => l.title.toLowerCase().includes(q) || l.description?.toLowerCase().includes(q)
+   152→      )
+   153→    }
+   154→    if (priceMin) items = items.filter((l) => l.price >= +priceMin)
+   155→    if (priceMax) items = items.filter((l) => l.price <= +priceMax)
+   156→    if (sortKey === 'price-asc') items.sort((a, b) => a.price - b.price)
+   157→    else if (sortKey === 'price-desc') items.sort((a, b) => b.price - a.price)
+   158→    else if (sortKey === 'newest')
+   159→      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+   160→    else if (sortKey === 'views') items.sort((a, b) => b.viewsCount - a.viewsCount)
+   161→    return items
+   162→  }, [data, tab, statusFilter, catFilter, cityFilter, globalFilter, priceMin, priceMax, sortKey])
+   163→
+   164→  const stats = useMemo(
+   165→    () => ({
+   166→      total: data.length,
+   167→      active: data.filter((l) => l.status === 'active').length,
+   168→      pending: data.filter((l) => l.status === 'pending').length,
+   169→      featured: data.filter((l) => l.isFeatured).length,
+   170→      banned: data.filter((l) => l.status === 'banned').length,
+   171→      avgPrice: data.length ? Math.round(data.reduce((s, l) => s + l.price, 0) / data.length) : 0,
+   172→    }),
+   173→    [data]
+   174→  )
+   175→
+   176→  const selIds = Object.keys(rowSel).filter((k) => rowSel[k])
+   177→
+   178→  const catChart = useMemo(() => {
+   179→    const c: Record<string, number> = {}
+   180→    data.forEach((l) => {
+   181→      const n = catMap[l.categoryId] || 'أخرى'
+   182→      c[n] = (c[n] || 0) + 1
+   183→    })
+   184→    return Object.entries(c)
+   185→      .sort((a, b) => b[1] - a[1])
+   186→      .slice(0, 8)
+   187→      .map(([name, count]) => ({ name, count }))
+   188→  }, [data])
+   189→
+   190→  const pieData = useMemo(
+   191→    () => [
+   192→      { name: 'نشط', value: stats.active },
+   193→      { name: 'معلّق', value: stats.pending },
+   194→      { name: 'محظور', value: stats.banned },
+   195→    ],
+   196→    [stats]
+   197→  )
+   198→
+   199→  /* ---- TanStack Table Columns ---- */
+   200→  const columns = useMemo<ColumnDef<Listing>[]>(
+   201→    () => [
+   202→      {
+   203→        id: 'select', size: 40,
+   204→        header: ({ table }) => (
+   205→          <Checkbox
+   206→            checked={table.getIsAllPageRowsSelected()}
+   207→            onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+   208→          />
+   209→        ),
+   210→        cell: ({ row }) => (
+   211→          <Checkbox
+   212→            checked={row.getIsSelected()}
+   213→            onCheckedChange={(v) => row.toggleSelected(!!v)}
+   214→          />
+   215→        ),
+   216→      },
+   217→      {
+   218→        accessorKey: 'title',
+   219→        header: ({ column }) => (
+   220→          <Button variant="ghost" size="sm" className="-px-2 text-xs"
+   221→            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+   222→            العنوان <ArrowUpDown className="size-3 mr-1" />
+   223→          </Button>
+   224→        ),
+   225→        cell: ({ row }) => (
+   226→          <div>
+   227→            <div className="font-medium text-sm leading-tight line-clamp-1">
+   228→              {row.original.title}
+   229→            </div>
+   230→            <div className="text-muted-foreground text-xs mt-0.5 flex items-center gap-1">
+   231→              <span className="inline-block size-1 rounded-full bg-emerald-400/60" />
+   232→              {row.original.city}
+   233→            </div>
+   234→          </div>
+   235→        ),
+   236→      },
+   237→      {
+   238→        accessorKey: 'price',
+   239→        header: ({ column }) => (
+   240→          <Button variant="ghost" size="sm" className="-px-2 text-xs"
+   241→            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+   242→            السعر <ArrowUpDown className="size-3 mr-1" />
+   243→          </Button>
+   244→        ),
+   245→        cell: ({ row }) => (
+   246→          <span className="font-semibold text-sm whitespace-nowrap">
+   247→            {fmt(row.original.price)}{' '}
+   248→            <span className="text-muted-foreground font-normal text-xs">د.م</span>
+   249→          </span>
+   250→        ),
+   251→      },
+   252→      {
+   253→        id: 'category', accessorKey: 'categoryId', header: 'القسم',
+   254→        cell: ({ row }) => (
+   255→          <span className="text-sm text-muted-foreground">
+   256→            {catMap[row.original.categoryId] || '—'}
+   257→          </span>
+   258→        ),
+   259→      },
+   260→      {
+   261→        id: 'seller', header: 'البائع',
+   262→        cell: ({ row }) => (
+   263→          <span className="text-sm">{row.original.profile?.displayName || '—'}</span>
+   264→        ),
+   265→      },
+   266→      {
+   267→        accessorKey: 'status', header: 'الحالة',
+   268→        cell: ({ row }) => {
+   269→          const cfg = STATUS_CFG[row.original.status] || STATUS_CFG.active
+   270→          const Ic = cfg.icon
+   271→          return (
+   272→            <Badge variant="outline" className={`${cfg.cls} text-xs gap-1`}>
+   273→              <Ic className="size-3" />{cfg.label}
+   274→            </Badge>
+   275→          )
+   276→        },
+   277→      },
+   278→      {
+   279→        accessorKey: 'viewsCount',
+   280→        header: ({ column }) => (
+   281→          <Button variant="ghost" size="sm" className="-px-2 text-xs"
+   282→            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+   283→            المشاهدات <ArrowUpDown className="size-3 mr-1" />
+   284→          </Button>
+   285→        ),
+   286→        cell: ({ row }) => (
+   287→          <span className="text-sm tabular-nums text-muted-foreground">
+   288→            {fmt(row.original.viewsCount)}
+   289→          </span>
+   290→        ),
+   291→      },
+   292→      {
+   293→        id: 'featured', header: 'مميز',
+   294→        cell: ({ row }) =>
+   295→          row.original.isFeatured ? (
+   296→            <Tooltip>
+   297→              <TooltipTrigger asChild>
+   298→                <Star className="size-4 text-yellow-400 fill-yellow-400" />
+   299→              </TooltipTrigger>
+   300→              <TooltipContent>إعلان مميز</TooltipContent>
+   301→            </Tooltip>
+   302→          ) : (
+   303→            <span className="text-muted-foreground/30">—</span>
+   304→          ),
+   305→      },
+   306→      {
+   307→        id: 'actions', header: '',
+   308→        cell: ({ row }) => {
+   309→          const l = row.original
+   310→          return (
+   311→            <DropdownMenu>
+   312→              <DropdownMenuTrigger asChild>
+   313→                <Button variant="ghost" size="icon" className="size-8"
+   314→                  onClick={(e) => e.stopPropagation()}>
+   315→                  <MoreHorizontal className="size-4" />
+   316→                </Button>
+   317→              </DropdownMenuTrigger>
+   318→              <DropdownMenuContent align="end" className="w-44">
+   319→                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelListing(l); setDetailOpen(true) }}>
+   320→                  <Eye className="size-4 ml-2" />عرض التفاصيل
+   321→                </DropdownMenuItem>
+   322→                {l.status !== 'active' && (
+   323→                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateStatus(l.id, 'active') }}>
+   324→                    <CheckCircle2 className="size-4 ml-2 text-emerald-400" />قبول
+   325→                  </DropdownMenuItem>
+   326→                )}
+   327→                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); toggleFeat(l.id) }}>
+   328→                  <Crown className="size-4 ml-2 text-yellow-400" />
+   329→                  {l.isFeatured ? 'إزالة التمييز' : 'تمييز'}
+   330→                </DropdownMenuItem>
+   331→                {l.status !== 'banned' && (
+   332→                  <DropdownMenuItem className="text-red-400"
+   333→                    onClick={(e) => { e.stopPropagation(); updateStatus(l.id, 'banned') }}>
+   334→                    <ShieldBan className="size-4 ml-2" />حظر
+   335→                  </DropdownMenuItem>
+   336→                )}
+   337→                <DropdownMenuSeparator />
+   338→                <DropdownMenuItem className="text-red-400"
+   339→                  onClick={(e) => { e.stopPropagation(); deleteOne(l.id) }}>
+   340→                  <Trash2 className="size-4 ml-2" />حذف نهائي
+   341→                </DropdownMenuItem>
+   342→              </DropdownMenuContent>
+   343→            </DropdownMenu>
+   344→          )
+   345→        },
+   346→      },
+   347→    ],
+   348→    [data]
+   349→  )
+   350→
+   351→  const table = useReactTable({
+   352→    data: filtered, columns,
+   353→    state: { sorting, rowSelection: rowSel },
+   354→    onSortingChange: setSorting, onRowSelectionChange: setRowSel,
+   355→    getCoreRowModel: getCoreRowModel(),
+   356→    getFilteredRowModel: getFilteredRowModel(),
+   357→    getPaginationRowModel: getPaginationRowModel(),
+   358→    getSortedRowModel: getSortedRowModel(),
+   359→    initialState: { pagination: { pageSize } },
+   360→    onPaginationChange: (updater) => {
+   361→      if (typeof updater === 'function') {
+   362→        const next = updater(table.getState().pagination)
+   363→        setPageSize(next.pageSize)
+   364→      }
+   365→    },
+   366→  })
+   367→
+   368→  const openDetail = (l: Listing) => { setSelListing(l); setDetailOpen(true) }
+   369→
+   370→  /* ================================================================ */
+   371→  /*  RENDER                                                           */
+   372→  /* ================================================================ */
+   373→  return (
+   374→    <TooltipProvider delayDuration={300}>
+   375→    <div className="space-y-5 p-4">
+   376→      {/* ── Header ── */}
+   377→      <div className="flex items-center gap-3">
+   378→        <div className="sultan-gradient rounded-xl p-2.5">
+   379→          <Package className="size-6 text-[#D4AF37]" />
+   380→        </div>
+   381→        <div>
+   382→          <h2 className="text-lg font-bold">إدارة الإعلانات</h2>
+   383→          <p className="text-xs text-muted-foreground">
+   384→            مراجعة وإدارة جميع الإعلانات المنشورة على المنصة
+   385→          </p>
+   386→        </div>
+   387→      </div>
+   388→
+   389→      {/* Stats Row */}
+   390→      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+   391→        {[
+   392→          { icon: Package, label: 'إجمالي الإعلانات', value: fmt(stats.total), color: 'text-white', bg: 'bg-white/5' },
+   393→          { icon: CheckCircle2, label: 'النشطة', value: fmt(stats.active), color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+   394→          { icon: Clock, label: 'بانتظار المراجعة', value: fmt(stats.pending), color: 'text-[#F0D060]', bg: 'bg-yellow-500/10' },
+   395→          { icon: Star, label: 'المميزة', value: fmt(stats.featured), color: 'text-[#D4AF37]', bg: 'bg-yellow-500/10' },
+   396→          { icon: ShieldBan, label: 'المحظورة', value: fmt(stats.banned), color: 'text-red-400', bg: 'bg-red-500/10' },
+   397→          { icon: DollarSign, label: 'متوسط السعر', value: fmt(stats.avgPrice) + ' د.م', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+   398→        ].map((s, i) => (
+   399→          <motion.div
+   400→            key={i}
+   401→            initial={{ opacity: 0, y: 14 }}
+   402→            animate={{ opacity: 1, y: 0 }}
+   403→            transition={{ delay: i * 0.05, type: 'spring', stiffness: 260, damping: 20 }}
+   404→          >
+   405→            <div className="admin-card p-4 flex items-center gap-3 group hover:border-white/10">
+   406→              <div className={`${s.bg} rounded-lg p-2.5 group-hover:scale-110 transition-transform`}>
+   407→                <s.icon className={`size-5 ${s.color}`} />
+   408→              </div>
+   409→              <div className="min-w-0">
+   410→                <div className={`text-lg font-bold truncate ${s.color}`}>{s.value}</div>
+   411→                <div className="text-xs text-muted-foreground truncate">{s.label}</div>
+   412→              </div>
+   413→            </div>
+   414→          </motion.div>
+   415→        ))}
+   416→      </div>
+   417→
+   418→         2. MODERATION TABS
+   419→      <Tabs value={tab} onValueChange={setTab}>
+   420→        <TabsList className="bg-white/5 border border-white/10 h-auto p-1 flex-wrap">
+   421→          <TabsTrigger value="all" className="text-xs gap-1">
+   422→            <List className="size-3.5" />جميع الإعلانات
+   423→            <Badge variant="secondary" className="mr-0.5 text-[10px] px-1.5 h-4">
+   424→              {stats.total}
+   425→            </Badge>
+   426→          </TabsTrigger>
+   427→          <TabsTrigger value="pending" className="text-xs gap-1">
+   428→            <Clock className="size-3.5" />بانتظار المراجعة
+   429→            <Badge variant="secondary" className="mr-0.5 text-[10px] px-1.5 h-4">
+   430→              {stats.pending}
+   431→            </Badge>
+   432→          </TabsTrigger>
+   433→          <TabsTrigger value="featured" className="text-xs gap-1">
+   434→            <Star className="size-3.5" />المميزة
+   435→            <Badge variant="secondary" className="mr-0.5 text-[10px] px-1.5 h-4">
+   436→              {stats.featured}
+   437→            </Badge>
+   438→          </TabsTrigger>
+   439→          <TabsTrigger value="banned" className="text-xs gap-1">
+   440→            <ShieldBan className="size-3.5" />المحظورة
+   441→            <Badge variant="secondary" className="mr-0.5 text-[10px] px-1.5 h-4">
+   442→              {stats.banned}
+   443→            </Badge>
+   444→          </TabsTrigger>
+   445→        </TabsList>
+   446→
+   447→        {/* ── Pending Tab: Card Layout ── */}
+   448→        <TabsContent value="pending">
+   449→          {filtered.length === 0 ? (
+   450→            <div className="admin-card p-16 text-center">
+   451→              <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10
+   452→                flex items-center justify-center mb-4">
+   453→                <CheckCircle2 className="size-8 text-emerald-400" />
+   454→              </div>
+   455→              <p className="text-muted-foreground text-sm">لا توجد إعلانات بانتظار المراجعة</p>
+   456→              <p className="text-muted-foreground/60 text-xs mt-1">
+   457→                جميع الإعلانات تمت مراجعتها
+   458→              </p>
+   459→            </div>
+   460→          ) : (
+   461→            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+   462→              {filtered.map((l, i) => (
+   463→                <motion.div
+   464→                  key={l.id}
+   465→                  initial={{ opacity: 0, scale: 0.95 }}
+   466→                  animate={{ opacity: 1, scale: 1 }}
+   467→                  transition={{ delay: i * 0.04 }}
+   468→                >
+   469→                  <div className="admin-card overflow-hidden hover:border-yellow-500/20">
+   470→                    <div className={`h-32 bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]} relative`}>
+   471→                      <div className="absolute inset-0 flex items-center justify-center">
+   472→                        <ImageOff className="size-8 text-white/20" />
+   473→                      </div>
+   474→                      <Badge className="absolute top-2 right-2 bg-yellow-500/80 text-black
+   475→                        text-[10px] font-semibold backdrop-blur-sm">
+   476→                        <Clock className="size-3 ml-1" />بانتظار المراجعة
+   477→                      </Badge>
+   478→                    </div>
+   479→                    <div className="p-4 space-y-3">
+   480→                      <h4 className="font-semibold text-sm line-clamp-1">{l.title}</h4>
+   481→                      <div className="text-[#F0D060] font-bold">
+   482→                        {fmt(l.price)}{' '}
+   483→                        <span className="text-xs font-normal text-muted-foreground">د.م</span>
+   484→                      </div>
+   485→                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+   486→                        <span className="flex items-center gap-1">
+   487→                          <User className="size-3" />{l.profile?.displayName}
+   488→                        </span>
+   489→                        <span>{l.city}</span>
+   490→                      </div>
+   491→                      <div className="flex gap-2 pt-1">
+   492→                        <Button size="sm"
+   493→                          className="flex-1 bg-emerald-600 hover:bg-emerald-700
+   494→                            text-white text-xs h-9 press-effect"
+   495→                          onClick={() => updateStatus(l.id, 'active')}>
+   496→                          <CheckCircle2 className="size-4 ml-1" />قبول
+   497→                        </Button>
+   498→                        <Button size="sm" variant="outline"
+   499→                          className="flex-1 border-red-500/40 text-red-400
+   500→                            hover:bg-red-500/10 text-xs h-9 press-effect"
+   501→                          onClick={() => updateStatus(l.id, 'banned')}>
+   502→                          <XCircle className="size-4 ml-1" />رفض
+   503→                        </Button>
+   504→                      </div>
+   505→                    </div>
+   506→                  </div>
+   507→                </motion.div>
+   508→              ))}
+   509→            </div>
+   510→          )}
+   511→        </TabsContent>
+   512→
+   513→        {/* ── Table Tabs (All / Featured / Banned) ── */}
+   514→        {['all', 'featured', 'banned'].map((t) => (
+   515→          <TabsContent key={t} value={t}>
+   516→               3. SEARCH + FILTERS BAR
+   517→            <div className="admin-card p-4 space-y-3">
+   518→              <div className="flex flex-wrap gap-2 items-center">
+   519→                <div className="relative flex-1 min-w-[180px]">
+   520→                  <Search className="absolute right-2.5 top-1/2 -translate-y-1/2
+   521→                    size-4 text-muted-foreground" />
+   522→                  <Input placeholder="بحث بالعنوان أو الوصف..."
+   523→                    value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)}
+   524→                    className="pr-8 h-9 text-sm bg-white/5 border-white/10
+   525→                      focus:border-[#D4AF37]/40" />
+   526→                </div>
+   527→                <Select value={statusFilter} onValueChange={setStatusFilter}>
+   528→                  <SelectTrigger className="w-[130px] h-9 text-sm bg-white/5 border-white/10">
+   529→                    <SelectValue placeholder="الحالة" />
+   530→                  </SelectTrigger>
+   531→                  <SelectContent>
+   532→                    <SelectItem value="all">الكل</SelectItem>
+   533→                    <SelectItem value="active">نشط</SelectItem>
+   534→                    <SelectItem value="pending">معلّق</SelectItem>
+   535→                    <SelectItem value="banned">محظور</SelectItem>
+   536→                  </SelectContent>
+   537→                </Select>
+   538→                <Select value={catFilter} onValueChange={setCatFilter}>
+   539→                  <SelectTrigger className="w-[140px] h-9 text-sm bg-white/5 border-white/10">
+   540→                    <SelectValue placeholder="القسم" />
+   541→                  </SelectTrigger>
+   542→                  <SelectContent>
+   543→                    <SelectItem value="all">جميع الأقسام</SelectItem>
+   544→                    {categories.map((c) => (
+   545→                      <SelectItem key={c.id} value={c.id}>{c.nameAr}</SelectItem>
+   546→                    ))}
+   547→                  </SelectContent>
+   548→                </Select>
+   549→                <Select value={cityFilter} onValueChange={setCityFilter}>
+   550→                  <SelectTrigger className="w-[130px] h-9 text-sm bg-white/5 border-white/10">
+   551→                    <SelectValue placeholder="المدينة" />
+   552→                  </SelectTrigger>
+   553→                  <SelectContent>
+   554→                    <SelectItem value="all">جميع المدن</SelectItem>
+   555→                    {cities.map((c) => (
+   556→                      <SelectItem key={c.id} value={c.nameAr}>{c.nameAr}</SelectItem>
+   557→                    ))}
+   558→                  </SelectContent>
+   559→                </Select>
+   560→                <Select value={sortKey} onValueChange={setSortKey}>
+   561→                  <SelectTrigger className="w-[130px] h-9 text-sm bg-white/5 border-white/10">
+   562→                    <SelectValue placeholder="ترتيب" />
+   563→                  </SelectTrigger>
+   564→                  <SelectContent>
+   565→                    <SelectItem value="newest">الأحدث</SelectItem>
+   566→                    <SelectItem value="price-asc">السعر ↑</SelectItem>
+   567→                    <SelectItem value="price-desc">السعر ↓</SelectItem>
+   568→                    <SelectItem value="views">الأكثر مشاهدة</SelectItem>
+   569→                  </SelectContent>
+   570→                </Select>
+   571→                <Tooltip>
+   572→                  <TooltipTrigger asChild>
+   573→                    <Button variant="outline" size="sm"
+   574→                      className={`border-white/10 h-9 ${advOpen ? 'border-[#D4AF37]/40 text-[#D4AF37]' : ''}`}
+   575→                      onClick={() => setAdvOpen(!advOpen)}>
+   576→                      <SlidersHorizontal className="size-4 ml-1" />متقدم
+   577→                    </Button>
+   578→                  </TooltipTrigger>
+   579→                  <TooltipContent>فلاتر متقدمة</TooltipContent>
+   580→                </Tooltip>
+   581→              </div>
+   582→
+   583→              {/* Advanced: Price Range */}
+   584→              <AnimatePresence>
+   585→                {advOpen && (
+   586→                  <motion.div
+   587→                    initial={{ height: 0, opacity: 0 }}
+   588→                    animate={{ height: 'auto', opacity: 1 }}
+   589→                    exit={{ height: 0, opacity: 0 }}
+   590→                    className="overflow-hidden"
+   591→                  >
+   592→                    <div className="flex flex-wrap gap-3 items-center pt-3 border-t border-white/5">
+   593→                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+   594→                        <DollarSign className="size-3" />نطاق السعر:
+   595→                      </span>
+   596→                      <Input type="number" placeholder="الحد الأدنى"
+   597→                        value={priceMin} onChange={(e) => setPriceMin(e.target.value)}
+   598→                        className="w-28 h-8 text-xs bg-white/5 border-white/10" />
+   599→                      <span className="text-muted-foreground text-xs">—</span>
+   600→                      <Input type="number" placeholder="الحد الأقصى"
+   601→                        value={priceMax} onChange={(e) => setPriceMax(e.target.value)}
+   602→                        className="w-28 h-8 text-xs bg-white/5 border-white/10" />
+   603→                      <Button size="sm" variant="ghost"
+   604→                        className="text-xs text-muted-foreground h-8"
+   605→                        onClick={() => { setPriceMin(''); setPriceMax('') }}>
+   606→                        مسح
+   607→                      </Button>
+   608→                    </div>
+   609→                  </motion.div>
+   610→                )}
+   611→              </AnimatePresence>
+   612→            </div>
+   613→
+   614→               4. TANSTACK TABLE
+   615→            <div className="admin-card overflow-hidden mt-3">
+   616→              <ScrollArea className="max-h-[460px] scrollbar-thin">
+   617→                <table className="w-full text-sm">
+   618→                  <thead className="sticky top-0 z-10 bg-white/[0.04] backdrop-blur-md">
+   619→                    {table.getHeaderGroups().map((hg) => (
+   620→                      <tr key={hg.id} className="border-b border-white/5">
+   621→                        {hg.headers.map((h) => (
+   622→                          <th key={h.id}
+   623→                            className="px-3 py-2.5 text-right text-xs font-medium
+   624→                              text-muted-foreground whitespace-nowrap">
+   625→                            {h.isPlaceholder
+   626→                              ? null
+   627→                              : flexRender(h.column.columnDef.header, h.getContext())}
+   628→                          </th>
+   629→                        ))}
+   630→                      </tr>
+   631→                    ))}
+   632→                  </thead>
+   633→                  <tbody>
+   634→                    {table.getRowModel().rows.length === 0 ? (
+   635→                      <tr>
+   636→                        <td colSpan={columns.length} className="text-center py-16">
+   637→                          <div className="flex flex-col items-center gap-2">
+   638→                            <Package className="size-8 opacity-30" />
+   639→                            <span className="text-sm text-muted-foreground">
+   640→                              لا توجد نتائج مطابقة
+   641→                            </span>
+   642→                          </div>
+   643→                        </td>
+   644→                      </tr>
+   645→                    ) : (
+   646→                      table.getRowModel().rows.map((row, i) => (
+   647→                        <motion.tr
+   648→                          key={row.id}
+   649→                          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+   650→                          transition={{ delay: i * 0.02 }}
+   651→                          className="border-b border-white/[0.03] hover:bg-white/[0.04]
+   652→                            transition-colors cursor-pointer"
+   653→                          onClick={() => openDetail(row.original)}
+   654→                        >
+   655→                          {row.getVisibleCells().map((cell) => (
+   656→                            <td key={cell.id} className="px-3 py-2.5"
+   657→                              onClick={(e) => {
+   658→                                if (cell.column.id === 'actions' || cell.column.id === 'select')
+   659→                                  e.stopPropagation()
+   660→                              }}
+   661→                            >
+   662→                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+   663→                            </td>
+   664→                          ))}
+   665→                        </motion.tr>
+   666→                      ))
+   667→                    )}
+   668→                  </tbody>
+   669→                </table>
+   670→              </ScrollArea>
+   671→
+   672→              {/* Pagination */}
+   673→              <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
+   674→                <div className="text-xs text-muted-foreground">
+   675→                  صفحة {fmt(table.getState().pagination.pageIndex + 1)} من{' '}
+   676→                  {fmt(table.getPageCount())} —{' '}
+   677→                  <span className="text-[#D4AF37]">{fmt(filtered.length)}</span> نتيجة
+   678→                </div>
+   679→                <div className="flex items-center gap-1">
+   680→                  <Button variant="outline" size="icon" className="size-8 border-white/10"
+   681→                    disabled={!table.getCanPreviousPage()}
+   682→                    onClick={() => table.previousPage()}>
+   683→                    <ChevronRight className="size-4" />
+   684→                  </Button>
+   685→                  <Button variant="outline" size="icon" className="size-8 border-white/10"
+   686→                    disabled={!table.getCanNextPage()}
+   687→                    onClick={() => table.nextPage()}>
+   688→                    <ChevronLeft className="size-4" />
+   689→                  </Button>
+   690→                  <Select value={String(pageSize)}
+   691→                    onValueChange={(v) => table.setPageSize(+v)}>
+   692→                    <SelectTrigger className="w-16 h-8 text-xs bg-white/5 border-white/10">
+   693→                      <SelectValue />
+   694→                    </SelectTrigger>
+   695→                    <SelectContent>
+   696→                      <SelectItem value="10">10</SelectItem>
+   697→                      <SelectItem value="20">20</SelectItem>
+   698→                      <SelectItem value="50">50</SelectItem>
+   699→                    </SelectContent>
+   700→                  </Select>
+   701→                </div>
+   702→              </div>
+   703→            </div>
+   704→          </TabsContent>
+   705→        ))}
+   706→      </Tabs>
+   707→
+   708→         6. CATEGORY ANALYTICS — Horizontal BarChart
+   709→         7. STATUS DISTRIBUTION — PieChart Donut
+   710→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+   711→        <motion.div
+   712→          initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+   713→          transition={{ delay: 0.2 }}
+   714→        >
+   715→          <div className="admin-card p-5">
+   716→            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+   717→              <BarChart3 className="size-4 text-[#D4AF37]" />
+   718→              تحليل الأقسام
+   719→              <Badge variant="outline"
+   720→                className="text-[10px] border-[#D4AF37]/30 text-[#D4AF37] mr-auto">
+   721→                أفضل 8
+   722→              </Badge>
+   723→            </h3>
+   724→            <ResponsiveContainer width="100%" height={230}>
+   725→              <BarChart data={catChart} layout="vertical"
+   726→                margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+   727→                <XAxis type="number" tick={{ fill: '#888', fontSize: 11 }}
+   728→                  axisLine={false} tickLine={false} />
+   729→                <YAxis type="category" dataKey="name" width={85}
+   730→                  tick={{ fill: '#ccc', fontSize: 11 }}
+   731→                  axisLine={false} tickLine={false} />
+   732→                <RTooltip contentStyle={{
+   733→                  background: 'rgba(10,22,40,0.95)',
+   734→                  border: '1px solid rgba(212,175,55,0.3)',
+   735→                  borderRadius: 8, fontSize: 12,
+   736→                }} labelStyle={{ color: '#F0D060' }} />
+   737→                <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={16}>
+   738→                  {catChart.map((_, i) => (
+   739→                    <Cell key={i}
+   740→                      fill={i === 0 ? '#D4AF37' : i === 1 ? '#F0D060' : 'rgba(212,175,55,0.4)'} />
+   741→                  ))}
+   742→                </Bar>
+   743→              </BarChart>
+   744→            </ResponsiveContainer>
+   745→          </div>
+   746→        </motion.div>
+   747→
+   748→        <motion.div
+   749→          initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+   750→          transition={{ delay: 0.2 }}
+   751→        >
+   752→          <div className="admin-card p-5">
+   753→            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+   754→              <TrendingUp className="size-4 text-emerald-400" />
+   755→              توزيع الحالات
+   756→            </h3>
+   757→            <div className="flex items-center gap-6">
+   758→              <ResponsiveContainer width={170} height={170}>
+   759→                <PieChart>
+   760→                  <Pie data={pieData} dataKey="value"
+   761→                    innerRadius={45} outerRadius={78} paddingAngle={3}
+   762→                    stroke="none" strokeWidth={0}>
+   763→                    {pieData.map((_, i) => (
+   764→                      <Cell key={i} fill={PIE_COLORS[i]} />
+   765→                    ))}
+   766→                  </Pie>
+   767→                  <RTooltip contentStyle={{
+   768→                    background: 'rgba(10,22,40,0.95)',
+   769→                    border: '1px solid rgba(212,175,55,0.3)',
+   770→                    borderRadius: 8, fontSize: 12,
+   771→                  }} />
+   772→                </PieChart>
+   773→              </ResponsiveContainer>
+   774→              <div className="space-y-4">
+   775→                {pieData.map((d, i) => (
+   776→                  <div key={d.name} className="flex items-center gap-2.5">
+   777→                    <div className="size-3 rounded-sm"
+   778→                      style={{ background: PIE_COLORS[i] }} />
+   779→                    <span className="text-sm text-muted-foreground">{d.name}</span>
+   780→                    <span className="font-bold text-sm mr-auto">{fmt(d.value)}</span>
+   781→                  </div>
+   782→                ))}
+   783→                <div className="pt-2 border-t border-white/5">
+   784→                  <div className="text-xs text-muted-foreground">الإجمالي</div>
+   785→                  <div className="font-bold text-lg text-gradient-sultan">
+   786→                    {fmt(stats.total)}
+   787→                  </div>
+   788→                </div>
+   789→              </div>
+   790→            </div>
+   791→          </div>
+   792→        </motion.div>
+   793→      </div>
+   794→
+   795→         8. BULK OPERATIONS — Floating Bar
+   796→      <AnimatePresence>
+   797→        {selIds.length > 0 && (
+   798→          <motion.div
+   799→            initial={{ y: 80, opacity: 0 }}
+   800→            animate={{ y: 0, opacity: 1 }}
+   801→            exit={{ y: 80, opacity: 0 }}
+   802→            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+   803→            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 admin-card-gold
+   804→              px-5 py-3 flex items-center gap-3 shadow-2xl border-beam"
+   805→          >
+   806→            <div className="flex items-center gap-2">
+   807→              <div className="size-2 rounded-full bg-[#F0D060] animate-pulse" />
+   808→              <span className="text-sm font-semibold">
+   809→                {fmt(selIds.length)} عنصر محدد
+   810→              </span>
+   811→            </div>
+   812→            <div className="w-px h-5 bg-white/10" />
+   813→            <Button size="sm"
+   814→              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 press-effect"
+   815→              onClick={() => bulk('approve')}>
+   816→              <CheckCircle2 className="size-3.5 ml-1" />قبول الكل
+   817→            </Button>
+   818→            <Button size="sm"
+   819→              className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs h-8 press-effect"
+   820→              onClick={() => bulk('feature')}>
+   821→              <Sparkles className="size-3.5 ml-1" />تمييز الكل
+   822→            </Button>
+   823→            <Button size="sm" variant="outline"
+   824→              className="border-red-500/40 text-red-400 hover:bg-red-500/10
+   825→                text-xs h-8 press-effect"
+   826→              onClick={() => bulk('delete')}>
+   827→              <Trash2 className="size-3.5 ml-1" />حذف الكل
+   828→            </Button>
+   829→          </motion.div>
+   830→        )}
+   831→      </AnimatePresence>
+   832→
+   833→         5. LISTING DETAIL MODAL
+   834→      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+   835→        <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto scrollbar-thin
+   836→          bg-[#0a1628]/95 border-white/10 backdrop-blur-xl">
+   837→          {selListing && (
+   838→            <>
+   839→              <DialogHeader>
+   840→                <DialogTitle className="text-lg flex items-center gap-2">
+   841→                  <Package className="size-5 text-[#D4AF37]" />
+   842→                  تفاصيل الإعلان
+   843→                </DialogTitle>
+   844→              </DialogHeader>
+   845→
+   846→              {/* Image Gallery Grid */}
+   847→              <div className="grid grid-cols-3 gap-2">
+   848→                <div className={`col-span-2 row-span-2 h-48 rounded-lg
+   849→                  bg-gradient-to-br ${GRADIENTS[0]} relative flex items-center justify-center`}>
+   850→                  <ImageOff className="size-10 text-white/15" />
+   851→                </div>
+   852→                {[1, 2].map((i) => (
+   853→                  <div key={i}
+   854→                    className={`h-[6.5rem] rounded-lg bg-gradient-to-br ${GRADIENTS[i]}
+   855→                      relative flex items-center justify-center`}>
+   856→                    <ImageOff className="size-6 text-white/15" />
+   857→                  </div>
+   858→                ))}
+   859→              </div>
+   860→
+   861→              {/* Info */}
+   862→              <div className="space-y-4 mt-1">
+   863→                {/* Title + Price + Badges */}
+   864→                <div className="flex items-start justify-between gap-3">
+   865→                  <div className="min-w-0">
+   866→                    <h3 className="font-bold text-base leading-tight">
+   867→                      {selListing.title}
+   868→                    </h3>
+   869→                    <div className="text-[#F0D060] font-bold text-xl mt-1.5">
+   870→                      {fmt(selListing.price)}{' '}
+   871→                      <span className="text-sm font-normal text-muted-foreground">
+   872→                        د.م
+   873→                      </span>
+   874→                    </div>
+   875→                  </div>
+   876→                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+   877→                    {(() => {
+   878→                      const cfg = STATUS_CFG[selListing.status] || STATUS_CFG.active
+   879→                      const Ic = cfg.icon
+   880→                      return (
+   881→                        <Badge variant="outline" className={`${cfg.cls} gap-1`}>
+   882→                          <Ic className="size-3" />{cfg.label}
+   883→                        </Badge>
+   884→                      )
+   885→                    })()}
+   886→                    {selListing.isFeatured && (
+   887→                      <Badge className="bg-yellow-500/20 text-yellow-400
+   888→                        border-yellow-500/30 gap-1">
+   889→                        <Star className="size-3" />مميز
+   890→                      </Badge>
+   891→                    )}
+   892→                  </div>
+   893→                </div>
+   894→
+   895→                {/* Description */}
+   896→                <div>
+   897→                  <h4 className="text-xs text-muted-foreground mb-1">الوصف</h4>
+   898→                  <p className="text-sm text-muted-foreground leading-relaxed
+   899→                    bg-white/[0.02] rounded-lg p-3">
+   900→                    {selListing.description}
+   901→                  </p>
+   902→                </div>
+   903→
+   904→                {/* Metadata Grid */}
+   905→                <div className="grid grid-cols-2 gap-3">
+   906→                  <div className="bg-white/[0.02] rounded-lg p-3">
+   907→                    <div className="text-xs text-muted-foreground flex items-center gap-1 mb-0.5">
+   908→                      <Sparkles className="size-3" />المدينة
+   909→                    </div>
+   910→                    <div className="text-sm font-medium">{selListing.city}</div>
+   911→                  </div>
+   912→                  <div className="bg-white/[0.02] rounded-lg p-3">
+   913→                    <div className="text-xs text-muted-foreground flex items-center gap-1 mb-0.5">
+   914→                      <LayoutGrid className="size-3" />القسم
+   915→                    </div>
+   916→                    <div className="text-sm font-medium">
+   917→                      {catMap[selListing.categoryId] || '—'}
+   918→                    </div>
+   919→                  </div>
+   920→                  <div className="bg-white/[0.02] rounded-lg p-3">
+   921→                    <div className="text-xs text-muted-foreground flex items-center gap-1 mb-0.5">
+   922→                      <Eye className="size-3" />المشاهدات
+   923→                    </div>
+   924→                    <div className="text-sm font-medium">
+   925→                      {fmt(selListing.viewsCount)}
+   926→                    </div>
+   927→                  </div>
+   928→                  <div className="bg-white/[0.02] rounded-lg p-3">
+   929→                    <div className="text-xs text-muted-foreground flex items-center gap-1 mb-0.5">
+   930→                      <CalendarDays className="size-3" />تاريخ الإنشاء
+   931→                    </div>
+   932→                    <div className="text-sm font-medium">
+   933→                      {new Date(selListing.createdAt).toLocaleDateString('ar-EG')}
+   934→                    </div>
+   935→                  </div>
+   936→                </div>
+   937→
+   938→                {/* Quality Score */}
+   939→                <div className="admin-card p-4 space-y-3">
+   940→                  <div className="flex justify-between items-center">
+   941→                    <span className="text-sm font-medium flex items-center gap-1.5">
+   942→                      <Sparkles className="size-4 text-[#D4AF37]" />
+   943→                      جودة الإعلان
+   944→                    </span>
+   945→                    <span className={`font-bold text-sm ${qLabel(qScore(selListing)).c}`}>
+   946→                      {qScore(selListing)}% — {qLabel(qScore(selListing)).t}
+   947→                    </span>
+   948→                  </div>
+   949→                  <Progress value={qScore(selListing)} className="h-2" />
+   950→                  <div className="grid grid-cols-2 gap-2">
+   951→                    {qBreakdown(selListing).map((q) => (
+   952→                      <div key={q.label}
+   953→                        className="flex items-center justify-between text-xs">
+   954→                        <span className="text-muted-foreground">{q.label}</span>
+   955→                        <span className={q.v === 25 ? 'text-emerald-400' : 'text-red-400'}>
+   956→                          {q.v}/25
+   957→                        </span>
+   958→                      </div>
+   959→                    ))}
+   960→                  </div>
+   961→                </div>
+   962→
+   963→                {/* Seller Card */}
+   964→                <div className="admin-card p-4">
+   965→                  <div className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+   966→                    <User className="size-3" />البائع
+   967→                  </div>
+   968→                  <div className="flex items-center gap-4">
+   969→                    <div className="w-12 h-12 rounded-full
+   970→                      bg-gradient-to-br from-[#D4AF37]/30 to-emerald-500/20
+   971→                      flex items-center justify-center text-lg font-bold text-[#D4AF37]
+   972→                      shrink-0">
+   973→                      {selListing.profile?.displayName?.charAt(0) || '?'}
+   974→                    </div>
+   975→                    <div className="flex-1 min-w-0">
+   976→                      <div className="font-semibold text-sm">
+   977→                        {selListing.profile?.displayName || '—'}
+   978→                      </div>
+   979→                      <div className="text-xs text-muted-foreground">
+   980→                        {selListing.profile?.city}
+   981→                      </div>
+   982→                    </div>
+   983→                    <div className="text-left shrink-0">
+   984→                      <div className="text-xs text-muted-foreground">نقاط الثقة</div>
+   985→                      <div className="font-bold text-sm text-emerald-400">
+   986→                        {selListing.profile?.trustScore ?? 0}/100
+   987→                      </div>
+   988→                      <Progress value={selListing.profile?.trustScore ?? 0}
+   989→                        className="h-1.5 w-24 mt-1" />
+   990→                    </div>
+   991→                  </div>
+   992→                </div>
+   993→
+   994→                {/* Action Buttons */}
+   995→                <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
+   996→                  {selListing.status !== 'active' && (
+   997→                    <Button size="sm"
+   998→                      className="bg-emerald-600 hover:bg-emerald-700 text-white press-effect"
+   999→                      onClick={() => {
+  1000→                        updateStatus(selListing.id, 'active')
+  1001→                        setSelListing({ ...selListing, status: 'active' })
+  1002→                      }}>
+  1003→                      <CheckCircle2 className="size-4 ml-1" />قبول
+  1004→                    </Button>
+  1005→                  )}
+  1006→                  <Button size="sm" variant="outline"
+  1007→                    className="border-yellow-500/30 text-yellow-400
+  1008→                      hover:bg-yellow-500/10 press-effect"
+  1009→                    onClick={() => {
+  1010→                      toggleFeat(selListing.id)
+  1011→                      setSelListing({ ...selListing, isFeatured: !selListing.isFeatured })
+  1012→                    }}>
+  1013→                    <Star className="size-4 ml-1" />
+  1014→                    {selListing.isFeatured ? 'إزالة التمييز' : 'تمييز'}
+  1015→                  </Button>
+  1016→                  {selListing.status !== 'banned' && (
+  1017→                    <Button size="sm" variant="outline"
+  1018→                      className="border-red-500/30 text-red-400 hover:bg-red-500/10 press-effect"
+  1019→                      onClick={() => {
+  1020→                        updateStatus(selListing.id, 'banned')
+  1021→                        setSelListing({ ...selListing, status: 'banned' })
+  1022→                      }}>
+  1023→                      <ShieldBan className="size-4 ml-1" />حظر
+  1024→                    </Button>
+  1025→                  )}
+  1026→                  <Button size="sm" variant="outline"
+  1027→                    className="border-red-500/30 text-red-400 hover:bg-red-500/10 press-effect"
+  1028→                    onClick={() => { deleteOne(selListing.id); setDetailOpen(false) }}>
+  1029→                    <Trash2 className="size-4 ml-1" />حذف
+  1030→                  </Button>
+  1031→                  <Select onValueChange={(v) => {
+  1032→                    updateStatus(selListing.id, v)
+  1033→                    setSelListing({ ...selListing, status: v })
+  1034→                  }}>
+  1035→                    <SelectTrigger className="w-[140px] h-8 text-xs bg-white/5 border-white/10">
+  1036→                      <SelectValue placeholder="تغيير الحالة" />
+  1037→                    </SelectTrigger>
+  1038→                    <SelectContent>
+  1039→                      <SelectItem value="active">نشط</SelectItem>
+  1040→                      <SelectItem value="pending">معلّق</SelectItem>
+  1041→                      <SelectItem value="banned">محظور</SelectItem>
+  1042→                    </SelectContent>
+  1043→                  </Select>
+  1044→                </div>
+  1045→              </div>
+  1046→            </>
+  1047→          )}
+  1048→        </DialogContent>
+  1049→      </Dialog>
+  1050→    </div>
+  1051→    </TooltipProvider>
+  1052→  )
+  1053→}
+  1054→

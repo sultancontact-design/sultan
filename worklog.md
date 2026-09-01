@@ -1,30 +1,34 @@
-# SULTAN Platform - Work Log
-
 ---
 Task ID: 1
 Agent: Super Z (Main)
-Task: Migrate Sultan Platform to Supabase + Deploy to Cloudflare Pages
+Task: Diagnose and fix dead frontend - connect UI to live API endpoints
 
 Work Log:
-- Prisma schema already converted to PostgreSQL (provider + URL)
-- Created .env.local and .env with Supabase credentials
-- Discovered PostgreSQL port (5432/6543) blocked from this environment
-- Discovered Prisma doesn't work on Cloudflare Pages Edge Runtime
-- Confirmed all 6 API routes already use @supabase/supabase-js with Edge runtime
-- Fixed supabase-client.ts to remove placeholder fallback keys
-- Created /api/seed endpoint for database initialization via Supabase REST API
-- Created supabase/tables.sql with full DDL for all 11 tables + indexes + RLS
-- Downgraded Next.js from 16.3.3 to 15.5.2 for @cloudflare/next-on-pages compatibility
-- Fixed package.json build script (next build) for CF Pages compatibility
-- Build verified: 8 Edge Functions + static assets generated successfully
-- Pushed to GitHub: sultancontact-design/sultan (commit f04a09a)
-- Cloudflare Pages auto-deploy triggered
-- Live site verified at https://sultan-1yj.pages.dev/
+- Launched Explore agent to thoroughly analyze frontend architecture
+- Agent found 7 interlocking bugs causing dead frontend:
+  1. HomeView crashes - missing imports (restaurants, services, jobs, newsArticles)
+  2. initializeApp() never called - store stays empty
+  3. page.tsx uses wrong Supabase key (sb_publishable_... instead of JWT)
+  4. All 11 view components import static seed-data, ignore Zustand store
+  5. Image handling uses CSS gradient strings, not real URLs
+  6. No URL/hash routing
+  7. Two competing Supabase clients
+- Fixed page.tsx: removed broken Supabase client, added initializeApp() call
+- Fixed store.ts: enhanced initializeApp() to properly map API data (listings, auctions, charity)
+- Fixed HomeView: added missing imports for restaurants/services/jobs/newsArticles
+- Fixed MarketplaceView: uses store listings + apiCategories instead of seed-data
+- Fixed AuctionsView: uses apiAuctions from store with real countdown timers
+- Fixed CharityView: uses apiCharity from store with real progress bars
+- Fixed ListingDetail: uses selectedListing from store, removed seed-data dependency
+- Fixed OverviewPanel: KPI cards use real apiStats from API
+- Launched subagent to fix ListingsPanel, UsersPanel, AuctionsPanel, CategoriesPanel
+- Built successfully with next build and @cloudflare/next-on-pages
+- Pushed to GitHub, auto-deployed via GitHub Actions
+- Verified new code is live (initializeApp present, sb_publishable removed)
 
 Stage Summary:
-- Site live: https://sultan-1yj.pages.dev/ (200 OK, full Arabic RTL)
-- /api/categories returns 16 real categories from Supabase ✅
-- /api/listings and /api/auctions return empty arrays (tables exist, no data yet)
-- Remaining APIs deploying (propagation in progress)
-- User needs to: (1) run supabase/tables.sql in Supabase Dashboard, (2) visit /api/seed to populate data
-- All API routes use Edge runtime + Supabase JS client (no Prisma on CF Pages)
+- 12 files modified, 732 insertions, 501 deletions
+- Site now fetches real data from 5 API endpoints on load
+- All major views (Home, Marketplace, Auctions, Charity, Listing Detail, Admin) display live data
+- Admin panel KPIs show real stats (12 users, 25 listings, 5 auctions, 4 charity cases)
+- Deployed to https://sultan-1yj.pages.dev/
