@@ -16,6 +16,23 @@ const categoryIcons: Record<string, any> = {
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } };
 
+const categoryGradients: Record<string, string> = {
+  'c-electronics': 'from-violet-600/80 to-blue-900/80',
+  'c-furniture': 'from-amber-700/80 to-orange-900/80',
+  'c-fashion': 'from-pink-600/80 to-rose-900/80',
+  'c-animals': 'from-green-600/80 to-emerald-900/80',
+  'c-hobbies': 'from-cyan-600/80 to-teal-900/80',
+  'c-motors': 'from-red-600/80 to-red-900/80',
+  'c-realestate': 'from-sky-600/80 to-blue-900/80',
+  'c-food': 'from-orange-500/80 to-amber-900/80',
+  'c-services': 'from-indigo-600/80 to-purple-900/80',
+  'c-jobs': 'from-teal-500/80 to-cyan-900/80',
+};
+
+function getListingGradient(categoryId: string) {
+  return categoryGradients[categoryId] || 'from-[#D4AF37]/80 to-amber-900/80';
+}
+
 function CountdownTimer({ endsAt }: { endsAt: string }) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   useEffect(() => {
@@ -146,16 +163,17 @@ export default function HomeView() {
               onClick={() => selectListing(listing)}
               className="shrink-0 w-56 rounded-xl bg-card border border-border/50 overflow-hidden cursor-pointer group hover:border-sultan/30 transition-all"
             >
-              <div className={`h-36 bg-gradient-to-br from-sultan/20 to-emerald-900/30 relative`}>
+              <div className={`h-44 bg-gradient-to-br ${getListingGradient(listing.categoryId)} relative flex flex-col justify-end p-3`}>
                 {listing.isUrgent && (
                   <Badge className="absolute top-2 start-2 bg-red-500 text-white text-[10px]">عاجل</Badge>
                 )}
                 <button onClick={(e) => toggleLike(listing.id, e)} className="absolute top-2 end-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors">
                   <Heart className={`h-4 w-4 ${liked.has(listing.id) ? 'fill-red-500 text-red-500' : 'text-white'}`} />
                 </button>
+                <p className="text-white font-bold text-lg drop-shadow-lg">{listing.price?.toLocaleString()} <span className="text-xs font-normal opacity-80">درهم</span></p>
+                <p className="text-white/90 text-xs mt-1 line-clamp-1">{listing.category}</p>
               </div>
               <div className="p-3">
-                <p className="text-sultan font-bold text-base">{listing.price?.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">درهم</span></p>
                 <p className="text-sm font-medium mt-1 line-clamp-1 group-hover:text-sultan transition-colors">{listing.title}</p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" /> {listing.city}
@@ -188,21 +206,31 @@ export default function HomeView() {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {auctions.slice(0, 3).map((auction, i) => (
+        {auctions.length === 0 ? (
+          <div className="col-span-full text-center py-10 text-muted-foreground">
+            <Gavel className="h-8 w-8 mx-auto mb-2 opacity-30" />
+            <p>لا توجد مزادات حالياً</p>
+          </div>
+        ) : auctions.slice(0, 3).map((auction, i) => (
             <motion.div key={auction.id} {...fadeUp} transition={{ delay: i * 0.1 }}
               className="rounded-xl bg-card border border-sultan/20 overflow-hidden hover:border-sultan/40 transition-all group cursor-pointer"
               onClick={() => navigate('auctions')}
             >
-              <div className="h-40 bg-gradient-to-br from-sultan/20 to-amber-900/30 relative">
+              <div className="h-40 bg-gradient-to-br from-amber-600/70 to-amber-900/80 relative flex items-center justify-center">
+                <Gavel className="h-12 w-12 text-white/30" />
                 <Badge className="absolute top-2 start-2 bg-sultan text-royal text-xs font-bold">مزاد مباشر</Badge>
                 <div className="absolute bottom-2 start-2"><CountdownTimer endsAt={auction.endsAt} /></div>
               </div>
               <div className="p-4">
                 <h3 className="font-semibold line-clamp-1 group-hover:text-sultan transition-colors">{auction.title}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{auction.description}</p>
                 <div className="flex items-center justify-between mt-3">
                   <div>
                     <p className="text-xs text-muted-foreground">المزايدة الحالية</p>
-                    <p className="text-sultan font-bold text-lg">{auction.currentBid?.toLocaleString()} <span className="text-xs font-normal">درهم</span></p>
+                    <p className="text-sultan font-bold text-lg">{(auction.currentBid || 0).toLocaleString()} <span className="text-xs font-normal">درهم</span></p>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <span>{auction.bidCount || 0} مزايدة</span>
                   </div>
                 </div>
               </div>
@@ -223,8 +251,15 @@ export default function HomeView() {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {charityCases.slice(0, 3).map((c, i) => {
-            const pct = Math.round((c.collectedAmount / c.goalAmount) * 100);
+          {charityCases.length === 0 ? (
+            <div className="col-span-full text-center py-10 text-muted-foreground">
+              <Heart className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <p>لا توجد قضايا تضامنية حالياً</p>
+            </div>
+          ) : charityCases.slice(0, 3).map((c, i) => {
+            const goal = c.goalAmount || 1;
+            const collected = c.collectedAmount || 0;
+            const pct = Math.min(100, Math.round((collected / goal) * 100));
             const urgencyColors: Record<string, string> = { critical: 'bg-red-500', high: 'bg-orange-500', medium: 'bg-yellow-500', low: 'bg-green-500' };
             const urgencyLabels: Record<string, string> = { critical: 'عاجل جدا', high: 'عاجل', medium: 'متوسط', low: 'عادي' };
             return (
@@ -233,8 +268,7 @@ export default function HomeView() {
               >
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge className={`${urgencyColors[c.urgency]} text-white text-[10px]`}>{urgencyLabels[c.urgency]}</Badge>
-                    <Badge variant="outline" className="text-[10px] border-border text-muted-foreground">DEM0</Badge>
+                    <Badge className={`${urgencyColors[c.urgency] || urgencyColors.medium} text-white text-[10px]`}>{urgencyLabels[c.urgency] || 'متوسط'}</Badge>
                   </div>
                   <h3 className="font-semibold mb-2 line-clamp-1">{c.title}</h3>
                   <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{c.description}</p>

@@ -10,17 +10,33 @@ import { useState, useMemo } from 'react';
 
 // Gradient fallbacks for images (used when no real image URLs)
 const gradients = [
-  'from-slate-700/60 to-slate-500/30',
-  'from-amber-700/50 to-amber-500/20',
-  'from-emerald-700/40 to-emerald-500/20',
-  'from-violet-700/50 to-violet-500/20',
-  'from-rose-700/40 to-rose-500/20',
-  'from-sky-700/40 to-sky-500/20',
-  'from-orange-700/50 to-orange-500/20',
-  'from-teal-700/40 to-teal-500/20',
+  'from-violet-600/70 to-blue-900/70',
+  'from-amber-700/70 to-orange-900/70',
+  'from-pink-600/70 to-rose-900/70',
+  'from-green-600/70 to-emerald-900/70',
+  'from-cyan-600/70 to-teal-900/70',
+  'from-red-600/70 to-red-900/70',
+  'from-sky-600/70 to-blue-900/70',
+  'from-orange-500/70 to-amber-900/70',
+  'from-indigo-600/70 to-purple-900/70',
+  'from-teal-500/70 to-cyan-900/70',
 ];
 
-function getGradient(id: string) {
+const categoryGradients: Record<string, string> = {
+  'c-electronics': 'from-violet-600/70 to-blue-900/70',
+  'c-furniture': 'from-amber-700/70 to-orange-900/70',
+  'c-fashion': 'from-pink-600/70 to-rose-900/70',
+  'c-animals': 'from-green-600/70 to-emerald-900/70',
+  'c-hobbies': 'from-cyan-600/70 to-teal-900/70',
+  'c-motors': 'from-red-600/70 to-red-900/70',
+  'c-realestate': 'from-sky-600/70 to-blue-900/70',
+  'c-food': 'from-orange-500/70 to-amber-900/70',
+  'c-services': 'from-indigo-600/70 to-purple-900/70',
+  'c-jobs': 'from-teal-500/70 to-cyan-900/70',
+};
+
+function getGradient(id: string, categoryId?: string) {
+  if (categoryId && categoryGradients[categoryId]) return categoryGradients[categoryId];
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
   return gradients[Math.abs(hash) % gradients.length];
@@ -149,7 +165,7 @@ export default function MarketplaceView() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {visible.map((listing, i) => {
-            const grad = getGradient(listing.id);
+            const grad = getGradient(listing.id, listing.categoryId);
             return (
               <motion.div key={listing.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}
                 whileHover={{ y: -3 }}
@@ -192,7 +208,7 @@ export default function MarketplaceView() {
       ) : (
         <div className="space-y-3">
           {visible.map((listing, i) => {
-            const grad = getGradient(listing.id);
+            const grad = getGradient(listing.id, listing.categoryId);
             return (
               <motion.div key={listing.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}
                 onClick={() => selectListing(listing)}
