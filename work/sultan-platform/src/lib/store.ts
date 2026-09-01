@@ -56,6 +56,14 @@ export interface SultanState {
   setLocale: (locale: 'ar' | 'fr' | 'en' | 'darija') => void
   isRTL: boolean
 
+  // ─── API Data ────────────────────────────────────────────────────────
+  apiCategories: any[]
+  apiAuctions: any[]
+  apiCharity: any[]
+  apiStats: any
+  isDataLoaded: boolean
+  initializeApp: () => Promise<void>
+
   // ─── Listings ──────────────────────────────────────────────────────────
   listings: any[]
   filteredListings: any[]
@@ -263,8 +271,41 @@ export const useSultanStore = create<SultanState>()((set, get) => ({
 
   setLocale: (newLocale) => set({ locale: newLocale, isRTL: newLocale === 'ar' || newLocale === 'darija' }),
 
+  // ─── API Data ────────────────────────────────────────────────────────
+  apiCategories: [],
+  apiAuctions: [],
+  apiCharity: [],
+  apiStats: null,
+  isDataLoaded: false,
+
+  initializeApp: async () => {
+    if (get().isDataLoaded) return
+    try {
+      const [catRes, listRes, aucRes, charRes, statsRes] = await Promise.all([
+        fetch('/api/categories').then(r => r.json()).catch(() => ({ categories: [] })),
+        fetch('/api/listings?limit=100').then(r => r.json()).catch(() => ({ listings: [] })),
+        fetch('/api/auctions').then(r => r.json()).catch(() => ({ auctions: [] })),
+        fetch('/api/charity').then(r => r.json()).catch(() => ({ cases: [] })),
+        fetch('/api/stats').then(r => r.json()).catch(() => ({})),
+      ])
+      const cats = catRes.categories || []
+      const lists = listRes.listings || []
+      const aucs = aucRes.auctions || []
+      const chars = charRes.cases || []
+      set({
+        apiCategories: cats,
+        apiAuctions: aucs,
+        apiCharity: chars,
+        apiStats: statsRes,
+        isDataLoaded: true,
+      })
+      get().setListings(lists)
+    } catch (e) {
+      console.error('Failed to initialize app data:', e)
+    }
+  },
+
   // ─── Listings ──────────────────────────────────────────────────────────
-  listings: [],
   filteredListings: [],
   setListings: (items) => {
     set({ listings: items, filteredListings: computeFilteredListings(items, get().searchQuery, get().selectedCategory, get().selectedCity, get().priceRange, get().condition, get().sortBy) })

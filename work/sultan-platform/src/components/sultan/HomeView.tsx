@@ -1,7 +1,7 @@
 'use client';
 import { useSultanStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { categories, listings, auctions, charityCases, restaurants, services, jobs, newsArticles, cities } from '@/lib/seed-data';
+import { cities } from '@/lib/seed-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,13 +40,16 @@ function CountdownTimer({ endsAt }: { endsAt: string }) {
 }
 
 export default function HomeView() {
-  const { navigate, locale, setSelectedCategory, setSearchQuery, selectListing, searchQuery, openSupportModal } = useSultanStore();
+  const { navigate, locale, setSelectedCategory, setSearchQuery, selectListing, searchQuery, openSupportModal, apiCategories, listings, apiAuctions, apiCharity, isDataLoaded } = useSultanStore();
   const [liked, setLiked] = useState<Set<string>>(new Set());
 
-  const featuredListings = listings.filter(l => l.isFeatured).slice(0, 10);
-  const recentListings = [...listings].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8);
-  const topCategories = categories.filter(c => !['c-marketplace', 'c-zawaj', 'c-social'].includes(c.id)).slice(0, 10);
-  const categoryCount = (catId: string) => listings.filter(l => l.categoryId === catId).length;
+  const categories = apiCategories.length > 0 ? apiCategories : [];
+  const auctions = apiAuctions;
+  const charityCases = apiCharity;
+  const featuredListings = listings.filter((l: any) => l.isFeatured).slice(0, 10);
+  const recentListings = [...listings].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8);
+  const topCategories = categories.filter((c: any) => !['c-marketplace', 'c-zawaj', 'c-social'].includes(c.id)).slice(0, 10);
+  const categoryCount = (catId: string) => listings.filter((l: any) => l.categoryId === catId).length;
 
   const toggleLike = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -143,30 +146,29 @@ export default function HomeView() {
               onClick={() => selectListing(listing)}
               className="shrink-0 w-56 rounded-xl bg-card border border-border/50 overflow-hidden cursor-pointer group hover:border-sultan/30 transition-all"
             >
-              <div className={`h-36 bg-gradient-to-br ${listing.images} relative`}>
+              <div className={`h-36 bg-gradient-to-br from-sultan/20 to-emerald-900/30 relative`}>
                 {listing.isUrgent && (
                   <Badge className="absolute top-2 start-2 bg-red-500 text-white text-[10px]">عاجل</Badge>
                 )}
                 <button onClick={(e) => toggleLike(listing.id, e)} className="absolute top-2 end-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors">
                   <Heart className={`h-4 w-4 ${liked.has(listing.id) ? 'fill-red-500 text-red-500' : 'text-white'}`} />
                 </button>
-                <Badge className="absolute bottom-2 start-2 bg-black/60 text-white text-[10px] backdrop-blur-sm">DEM0</Badge>
               </div>
               <div className="p-3">
-                <p className="text-sultan font-bold text-base">{listing.price.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">درهم</span></p>
+                <p className="text-sultan font-bold text-base">{listing.price?.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">درهم</span></p>
                 <p className="text-sm font-medium mt-1 line-clamp-1 group-hover:text-sultan transition-colors">{listing.title}</p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" /> {listing.city}
-                  <Eye className="h-3 w-3" /> {listing.viewsCount}
+                  <Eye className="h-3 w-3" /> {listing.viewsCount || 0}
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-full bg-sultan/20 flex items-center justify-center">
-                      <span className="text-[8px] text-sultan font-bold">{listing.profile.displayName.charAt(0)}</span>
+                      <span className="text-[8px] text-sultan font-bold">{(listing.profile?.displayName || '?').charAt(0)}</span>
                     </div>
-                    <span className="text-xs truncate max-w-20">{listing.profile.displayName}</span>
+                    <span className="text-xs truncate max-w-20">{listing.profile?.displayName || ''}</span>
                   </div>
-                  {listing.profile.isVerified && <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-sultan/30 text-sultan">موثق</Badge>}
+                  {listing.profile?.isVerified && <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-sultan/30 text-sultan">موثق</Badge>}
                 </div>
               </div>
             </motion.div>
@@ -191,7 +193,7 @@ export default function HomeView() {
               className="rounded-xl bg-card border border-sultan/20 overflow-hidden hover:border-sultan/40 transition-all group cursor-pointer"
               onClick={() => navigate('auctions')}
             >
-              <div className={`h-40 bg-gradient-to-br ${auction.images} relative`}>
+              <div className="h-40 bg-gradient-to-br from-sultan/20 to-amber-900/30 relative">
                 <Badge className="absolute top-2 start-2 bg-sultan text-royal text-xs font-bold">مزاد مباشر</Badge>
                 <div className="absolute bottom-2 start-2"><CountdownTimer endsAt={auction.endsAt} /></div>
               </div>
@@ -200,9 +202,8 @@ export default function HomeView() {
                 <div className="flex items-center justify-between mt-3">
                   <div>
                     <p className="text-xs text-muted-foreground">المزايدة الحالية</p>
-                    <p className="text-sultan font-bold text-lg">{auction.currentBid.toLocaleString()} <span className="text-xs font-normal">درهم</span></p>
+                    <p className="text-sultan font-bold text-lg">{auction.currentBid?.toLocaleString()} <span className="text-xs font-normal">درهم</span></p>
                   </div>
-                  <Badge variant="secondary" className="text-xs">{auction.bidCount} مزايدة</Badge>
                 </div>
               </div>
             </motion.div>

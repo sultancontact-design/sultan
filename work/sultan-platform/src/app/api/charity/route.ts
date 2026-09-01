@@ -5,17 +5,17 @@ export const runtime = 'edge'
 
 export async function GET() {
   try {
-    const { data: categories, error } = await supabase
-      .from('Category')
+    const { data: cases, error } = await supabase
+      .from('CharityCase')
       .select('*')
-      .eq('isActive', true)
-      .order('order', { ascending: true })
+      .eq('status', 'active')
+      .order('createdAt', { ascending: false })
 
     if (error) throw error
 
-    return NextResponse.json({ categories: categories || [] })
+    return NextResponse.json({ cases: cases || [] })
   } catch (error: any) {
-    console.error('Categories API error:', error)
+    console.error('Charity API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
