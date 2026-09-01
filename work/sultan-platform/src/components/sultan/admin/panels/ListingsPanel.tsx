@@ -386,9 +386,7 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════ */
-         1. STATS ROW — 6 cards in 3×2 grid
-      ════════════════════════════════════════════════════════════ */}
+      {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {[
           { icon: Package, label: 'إجمالي الإعلانات', value: fmt(stats.total), color: 'text-white', bg: 'bg-white/5' },
@@ -417,9 +415,7 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
         ))}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════ */
          2. MODERATION TABS
-      ════════════════════════════════════════════════════════════ */}
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="bg-white/5 border border-white/10 h-auto p-1 flex-wrap">
           <TabsTrigger value="all" className="text-xs gap-1">
@@ -517,9 +513,7 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
         {/* ── Table Tabs (All / Featured / Banned) ── */}
         {['all', 'featured', 'banned'].map((t) => (
           <TabsContent key={t} value={t}>
-            {/* ══════════════════════════════════════════════════════
                3. SEARCH + FILTERS BAR
-            ══════════════════════════════════════════════════════ */}
             <div className="admin-card p-4 space-y-3">
               <div className="flex flex-wrap gap-2 items-center">
                 <div className="relative flex-1 min-w-[180px]">
@@ -617,9 +611,7 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
               </AnimatePresence>
             </div>
 
-            {/* ══════════════════════════════════════════════════════
                4. TANSTACK TABLE
-            ══════════════════════════════════════════════════════ */}
             <div className="admin-card overflow-hidden mt-3">
               <ScrollArea className="max-h-[460px] scrollbar-thin">
                 <table className="w-full text-sm">
@@ -713,10 +705,8 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
         ))}
       </Tabs>
 
-      {/* ════════════════════════════════════════════════════════════ */
          6. CATEGORY ANALYTICS — Horizontal BarChart
          7. STATUS DISTRIBUTION — PieChart Donut
-      ════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div
           initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
@@ -802,9 +792,7 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
         </motion.div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════ */
          8. BULK OPERATIONS — Floating Bar
-      ════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {selIds.length > 0 && (
           <motion.div
@@ -842,9 +830,7 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
         )}
       </AnimatePresence>
 
-      {/* ════════════════════════════════════════════════════════════ */
          5. LISTING DETAIL MODAL
-      ════════════════════════════════════════════════════════════ */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto scrollbar-thin
           bg-[#0a1628]/95 border-white/10 backdrop-blur-xl">
