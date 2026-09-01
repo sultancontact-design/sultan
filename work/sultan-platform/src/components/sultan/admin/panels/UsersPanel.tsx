@@ -29,7 +29,6 @@ import {
   PieChart, Pie, BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell,
 } from 'recharts'
-import { adminUsers, listings, adminStats, cities } from '@/lib/seed-data'
 import { useSultanStore } from '@/lib/store'
 
 /* ------------------------------------------------------------------ */
@@ -76,36 +75,48 @@ const BAR_COLORS = ['#D4AF37', '#34d399', '#f97316', '#f87171', '#F0D060', '#D4A
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
+type UserRow = any
+
 export default function UsersPanel({ onNavigate }: UsersPanelProps) {
   const addToast = useSultanStore((s) => s.addToast)
+  const apiStats = useSultanStore((s) => s.apiStats)
+  const isDataLoaded = useSultanStore((s) => s.isDataLoaded)
+
+  const users: UserRow[] = (apiStats?.recentUsers as UserRow[]) || []
 
   const [roleFilter, setRoleFilter] = useState<UserFilter>('all')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [cityFilter, setCityFilter] = useState('all')
   const [search, setSearch] = useState('')
-  const [detailUser, setDetailUser] = useState<typeof adminUsers[number] | null>(null)
+  const [detailUser, setDetailUser] = useState<UserRow | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [banDialogOpen, setBanDialogOpen] = useState(false)
   const [banReason, setBanReason] = useState('')
-  const [targetUser, setTargetUser] = useState<typeof adminUsers[number] | null>(null)
+  const [targetUser, setTargetUser] = useState<UserRow | null>(null)
   const [sortField, setSortField] = useState<'trustScore' | 'listingsCount' | 'createdAt'>('createdAt')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [page, setPage] = useState(0)
   const PER_PAGE = 8
 
+  const uniqueCities = useMemo(() => {
+    const set = new Set<string>()
+    users.forEach((u) => { if (u.city) set.add(u.city) })
+    return Array.from(set).sort()
+  }, [users])
+
   /* ── Computed ── */
   const stats = useMemo(() => {
-    const total = adminUsers.length
-    const admins = adminUsers.filter((u) => u.role === 'admin' || u.role === 'super_admin' || u.role === 'moderator').length
-    const banned = adminUsers.filter((u) => u.isBanned).length
-    const verified = adminUsers.filter((u) => u.isVerified).length
-    const rising = adminUsers.filter((u) => u.isRising).length
-    const avgTrust = Math.round(adminUsers.reduce((s, u) => s + u.trustScore, 0) / total)
+    const total = users.length
+    const admins = users.filter((u) => u.role === 'admin' || u.role === 'super_admin' || u.role === 'moderator').length
+    const banned = users.filter((u) => u.isBanned).length
+    const verified = users.filter((u) => u.isVerified).length
+    const rising = users.filter((u) => u.isRising).length
+    const avgTrust = total ? Math.round(users.reduce((s, u) => s + (u.trustScore || 0), 0) / total) : 0
     return { total, admins, banned, verified, rising, avgTrust }
-  }, [])
+  }, [users])
 
   const filtered = useMemo(() => {
-    let list = [...adminUsers]
+    let list = [...users]
     if (roleFilter !== 'all') list = list.filter((u) => u.role === roleFilter)
     if (statusFilter === 'banned') list = list.filter((u) => u.isBanned)
     else if (statusFilter === 'active') list = list.filter((u) => !u.isBanned)
@@ -114,36 +125,36 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
       const q = search.toLowerCase()
       list = list.filter(
         (u) =>
-          u.displayName.toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q) ||
-          u.phone.includes(q),
+          (u.displayName || '').toLowerCase().includes(q) ||
+          (u.email || '').toLowerCase().includes(q) ||
+          (u.phone || '').includes(q),
       )
     }
     list.sort((a, b) => {
       const mul = sortDir === 'asc' ? 1 : -1
-      if (sortField === 'trustScore') return mul * (a.trustScore - b.trustScore)
-      if (sortField === 'listingsCount') return mul * (a.listingsCount - b.listingsCount)
+      if (sortField === 'trustScore') return mul * ((a.trustScore || 0) - (b.trustScore || 0))
+      if (sortField === 'listingsCount') return mul * ((a.listingsCount || 0) - (b.listingsCount || 0))
       return mul * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
     })
     return list
-  }, [roleFilter, statusFilter, cityFilter, search, sortField, sortDir])
+  }, [users, roleFilter, statusFilter, cityFilter, search, sortField, sortDir])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE))
   const paginated = filtered.slice(page * PER_PAGE, (page + 1) * PER_PAGE)
 
   const roleDistribution = useMemo(() => {
     const map = new Map<string, number>()
-    adminUsers.forEach((u) => map.set(u.role, (map.get(u.role) || 0) + 1))
+    users.forEach((u) => map.set(u.role || 'user', (map.get(u.role || 'user') || 0) + 1))
     return Array.from(map.entries()).map(([role, count]) => ({ role: roleConfig[role]?.label || role, count }))
-  }, [])
+  }, [users])
 
   const cityDistribution = useMemo(() => {
     const map = new Map<string, number>()
-    adminUsers.forEach((u) => map.set(u.city, (map.get(u.city) || 0) + 1))
+    users.forEach((u) => { if (u.city) map.set(u.city, (map.get(u.city) || 0) + 1) })
     return Array.from(map.entries())
       .map(([city, count]) => ({ city, count }))
       .sort((a, b) => b.count - a.count)
-  }, [])
+  }, [users])
 
   const trustDistribution = useMemo(() => {
     const ranges = [
@@ -153,23 +164,24 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
       { range: '81-95', label: 'ممتاز', count: 0 },
       { range: '96-100', label: 'استثنائي', count: 0 },
     ]
-    adminUsers.forEach((u) => {
-      if (u.trustScore <= 30) ranges[0].count++
-      else if (u.trustScore <= 60) ranges[1].count++
-      else if (u.trustScore <= 80) ranges[2].count++
-      else if (u.trustScore <= 95) ranges[3].count++
+    users.forEach((u) => {
+      const score = u.trustScore || 0
+      if (score <= 30) ranges[0].count++
+      else if (score <= 60) ranges[1].count++
+      else if (score <= 80) ranges[2].count++
+      else if (score <= 95) ranges[3].count++
       else ranges[4].count++
     })
     return ranges
-  }, [])
+  }, [users])
 
   /* ── Handlers ── */
-  const openDetail = (user: typeof adminUsers[number]) => {
+  const openDetail = (user: UserRow) => {
     setDetailUser(user)
     setDetailOpen(true)
   }
 
-  const openBanDialog = (user: typeof adminUsers[number]) => {
+  const openBanDialog = (user: UserRow) => {
     setTargetUser(user)
     setBanReason('')
     setBanDialogOpen(true)
@@ -182,15 +194,15 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
     setTargetUser(null)
   }
 
-  const handleUnban = (user: typeof adminUsers[number]) => {
+  const handleUnban = (user: UserRow) => {
     addToast(`تم فك الحظر عن ${user.displayName}`, 'success')
   }
 
-  const handleVerify = (user: typeof adminUsers[number]) => {
+  const handleVerify = (user: UserRow) => {
     addToast(`تم توثيق حساب ${user.displayName}`, 'success')
   }
 
-  const handleRoleChange = (user: typeof adminUsers[number]) => {
+  const handleRoleChange = (user: UserRow) => {
     addToast(`تم تغيير دور ${user.displayName}`, 'info')
   }
 
@@ -226,13 +238,24 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
 
   /* ── Stat Cards ── */
   const statCards = [
-    { label: 'إجمالي المستخدمين', value: fmt(adminStats.totalUsers), icon: Users, color: 'text-white', bg: 'bg-white/10' },
+    { label: 'إجمالي المستخدمين', value: fmt(apiStats?.totalUsers ?? users.length), icon: Users, color: 'text-white', bg: 'bg-white/10' },
     { label: 'فريق الإدارة', value: fmt(stats.admins), icon: ShieldCheck, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' },
     { label: 'محظورون', value: fmt(stats.banned), icon: ShieldBan, color: 'text-red-400', bg: 'bg-red-500/10' },
     { label: 'موثّقون', value: fmt(stats.verified), icon: UserCheck, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   ]
 
   /* ── Render ── */
+  if (!isDataLoaded) {
+    return (
+      <div className="admin-card p-16 text-center">
+        <div className="mx-auto w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 animate-pulse">
+          <Users className="size-6 text-white/30" />
+        </div>
+        <p className="text-white/50 text-sm">جارٍ تحميل بيانات المستخدمين...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6 p-1">
       {/* ─── Header ─── */}
@@ -242,7 +265,7 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
             <Users className="h-6 w-6 text-[#D4AF37]" />
             إدارة المستخدمين
           </h2>
-          <p className="text-white/50 text-sm mt-1">إدارة ومراقبة حسابات المستخدمين ({fmt(adminStats.totalUsers)} مسجّل)</p>
+          <p className="text-white/50 text-sm mt-1">إدارة ومراقبة حسابات المستخدمين ({fmt(apiStats?.totalUsers ?? users.length)} مسجّل)</p>
         </div>
       </div>
 
@@ -427,8 +450,8 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
               </SelectTrigger>
               <SelectContent className="admin-glass border-white/10">
                 <SelectItem value="all" className="text-white/80 text-xs">كل المدن</SelectItem>
-                {cities.map((c) => (
-                  <SelectItem key={c.id} value={c.nameAr} className="text-white/80 text-xs">{c.nameAr}</SelectItem>
+                {uniqueCities.map((city) => (
+                  <SelectItem key={city} value={city} className="text-white/80 text-xs">{city}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -478,7 +501,7 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
             <tbody>
               <AnimatePresence mode="popLayout">
                 {paginated.map((user) => {
-                  const rc = roleConfig[user.role]
+                  const rc = roleConfig[user.role] || roleConfig.user
                   return (
                     <motion.tr
                       key={user.id}
@@ -493,15 +516,15 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${user.isBanned ? 'bg-red-500/15 text-red-400' : 'bg-[#D4AF37]/15 text-[#D4AF37]'}`}>
-                            {user.displayName.charAt(0)}
+                            {(user.displayName || '?').charAt(0)}
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <span className="text-white/90 font-medium text-xs truncate max-w-[120px]">{user.displayName}</span>
+                              <span className="text-white/90 font-medium text-xs truncate max-w-[120px]">{user.displayName || '—'}</span>
                               {user.isVerified && <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />}
                               {user.isRising && <Zap className="h-3.5 w-3.5 text-orange-400 shrink-0" />}
                             </div>
-                            <p className="text-white/30 text-[10px] truncate max-w-[160px]">{user.email}</p>
+                            <p className="text-white/30 text-[10px] truncate max-w-[160px]">{user.email || '—'}</p>
                           </div>
                         </div>
                       </td>
@@ -509,7 +532,7 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                       {/* Role */}
                       <td className="px-4 py-3">
                         <Badge variant="outline" className={`${rc.bg} ${rc.color} border-0 text-[10px] px-2 py-0.5 font-medium`}>
-                          {user.role === 'super_admin' && <Crown className="h-2.5 w-2.5 ml-1" />}
+                          {(user.role || 'user') === 'super_admin' && <Crown className="h-2.5 w-2.5 ml-1" />}
                           {rc.label}
                         </Badge>
                       </td>
@@ -517,9 +540,9 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                       {/* Trust Score */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 min-w-[100px]">
-                          <Progress value={user.trustScore} className={`h-1.5 flex-1 bg-white/5 [&>div]:${trustBg(user.trustScore)}`} />
-                          <span className={`text-xs font-bold min-w-[28px] text-left ${trustColor(user.trustScore)}`}>
-                            {user.trustScore}
+                          <Progress value={user.trustScore || 0} className={`h-1.5 flex-1 bg-white/5 [&>div]:${trustBg(user.trustScore || 0)}`} />
+                          <span className={`text-xs font-bold min-w-[28px] text-left ${trustColor(user.trustScore || 0)}`}>
+                            {user.trustScore || 0}
                           </span>
                         </div>
                       </td>
@@ -528,26 +551,26 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 text-xs text-white/60">
                           <FileText className="h-3.5 w-3.5" />
-                          <span>{user.listingsCount}</span>
+                          <span>{user.listingsCount || 0}</span>
                           <span className="text-white/20">|</span>
                           <Gavel className="h-3.5 w-3.5" />
-                          <span>{user.bidsCount}</span>
+                          <span>{user.bidsCount || 0}</span>
                         </div>
                       </td>
 
                       {/* City */}
                       <td className="px-4 py-3">
-                        <span className="text-white/60 text-xs">{user.city}</span>
+                        <span className="text-white/60 text-xs">{user.city || '—'}</span>
                       </td>
 
                       {/* Joined */}
                       <td className="px-4 py-3">
-                        <span className="text-white/40 text-xs">{relativeTime(user.createdAt)}</span>
+                        <span className="text-white/40 text-xs">{user.createdAt ? relativeTime(user.createdAt) : '—'}</span>
                       </td>
 
                       {/* Status */}
                       <td className="px-4 py-3 text-center">
-                        {user.isBanned ? (
+                        {(user.isBanned) ? (
                           <Badge variant="outline" className="bg-red-500/15 text-red-400 border-0 text-[10px] px-2 py-0.5 font-medium">
                             <Ban className="h-2.5 w-2.5 ml-1" />
                             محظور
@@ -570,7 +593,7 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </button>
-                          {user.isBanned ? (
+                          {(user.isBanned) ? (
                             <button
                               onClick={() => handleUnban(user)}
                               className="p-1.5 rounded-lg hover:bg-emerald-500/10 text-white/40 hover:text-emerald-400 transition-colors press-effect"
@@ -587,7 +610,7 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                               <ShieldBan className="h-3.5 w-3.5" />
                             </button>
                           )}
-                          {!user.isVerified && !user.isBanned && (
+                          {!(user.isVerified) && !(user.isBanned) && (
                             <button
                               onClick={() => handleVerify(user)}
                               className="p-1.5 rounded-lg hover:bg-[#D4AF37]/10 text-white/40 hover:text-[#D4AF37] transition-colors press-effect"
@@ -666,18 +689,18 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
               <div className="space-y-4 mt-2">
                 {/* Header Card */}
                 <div className="admin-card-gold p-4 flex items-center gap-4">
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold ${detailUser.isBanned ? 'bg-red-500/15 text-red-400' : 'bg-[#D4AF37]/15 text-[#D4AF37]'}`}>
-                    {detailUser.displayName.charAt(0)}
+                  <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold ${(detailUser.isBanned) ? 'bg-red-500/15 text-red-400' : 'bg-[#D4AF37]/15 text-[#D4AF37]'}`}>
+                    {(detailUser.displayName || '?').charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-white font-bold text-base">{detailUser.displayName}</h3>
+                      <h3 className="text-white font-bold text-base">{detailUser.displayName || '—'}</h3>
                       {detailUser.isVerified && <ShieldCheck className="h-4 w-4 text-emerald-400" />}
                       {detailUser.isRising && <Zap className="h-4 w-4 text-orange-400" />}
-                      {detailUser.isBanned && <Badge variant="outline" className="bg-red-500/15 text-red-400 border-0 text-[10px] px-2 py-0.5"><Ban className="h-3 w-3 ml-1" />محظور</Badge>}
+                      {(detailUser.isBanned) && <Badge variant="outline" className="bg-red-500/15 text-red-400 border-0 text-[10px] px-2 py-0.5"><Ban className="h-3 w-3 ml-1" />محظور</Badge>}
                     </div>
-                    <Badge variant="outline" className={`${roleConfig[detailUser.role].bg} ${roleConfig[detailUser.role].color} border-0 text-[10px] px-2 py-0.5 mt-1`}>
-                      {roleConfig[detailUser.role].label}
+                    <Badge variant="outline" className={`${(roleConfig[detailUser.role] || roleConfig.user).bg} ${(roleConfig[detailUser.role] || roleConfig.user).color} border-0 text-[10px] px-2 py-0.5 mt-1`}>
+                      {(roleConfig[detailUser.role] || roleConfig.user).label}
                     </Badge>
                   </div>
                 </div>
@@ -686,9 +709,9 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                 <div className="admin-card p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-white/50">نقطة الثقة</span>
-                    <span className={`text-lg font-bold ${trustColor(detailUser.trustScore)}`}>{detailUser.trustScore}</span>
+                    <span className={`text-lg font-bold ${trustColor(detailUser.trustScore || 0)}`}>{detailUser.trustScore || 0}</span>
                   </div>
-                  <Progress value={detailUser.trustScore} className="h-2.5 bg-white/5" />
+                  <Progress value={detailUser.trustScore || 0} className="h-2.5 bg-white/5" />
                 </div>
 
                 {/* Info Grid */}
@@ -698,61 +721,61 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                       <Mail className="h-3.5 w-3.5 text-white/30" />
                       <span className="text-[10px] text-white/40">البريد</span>
                     </div>
-                    <p className="text-white/80 text-xs truncate">{detailUser.email}</p>
+                    <p className="text-white/80 text-xs truncate">{detailUser.email || '—'}</p>
                   </div>
                   <div className="admin-card p-3">
                     <div className="flex items-center gap-2 mb-1">
                       <Phone className="h-3.5 w-3.5 text-white/30" />
                       <span className="text-[10px] text-white/40">الهاتف</span>
                     </div>
-                    <p className="text-white/80 text-xs" dir="ltr">{detailUser.phone}</p>
+                    <p className="text-white/80 text-xs" dir="ltr">{detailUser.phone || '—'}</p>
                   </div>
                   <div className="admin-card p-3">
                     <div className="flex items-center gap-2 mb-1">
                       <MapPin className="h-3.5 w-3.5 text-white/30" />
                       <span className="text-[10px] text-white/40">المدينة</span>
                     </div>
-                    <p className="text-white/80 text-xs">{detailUser.city}</p>
+                    <p className="text-white/80 text-xs">{detailUser.city || '—'}</p>
                   </div>
                   <div className="admin-card p-3">
                     <div className="flex items-center gap-2 mb-1">
                       <CalendarDays className="h-3.5 w-3.5 text-white/30" />
                       <span className="text-[10px] text-white/40">الانضمام</span>
                     </div>
-                    <p className="text-white/80 text-xs">{relativeTime(detailUser.createdAt)}</p>
+                    <p className="text-white/80 text-xs">{detailUser.createdAt ? relativeTime(detailUser.createdAt) : '—'}</p>
                   </div>
                   <div className="admin-card p-3">
                     <div className="flex items-center gap-2 mb-1">
                       <FileText className="h-3.5 w-3.5 text-white/30" />
                       <span className="text-[10px] text-white/40">الإعلانات</span>
                     </div>
-                    <p className="text-white/80 text-xs font-bold">{fmt(detailUser.listingsCount)}</p>
+                    <p className="text-white/80 text-xs font-bold">{fmt(detailUser.listingsCount || 0)}</p>
                   </div>
                   <div className="admin-card p-3">
                     <div className="flex items-center gap-2 mb-1">
                       <Gavel className="h-3.5 w-3.5 text-white/30" />
                       <span className="text-[10px] text-white/40">المزايدات</span>
                     </div>
-                    <p className="text-white/80 text-xs font-bold">{fmt(detailUser.bidsCount)}</p>
+                    <p className="text-white/80 text-xs font-bold">{fmt(detailUser.bidsCount || 0)}</p>
                   </div>
                   <div className="admin-card p-3">
                     <div className="flex items-center gap-2 mb-1">
                       <AlertTriangle className="h-3.5 w-3.5 text-white/30" />
                       <span className="text-[10px] text-white/40">البلاغات</span>
                     </div>
-                    <p className={`text-xs font-bold ${detailUser.reportsCount > 0 ? 'text-red-400' : 'text-white/80'}`}>{fmt(detailUser.reportsCount)}</p>
+                    <p className={`text-xs font-bold ${(detailUser.reportsCount || 0) > 0 ? 'text-red-400' : 'text-white/80'}`}>{fmt(detailUser.reportsCount || 0)}</p>
                   </div>
                   <div className="admin-card p-3">
                     <div className="flex items-center gap-2 mb-1">
                       <Eye className="h-3.5 w-3.5 text-white/30" />
                       <span className="text-[10px] text-white/40">آخر ظهور</span>
                     </div>
-                    <p className="text-white/80 text-xs">{relativeTime(detailUser.lastSeen)}</p>
+                    <p className="text-white/80 text-xs">{detailUser.lastSeen ? relativeTime(detailUser.lastSeen) : '—'}</p>
                   </div>
                 </div>
 
                 {/* Ban Reason */}
-                {detailUser.isBanned && detailUser.banReason && (
+                {(detailUser.isBanned) && detailUser.banReason && (
                   <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
                       <ShieldBan className="h-4 w-4 text-red-400" />
@@ -764,7 +787,7 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
-                  {detailUser.isBanned ? (
+                  {(detailUser.isBanned) ? (
                     <Button
                       onClick={() => { setDetailOpen(false); handleUnban(detailUser) }}
                       className="flex-1 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 press-effect text-sm"
@@ -781,7 +804,7 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
                       حظر المستخدم
                     </Button>
                   )}
-                  {!detailUser.isVerified && !detailUser.isBanned && (
+                  {!(detailUser.isVerified) && !(detailUser.isBanned) && (
                     <Button
                       onClick={() => { setDetailOpen(false); handleVerify(detailUser) }}
                       className="flex-1 bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 border border-[#D4AF37]/30 press-effect text-sm"
@@ -813,11 +836,11 @@ export default function UsersPanel({ onNavigate }: UsersPanelProps) {
           <div className="space-y-4 mt-2">
             <div className="admin-card p-3 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center text-red-400 font-bold">
-                {targetUser?.displayName.charAt(0)}
+                {targetUser?.displayName?.charAt(0) || '?'}
               </div>
               <div>
                 <p className="text-white text-sm font-medium">{targetUser?.displayName}</p>
-                <p className="text-white/40 text-xs">{targetUser?.email}</p>
+                <p className="text-white/40 text-xs">{targetUser?.email || '—'}</p>
               </div>
             </div>
 

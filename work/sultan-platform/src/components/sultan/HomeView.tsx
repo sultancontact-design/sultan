@@ -1,7 +1,7 @@
 'use client';
 import { useSultanStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { cities } from '@/lib/seed-data';
+import { cities, restaurants, services, jobs, newsArticles } from '@/lib/seed-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

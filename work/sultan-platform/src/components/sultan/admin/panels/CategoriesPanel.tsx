@@ -1,6 +1,5 @@
 'use client'
 import { useState, useMemo } from 'react'
-import { categories, listings } from '@/lib/seed-data'
 import { useSultanStore } from '@/lib/store'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,7 +17,10 @@ const fmt = (n: number) => n.toLocaleString('ar-EG')
 const COLORS = ['#D4AF37','#34d399','#f97316','#f87171','#a78bfa','#f472b6','#facc15','#22d3ee','#a3e635','#fb923c','#e879f9','#2dd4bf','#fca5a5','#86efac','#fde047','#67e8f9']
 
 export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: string) => void }) {
-  const { addToast } = useSultanStore()
+  const { addToast, apiCategories, listings, isDataLoaded } = useSultanStore()
+  const categories: any[] = (apiCategories || []) as any[]
+  const storeListings: any[] = (listings || []) as any[]
+
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState<'grid'|'table'>('grid')
   const [editId, setEditId] = useState<string | null>(null)
@@ -36,27 +38,27 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
 
   const categoryStats = useMemo(() => {
     return categories.map(cat => {
-      const count = listings.filter(l => l.categoryId === cat.id).length
-      const activeCount = listings.filter(l => l.categoryId === cat.id && l.status === 'active').length
-      const featuredCount = listings.filter(l => l.categoryId === cat.id && l.isFeatured).length
-      const totalViews = listings.filter(l => l.categoryId === cat.id).reduce((s, l) => s + (l.viewsCount || 0), 0)
-      const avgPrice = listings.filter(l => l.categoryId === cat.id && l.price).reduce((s, l, _, arr) => {
-        const filtered = listings.filter(x => x.categoryId === cat.id && x.price)
-        return filtered.reduce((sum, x) => sum + (x.price || 0), 0) / (filtered.length || 1)
-      }, 0)
-      return { ...cat, count, activeCount, featuredCount, totalViews, avgPrice: Math.round(avgPrice) }
+      const count = storeListings.filter(l => l.categoryId === cat.id).length
+      const activeCount = storeListings.filter(l => l.categoryId === cat.id && l.status === 'active').length
+      const featuredCount = storeListings.filter(l => l.categoryId === cat.id && l.isFeatured).length
+      const totalViews = storeListings.filter(l => l.categoryId === cat.id).reduce((s, l) => s + (l.viewsCount || 0), 0)
+      const priceFiltered = storeListings.filter(x => x.categoryId === cat.id && x.price)
+      const avgPrice = priceFiltered.length
+        ? Math.round(priceFiltered.reduce((sum, x) => sum + (x.price || 0), 0) / priceFiltered.length)
+        : 0
+      return { ...cat, count, activeCount, featuredCount, totalViews, avgPrice }
     })
-  }, [])
+  }, [categories, storeListings])
 
   const filtered = useMemo(() => {
     let data = categoryStats.filter(c =>
-      c.nameAr.includes(search) || c.nameEn.toLowerCase().includes(search.toLowerCase()) || c.slug.includes(search)
+      (c.nameAr || '').includes(search) || (c.nameEn || '').toLowerCase().includes(search.toLowerCase()) || (c.slug || '').includes(search)
     )
     data.sort((a, b) => {
       let cmp = 0
-      if (sortField === 'name') cmp = a.nameAr.localeCompare(b.nameAr, 'ar')
+      if (sortField === 'name') cmp = (a.nameAr || '').localeCompare(b.nameAr || '', 'ar')
       else if (sortField === 'count') cmp = a.count - b.count
-      else cmp = a.order - b.order
+      else cmp = (a.order || 0) - (b.order || 0)
       return sortDir === 'asc' ? cmp : -cmp
     })
     return data
@@ -68,8 +70,8 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
   const chartData = filtered.filter(c => c.count > 0).sort((a, b) => b.count - a.count)
   const pieData = filtered.filter(c => c.count > 0).map((c, i) => ({ name: c.nameAr, value: c.count, color: COLORS[i % COLORS.length] }))
 
-  const startEdit = (cat: typeof categories[0]) => {
-    setEditId(cat.id); setEditName(cat.nameAr); setEditSlug(cat.slug); setEditOrder(cat.order)
+  const startEdit = (cat: any) => {
+    setEditId(cat.id); setEditName(cat.nameAr || ''); setEditSlug(cat.slug || ''); setEditOrder(cat.order || 0)
   }
   const saveEdit = () => {
     if (editId) { addToast(`تم تحديث فئة: ${editName}`, 'success'); setEditId(null) }
@@ -85,6 +87,18 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
   const toggleSort = (field: typeof sortField) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortField(field); setSortDir('desc') }
+  }
+
+  /* ── Loading ── */
+  if (!isDataLoaded) {
+    return (
+      <div className="admin-card p-16 text-center">
+        <div className="mx-auto w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 animate-pulse">
+          <FolderTree className="size-6 text-white/30" />
+        </div>
+        <p className="text-muted-foreground text-sm">جارٍ تحميل الفئات...</p>
+      </div>
+    )
   }
 
   return (
@@ -111,7 +125,7 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
           { label: 'إجمالي الفئات', value: categories.length, icon: FolderTree, color: 'text-sultan', bg: 'bg-sultan/10' },
           { label: 'إعلانات نشطة', value: totalActive, icon: Package, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
           { label: 'إعلانات مميزة', value: totalFeatured, icon: TrendingUp, color: 'text-orange-400', bg: 'bg-orange-400/10' },
-          { label: 'متوسط الإعلانات/فئة', value: Math.round(totalListings / categories.length), icon: BarChart3, color: 'text-sultan', bg: 'bg-sultan/10' },
+          { label: 'متوسط الإعلانات/فئة', value: categories.length ? Math.round(totalListings / categories.length) : 0, icon: BarChart3, color: 'text-sultan', bg: 'bg-sultan/10' },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="admin-card p-4">
             <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center mb-2`}><s.icon className={`h-4 w-4 ${s.color}`} /></div>
@@ -120,6 +134,15 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
           </motion.div>
         ))}
       </div>
+
+      {/* Empty state */}
+      {categories.length === 0 ? (
+        <div className="admin-card p-16 text-center">
+          <FolderTree className="h-10 w-10 mx-auto mb-3 text-white/20" />
+          <p className="text-muted-foreground text-sm">لا توجد فئات بعد</p>
+        </div>
+      ) : (
+      <>
 
       {/* Search + Sort */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -140,6 +163,9 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="admin-card p-4 lg:col-span-2">
           <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><BarChart3 className="h-4 w-4 text-sultan" />توزيع الإعلانات حسب الفئة</h3>
+          {chartData.length === 0 ? (
+            <div className="h-[260px] flex items-center justify-center text-muted-foreground text-sm">لا توجد بيانات</div>
+          ) : (
           <div className="h-[260px]"><ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} layout="vertical" margin={{ right: 20 }}>
               <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" axisLine={false} tickLine={false} />
@@ -150,14 +176,19 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
               </Bar>
             </BarChart>
           </ResponsiveContainer></div>
+          )}
         </div>
         <div className="admin-card p-4">
           <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><FolderTree className="h-4 w-4 text-emerald-400" />التوزيع النسبي</h3>
+          {pieData.length === 0 ? (
+            <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">لا توجد بيانات</div>
+          ) : (
           <div className="h-[200px]"><ResponsiveContainer width="100%" height="100%">
             <PieChart><Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={2} dataKey="value" strokeWidth={0}>
               {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
             </Pie><Tooltip contentStyle={{ background: 'rgba(10,22,40,0.95)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '10px', fontSize: '11px', direction: 'rtl' }} /></PieChart>
           </ResponsiveContainer></div>
+          )}
           <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2">
             {pieData.slice(0, 8).map(d => (
               <span key={d.name} className="flex items-center gap-1 text-[9px] text-muted-foreground">
@@ -194,8 +225,8 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
                   </div>
                 ) : (
                   <>
-                    <h4 className="font-semibold text-sm mb-0.5">{cat.nameAr}</h4>
-                    <p className="text-[10px] text-muted-foreground mb-3">{cat.slug} · ترتيب {cat.order}</p>
+                    <h4 className="font-semibold text-sm mb-0.5">{cat.nameAr || '—'}</h4>
+                    <p className="text-[10px] text-muted-foreground mb-3">{cat.slug || '—'} · ترتيب {cat.order ?? 0}</p>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-[11px]"><span className="text-muted-foreground">الإعلانات</span><span className="font-medium text-sultan">{fmt(cat.count)}</span></div>
                       <div className="h-1.5 rounded-full bg-white/[0.04] overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${Math.round((cat.count / (chartData[0]?.count || 1)) * 100)}%` }} transition={{ delay: i * 0.03, duration: 0.5 }} className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${COLORS[i % COLORS.length]}, ${COLORS[i % COLORS.length]}88)` }} /></div>
@@ -207,8 +238,8 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
                     <AnimatePresence>{isExpanded && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                         <div className="pt-2 space-y-1.5 border-t border-white/[0.04] mt-2">
-                          <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">الإنجليزية</span><span>{cat.nameEn}</span></div>
-                          <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">الفرنسية</span><span>{cat.nameFr}</span></div>
+                          <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">الإنجليزية</span><span>{cat.nameEn || '—'}</span></div>
+                          <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">الفرنسية</span><span>{cat.nameFr || '—'}</span></div>
                           <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">المشاهدات</span><span>{fmt(cat.totalViews)}</span></div>
                           <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">متوسط السعر</span><span>{fmt(cat.avgPrice)} درهم</span></div>
                         </div>
@@ -238,13 +269,13 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
               </thead>
               <tbody>{filtered.map((cat, i) => (
                 <tr key={cat.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-                  <td className="p-3"><div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} /><span className="font-medium">{cat.nameAr}</span></div></td>
-                  <td className="p-3 text-muted-foreground font-mono text-[10px]">{cat.slug}</td>
+                  <td className="p-3"><div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} /><span className="font-medium">{cat.nameAr || '—'}</span></div></td>
+                  <td className="p-3 text-muted-foreground font-mono text-[10px]">{cat.slug || '—'}</td>
                   <td className="p-3 font-medium text-sultan">{fmt(cat.count)}</td>
                   <td className="p-3 text-emerald-400">{fmt(cat.activeCount)}</td>
                   <td className="p-3 text-orange-400">{fmt(cat.featuredCount)}</td>
                   <td className="p-3">{fmt(cat.totalViews)}</td>
-                  <td className="p-3">{cat.order}</td>
+                  <td className="p-3">{cat.order ?? 0}</td>
                   <td className="p-3"><div className="flex items-center gap-1">
                     <button onClick={() => startEdit(cat)} className="p-1.5 rounded-md hover:bg-white/[0.06] text-muted-foreground hover:text-sultan"><Pencil className="h-3.5 w-3.5" /></button>
                     <button onClick={() => setDeleteConfirm(cat.id)} className="p-1.5 rounded-md hover:bg-red-500/10 text-muted-foreground hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -254,6 +285,9 @@ export default function CategoriesPanel({ onNavigate }: { onNavigate?: (panel: s
             </table>
           </div>
         </div>
+      )}
+
+      </>
       )}
 
       {/* Create Modal */}

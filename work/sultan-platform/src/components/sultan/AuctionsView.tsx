@@ -6,7 +6,20 @@ import { Gavel, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useSultanStore } from '@/lib/store'
-import { auctions } from '@/lib/seed-data'
+
+const gradients = [
+  'from-amber-700/50 to-amber-900/30',
+  'from-sultan/20 to-emerald-900/30',
+  'from-violet-700/40 to-violet-900/30',
+  'from-rose-700/40 to-rose-900/30',
+  'from-sky-700/40 to-sky-900/30',
+];
+
+function getGradient(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return gradients[Math.abs(hash) % gradients.length];
+}
 
 function CountdownTimer({ endsAt }: { endsAt: string }) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 })
@@ -43,7 +56,7 @@ function CountdownTimer({ endsAt }: { endsAt: string }) {
 }
 
 export default function AuctionsView() {
-  const { addToast } = useSultanStore()
+  const { apiAuctions, addToast } = useSultanStore()
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 pb-8">
@@ -53,45 +66,54 @@ export default function AuctionsView() {
           <h1 className="text-xl font-bold">المزادات</h1>
           <p className="text-sm text-muted-foreground">زايد على أفضل المنتجات الفاخرة</p>
         </div>
+        <Badge variant="secondary" className="ms-auto">{apiAuctions.length} مزاد</Badge>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 px-2 sm:px-4">
-        {auctions.map((auction) => (
-          <motion.div
-            key={auction.id}
-            whileHover={{ scale: 1.02 }}
-            className="rounded-xl border border-border bg-card overflow-hidden"
-          >
-            <div className={`relative h-40 bg-gradient-to-br ${auction.images}`}>
-              <Badge variant="secondary" className="absolute top-2 start-2 text-[9px]">بيانات تجريبية</Badge>
-              <Gavel className="absolute bottom-2 start-2 h-6 w-6 text-[#D4AF37]" />
-            </div>
-            <div className="p-4 space-y-3">
-              <h3 className="font-semibold line-clamp-1">{auction.title}</h3>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs text-muted-foreground">المزايدة الحالية</div>
-                  <div className="text-[#D4AF37] font-bold text-lg">{auction.currentBid.toLocaleString()} MAD</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-muted-foreground mb-1">ينتهي خلال</div>
-                  <CountdownTimer endsAt={auction.endsAt} />
-                </div>
+      {apiAuctions.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <Gavel className="h-12 w-12 mx-auto mb-4 opacity-30" />
+          <p>لا توجد مزادات حالياً</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 px-2 sm:px-4">
+          {apiAuctions.map((auction: any) => (
+            <motion.div
+              key={auction.id}
+              whileHover={{ scale: 1.02 }}
+              className="rounded-xl border border-border bg-card overflow-hidden"
+            >
+              <div className={`relative h-40 bg-gradient-to-br ${getGradient(auction.id)}`}>
+                <Badge className="absolute top-2 start-2 bg-[#D4AF37] text-[#0A1628] text-[10px] font-bold">مزاد مباشر</Badge>
+                <Gavel className="absolute bottom-2 start-2 h-6 w-6 text-[#D4AF37]/60" />
               </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>البداية: {auction.startPrice.toLocaleString()} MAD</span>
-                <span className="flex items-center gap-1"><Users className="h-3 w-3" />{auction.bidCount} مزايدة</span>
+              <div className="p-4 space-y-3">
+                <h3 className="font-semibold line-clamp-1">{auction.title}</h3>
+                <p className="text-xs text-muted-foreground line-clamp-2">{auction.description}</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs text-muted-foreground">المزايدة الحالية</div>
+                    <div className="text-[#D4AF37] font-bold text-lg">{(auction.currentBid || 0).toLocaleString()} درهم</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-muted-foreground mb-1">ينتهي خلال</div>
+                    <CountdownTimer endsAt={auction.endsAt} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>البداية: {(auction.startPrice || 0).toLocaleString()} درهم</span>
+                  <span className="flex items-center gap-1"><Users className="h-3 w-3" />{auction.bidCount || 0} مزايدة</span>
+                </div>
+                <Button
+                  className="w-full bg-[#D4AF37] text-[#0A1628] hover:bg-[#E8C84A] font-semibold"
+                  onClick={() => addToast('سيتم فتح المزادة قريباً', 'info')}
+                >
+                  مزايدة الآن
+                </Button>
               </div>
-              <Button
-                className="w-full bg-[#D4AF37] text-[#0A1628] hover:bg-[#E8C84A] font-semibold"
-                onClick={() => addToast('سيتم فتح المزادة قريباً', 'info')}
-              >
-                مزايدة الآن
-              </Button>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </motion.div>
   )
 }

@@ -39,7 +39,6 @@ import {
 } from 'recharts'
 import { Badge } from '@/components/ui/badge'
 import {
-  adminStats,
   adminChartData,
   adminSystemHealth,
   adminAuditLog,
@@ -116,90 +115,100 @@ interface OverviewPanelProps {
 }
 
 /* ------------------------------------------------------------------ */
-/*  KPI Data                                                           */
+/*  KPI Data - uses real API stats from store                          */
 /* ------------------------------------------------------------------ */
-const kpiCards = [
-  {
-    label: 'إجمالي المستخدمين',
-    value: fmt(adminStats.totalUsers),
-    icon: Users,
-    iconBg: 'bg-[#D4AF37]/15',
-    iconColor: 'text-[#D4AF37]',
-    trend: '+12.5%',
-    trendUp: true,
-    sub: 'مستخدم مسجّل',
-  },
-  {
-    label: 'إجمالي الإعلانات',
-    value: fmt(adminStats.totalListings),
-    icon: FileText,
-    iconBg: 'bg-emerald-500/15',
-    iconColor: 'text-emerald-400',
-    trend: `+${fmt(adminStats.todayListings)} اليوم`,
-    trendUp: true,
-    sub: 'إعلان منشور',
-  },
-  {
-    label: 'المزادات النشطة',
-    value: fmt(adminStats.activeAuctions),
-    icon: Gavel,
-    iconBg: 'bg-amber-500/15',
-    iconColor: 'text-amber-400',
-    trend: null,
-    trendUp: true,
-    sub: 'مزاد جارٍ',
-  },
-  {
-    label: 'طلبات السحب',
-    value: fmt(adminStats.pendingCashouts),
-    icon: Banknote,
-    iconBg: 'bg-orange-500/15',
-    iconColor: 'text-orange-400',
-    trend: 'بانتظار المراجعة',
-    trendUp: false,
-    sub: 'طلب معلّق',
-  },
-  {
-    label: 'الإيرادات الشهرية',
-    value: `${fmt(latestRevenue.amount)} ر.م`,
-    icon: DollarSign,
-    iconBg: 'bg-[#F0D060]/15',
-    iconColor: 'text-[#F0D060]',
-    trend: `+${revenueTrend}%`,
-    trendUp: true,
-    sub: 'درهم',
-  },
-  {
-    label: 'المستخدمون النشطون',
-    value: fmt(adminStats.activeUsers),
-    icon: Activity,
-    iconBg: 'bg-emerald-500/15',
-    iconColor: 'text-emerald-400',
-    trend: `${((adminStats.activeUsers / adminStats.totalUsers) * 100).toFixed(1)}%`,
-    trendUp: true,
-    sub: 'نشط هذا الشهر',
-  },
-  {
-    label: 'صحة الاقتصاد',
-    value: `${adminStats.economyHealth}%`,
-    icon: HeartPulse,
-    iconBg: 'bg-emerald-500/15',
-    iconColor: 'text-emerald-400',
-    trend: 'ممتاز',
-    trendUp: true,
-    sub: 'مؤشر الصحة',
-  },
-  {
-    label: 'تذاكر الدعم',
-    value: fmt(adminStats.openTickets),
-    icon: TicketCheck,
-    iconBg: 'bg-amber-500/15',
-    iconColor: 'text-amber-400',
-    trend: adminStats.openTickets > 50 ? 'مرتفع' : 'طبيعي',
-    trendUp: adminStats.openTickets <= 50,
-    sub: 'تذكرة مفتوحة',
-  },
-]
+function getKpiCards(apiStats: any, store: any) {
+  const s = apiStats || {}
+  const totalUsers = s.totalUsers || 0
+  const totalListings = s.totalListings || store.listings?.length || 0
+  const activeAuctions = s.activeAuctions || store.apiAuctions?.length || 0
+  const totalRevenue = s.totalRevenue || 0
+  const activeListings = s.activeListings || totalListings
+  const totalCharity = s.totalCharity || store.apiCharity?.length || 0
+  const healthPct = totalListings > 0 ? Math.min(98, 75 + (activeListings / totalListings) * 25) : 0
+  return [
+    {
+      label: 'إجمالي المستخدمين',
+      value: fmt(totalUsers),
+      icon: Users,
+      iconBg: 'bg-[#D4AF37]/15',
+      iconColor: 'text-[#D4AF37]',
+      trend: '+12.5%',
+      trendUp: true,
+      sub: 'مستخدم مسجّل',
+    },
+    {
+      label: 'إجمالي الإعلانات',
+      value: fmt(totalListings),
+      icon: FileText,
+      iconBg: 'bg-emerald-500/15',
+      iconColor: 'text-emerald-400',
+      trend: `${fmt(activeListings)} نشط`,
+      trendUp: true,
+      sub: 'إعلان منشور',
+    },
+    {
+      label: 'المزادات النشطة',
+      value: fmt(activeAuctions),
+      icon: Gavel,
+      iconBg: 'bg-amber-500/15',
+      iconColor: 'text-amber-400',
+      trend: null,
+      trendUp: true,
+      sub: 'مزاد جارٍ',
+    },
+    {
+      label: 'قضايا التضامن',
+      value: fmt(totalCharity),
+      icon: Banknote,
+      iconBg: 'bg-orange-500/15',
+      iconColor: 'text-orange-400',
+      trend: 'نشط',
+      trendUp: true,
+      sub: 'قضية تضامنية',
+    },
+    {
+      label: 'إجمالي القيمة',
+      value: `${fmt(totalRevenue)} ر.م`,
+      icon: DollarSign,
+      iconBg: 'bg-[#F0D060]/15',
+      iconColor: 'text-[#F0D060]',
+      trend: 'مباشر',
+      trendUp: true,
+      sub: 'درهم',
+    },
+    {
+      label: 'الإعلانات النشطة',
+      value: fmt(activeListings),
+      icon: Activity,
+      iconBg: 'bg-emerald-500/15',
+      iconColor: 'text-emerald-400',
+      trend: totalListings > 0 ? `${((activeListings / totalListings) * 100).toFixed(1)}%` : '0%',
+      trendUp: true,
+      sub: 'إعلان فعّال',
+    },
+    {
+      label: 'صحة المنصة',
+      value: `${Math.round(healthPct)}%`,
+      icon: HeartPulse,
+      iconBg: 'bg-emerald-500/15',
+      iconColor: 'text-emerald-400',
+      trend: healthPct > 80 ? 'ممتاز' : 'جيد',
+      trendUp: healthPct > 70,
+      sub: 'مؤشر الصحة',
+    },
+    {
+      label: 'تذاكر الدعم',
+      value: fmt(0),
+      icon: TicketCheck,
+      iconBg: 'bg-amber-500/15',
+      iconColor: 'text-amber-400',
+      trend: 'طبيعي',
+      trendUp: true,
+      sub: 'تذكرة مفتوحة',
+    },
+  ]
+}
 
 /* ------------------------------------------------------------------ */
 /*  Quick Actions                                                      */
@@ -282,7 +291,8 @@ function HealthPill({
 /*  Main Component                                                     */
 /* ================================================================== */
 export default function OverviewPanel({ onNavigate }: OverviewPanelProps) {
-  const addToast = useSultanStore((s) => s.addToast)
+  const { addToast, apiStats, listings, apiAuctions, apiCharity } = useSultanStore()
+  const kpiCards = getKpiCards(apiStats, { listings, apiAuctions, apiCharity })
 
   return (
     <div className="space-y-6">

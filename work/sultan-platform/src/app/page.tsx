@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useSultanStore } from '@/lib/store';
 import TopNav from '@/components/sultan/TopNav';
 import BottomNav from '@/components/sultan/BottomNav';
@@ -17,78 +17,13 @@ import ListingDetail from '@/components/sultan/ListingDetail';
 import PlaceholderView from '@/components/sultan/PlaceholderView';
 import SupportModal from '@/components/sultan/SupportModal';
 import PublishWizard from '@/components/sultan/PublishWizard';
-import { createClient } from '@supabase/supabase-js';
-
-// Fallback: import static seed data in case Supabase is unavailable
-import { listings as fallbackListings } from '@/lib/seed-data';
-
-// Browser-side Supabase client
-const supabase = createClient(
-  'https://ltdbaylnuivqnlthduhu.supabase.co',
-  'sb_publishable_u20v6MgAdrjOxILqc14Tqw_cOMOMSlN'
-);
 
 export default function Page() {
-  const { currentView, isRTL, locale, setListings } = useSultanStore();
-  const initialized = useRef(false);
-  const [loading, setLoading] = useState(true);
+  const { currentView, isRTL, locale, isDataLoaded, initializeApp } = useSultanStore();
 
+  // Initialize app data from API endpoints on first mount
   useEffect(function() {
-    if (!initialized.current) {
-      initialized.current = true;
-
-      // Fetch real listings directly from Supabase (bypasses API routes)
-      supabase
-        .from('Listing')
-        .select('*, profile:Profile(id, displayName, avatar, city, isVerified, trustScore), category:Category(id, nameAr, slug, icon)')
-        .eq('status', 'active')
-        .order('createdAt', { ascending: false })
-        .limit(100)
-        .then(({ data, error }) => {
-          if (data && data.length > 0 && !error) {
-            const mapped = data.map((l: any) => ({
-              id: l.id,
-              title: l.title,
-              description: l.description,
-              price: l.price,
-              currency: l.currency || 'MAD',
-              category: l.category?.nameAr || l.categoryId || '',
-              categoryId: l.categoryId,
-              condition: l.condition,
-              city: l.city,
-              region: l.region,
-              views: l.viewsCount,
-              likes: l.likesCount,
-              isFeatured: l.isFeatured,
-              isUrgent: l.isUrgent,
-              negotiation: l.negotiation,
-              delivery: l.delivery,
-              images: typeof l.images === 'string' ? JSON.parse(l.images || '[]') : (l.images || []),
-              createdAt: l.createdAt,
-              seller: l.profile ? {
-                id: l.profile.id,
-                name: l.profile.displayName,
-                avatar: l.profile.avatar,
-                city: l.profile.city,
-                verified: l.profile.isVerified,
-                trust: l.profile.trustScore,
-              } : null,
-            }));
-            setListings(mapped);
-            console.log('[SULTAN] Loaded ' + mapped.length + ' listings from Supabase (direct)');
-          } else {
-            // Fallback to static data
-            setListings(fallbackListings);
-            console.log('[SULTAN] Using fallback data. API error:', error?.message || 'empty result');
-          }
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('[SULTAN] Supabase fetch error, using fallback:', err);
-          setListings(fallbackListings);
-          setLoading(false);
-        });
-    }
+    initializeApp();
   }, []);
 
   useEffect(function() {
@@ -131,17 +66,15 @@ export default function Page() {
     }
   }
 
-  if (loading) {
+  if (!isDataLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black" dir="rtl">
         <div className="text-center">
-          <div className="text-4xl mb-4" style={{color:'#D4AF37'}}>
-            <svg className="animate-spin h-12 w-12 mx-auto" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#D4AF37" strokeWidth="3"/>
-              <path className="opacity-75" fill="#D4AF37" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
-          </div>
-          <p className="text-lg" style={{color:'#D4AF37'}}>سلطان | SULTAN</p>
+          <svg className="animate-spin h-12 w-12 mx-auto" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#D4AF37" strokeWidth="3"/>
+            <path className="opacity-75" fill="#D4AF37" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          <p className="text-lg mt-4" style={{color:'#D4AF37'}}>سلطان | SULTAN</p>
           <p className="text-sm text-zinc-500 mt-2">جاري تحميل البيانات...</p>
         </div>
       </div>

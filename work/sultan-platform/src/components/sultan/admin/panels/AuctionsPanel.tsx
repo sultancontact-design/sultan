@@ -27,7 +27,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { auctions } from '@/lib/seed-data'
 import { useSultanStore } from '@/lib/store'
 
 /* ------------------------------------------------------------------ */
@@ -41,30 +40,7 @@ const statusMap: Record<string, { label: string; cls: string }> = {
   cancelled: { label: 'ملغى', cls: 'bg-red-500/15 text-red-400 border-red-500/30' },
 }
 
-/* Simulated extra data */
-const enrichedAuctions = auctions.map((a, i) => ({
-  ...a,
-  simulatedBids: a.bidCount + Math.floor(Math.random() * 10),
-  simulatedCurrentBid: a.currentBid + Math.floor(Math.random() * 5000),
-  status: i < 4 ? 'active' : i === 4 ? 'completed' : 'cancelled' as string,
-}))
-
-const totalBids = enrichedAuctions.reduce((s, a) => s + a.simulatedBids, 0)
-const totalRevenue = enrichedAuctions
-  .filter(a => a.status === 'completed')
-  .reduce((s, a) => s + a.simulatedCurrentBid, 0)
-const avgPrice = Math.floor(enrichedAuctions.reduce((s, a) => s + a.simulatedCurrentBid, 0) / enrichedAuctions.length)
-
-const kpiCards = [
-  { label: 'إجمالي المزادات', value: fmt(enrichedAuctions.length), icon: Gavel, iconBg: 'bg-[#D4AF37]/15', iconColor: 'text-[#D4AF37]', sub: 'مزاد' },
-  { label: 'مزادات نشطة', value: fmt(enrichedAuctions.filter(a => a.status === 'active').length), icon: Zap, iconBg: 'bg-emerald-500/15', iconColor: 'text-emerald-400', sub: 'جارٍ الآن' },
-  { label: 'مكتملة', value: fmt(enrichedAuctions.filter(a => a.status === 'completed').length), icon: CheckCircle2, iconBg: 'bg-[#D4AF37]/15', iconColor: 'text-[#D4AF37]', sub: 'مزاد' },
-  { label: 'إجمالي المزايدات', value: fmt(totalBids), icon: Users, iconBg: 'bg-orange-500/15', iconColor: 'text-orange-400', sub: 'مزايدة' },
-  { label: 'متوسط السعر', value: `${fmt(avgPrice)} ر.م`, icon: TrendingUp, iconBg: 'bg-[#F0D060]/15', iconColor: 'text-[#F0D060]', sub: 'درهم' },
-  { label: 'الإيرادات', value: `${fmt(totalRevenue)} ر.م`, icon: DollarSign, iconBg: 'bg-emerald-500/15', iconColor: 'text-emerald-400', sub: 'من المزادات المكتملة' },
-]
-
-/* Monthly analytics (simulated) */
+/* Monthly analytics (static placeholder) */
 const monthlyAnalytics = [
   { month: 'يناير', created: 12, completed: 8 },
   { month: 'فبراير', created: 15, completed: 11 },
@@ -73,9 +49,6 @@ const monthlyAnalytics = [
   { month: 'مايو', created: 20, completed: 18 },
   { month: 'يونيو', created: 25, completed: 20 },
 ]
-
-/* Top 5 by bids */
-const topByBids = [...enrichedAuctions].sort((a, b) => b.simulatedBids - a.simulatedBids).slice(0, 5)
 
 /* ------------------------------------------------------------------ */
 /*  Tooltip                                                            */
@@ -110,17 +83,74 @@ function getCountdown(endsAt: string) {
 /* ================================================================== */
 interface AuctionsPanelProps { onNavigate?: (panel: string) => void }
 
+type AuctionRow = any
+
 export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
   const addToast = useSultanStore(s => s.addToast)
-  const [viewAuction, setViewAuction] = useState<typeof enrichedAuctions[0] | null>(null)
+  const apiAuctions = useSultanStore(s => s.apiAuctions)
+  const isDataLoaded = useSultanStore(s => s.isDataLoaded)
+
+  const auctions: AuctionRow[] = (apiAuctions || []) as AuctionRow[]
+
+  const enrichedAuctions = useMemo(() =>
+    auctions.map((a) => ({
+      ...a,
+      currentBid: a.currentBid || a.startPrice || 0,
+      bidCount: a.bidCount || 0,
+      status: a.status || 'active',
+      title: a.title || '—',
+      startPrice: a.startPrice || 0,
+      endsAt: a.endsAt || new Date(Date.now() + 7 * 86400000).toISOString(),
+    })),
+  [auctions]
+  )
+
+  const totalBids = useMemo(() => enrichedAuctions.reduce((s, a) => s + (a.bidCount || 0), 0), [enrichedAuctions])
+  const totalRevenue = useMemo(() =>
+    enrichedAuctions.filter(a => a.status === 'completed').reduce((s, a) => s + (a.currentBid || 0), 0),
+  [enrichedAuctions])
+  const avgPrice = useMemo(() =>
+    enrichedAuctions.length
+      ? Math.floor(enrichedAuctions.reduce((s, a) => s + (a.currentBid || 0), 0) / enrichedAuctions.length)
+      : 0,
+  [enrichedAuctions]
+  )
+
+  const kpiCards = [
+    { label: 'إجمالي المزادات', value: fmt(enrichedAuctions.length), icon: Gavel, iconBg: 'bg-[#D4AF37]/15', iconColor: 'text-[#D4AF37]', sub: 'مزاد' },
+    { label: 'مزادات نشطة', value: fmt(enrichedAuctions.filter(a => a.status === 'active').length), icon: Zap, iconBg: 'bg-emerald-500/15', iconColor: 'text-emerald-400', sub: 'جارٍ الآن' },
+    { label: 'مكتملة', value: fmt(enrichedAuctions.filter(a => a.status === 'completed').length), icon: CheckCircle2, iconBg: 'bg-[#D4AF37]/15', iconColor: 'text-[#D4AF37]', sub: 'مزاد' },
+    { label: 'إجمالي المزايدات', value: fmt(totalBids), icon: Users, iconBg: 'bg-orange-500/15', iconColor: 'text-orange-400', sub: 'مزايدة' },
+    { label: 'متوسط السعر', value: `${fmt(avgPrice)} ر.م`, icon: TrendingUp, iconBg: 'bg-[#F0D060]/15', iconColor: 'text-[#F0D060]', sub: 'درهم' },
+    { label: 'الإيرادات', value: `${fmt(totalRevenue)} ر.م`, icon: DollarSign, iconBg: 'bg-emerald-500/15', iconColor: 'text-emerald-400', sub: 'من المزادات المكتملة' },
+  ]
+
+  const topByBids = useMemo(() =>
+    [...enrichedAuctions].sort((a, b) => (b.bidCount || 0) - (a.bidCount || 0)).slice(0, 5),
+  [enrichedAuctions]
+  )
 
   const activeAuctions = enrichedAuctions.filter(a => a.status === 'active')
+
+  const [viewAuction, setViewAuction] = useState<AuctionRow | null>(null)
 
   const handleEnd = (id: string) => {
     addToast('تم إنهاء المزاد بنجاح', 'success')
   }
   const handleCancel = (id: string) => {
     addToast('تم إلغاء المزاد', 'info')
+  }
+
+  /* ── Loading / Empty ── */
+  if (!isDataLoaded) {
+    return (
+      <div className="admin-card p-16 text-center">
+        <div className="mx-auto w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 animate-pulse">
+          <Gavel className="size-6 text-white/30" />
+        </div>
+        <p className="text-white/50 text-sm">جارٍ تحميل المزادات...</p>
+      </div>
+    )
   }
 
   return (
@@ -151,6 +181,12 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
       {/* ── Auctions Table ─────────────────────────────────── */}
       <div className="admin-card p-5">
         <h3 className="mb-4 text-base font-bold text-zinc-100">إدارة المزادات</h3>
+        {enrichedAuctions.length === 0 ? (
+          <div className="py-12 text-center text-zinc-500 text-sm">
+            <Gavel className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
+            <p>لا توجد مزادات بعد</p>
+          </div>
+        ) : (
         <div className="scrollbar-thin max-h-[400px] overflow-y-auto">
           <table className="w-full text-xs">
             <thead className="sticky top-0 bg-zinc-900/95 backdrop-blur-sm">
@@ -171,8 +207,8 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
                   <tr key={auction.id} className="border-b border-white/[0.03] transition-colors hover:bg-white/[0.02]">
                     <td className="max-w-[180px] truncate py-2.5 pr-2 font-medium text-zinc-200">{auction.title}</td>
                     <td className="hidden py-2.5 pr-2 text-zinc-500 sm:table-cell">{fmt(auction.startPrice)} ر.م</td>
-                    <td className="py-2.5 pr-2 font-semibold text-[#D4AF37]">{fmt(auction.simulatedCurrentBid)} ر.م</td>
-                    <td className="hidden py-2.5 pr-2 text-zinc-400 md:table-cell">{fmt(auction.simulatedBids)}</td>
+                    <td className="py-2.5 pr-2 font-semibold text-[#D4AF37]">{fmt(auction.currentBid)} ر.م</td>
+                    <td className="hidden py-2.5 pr-2 text-zinc-400 md:table-cell">{fmt(auction.bidCount)}</td>
                     <td className="hidden py-2.5 pr-2 text-zinc-600 lg:table-cell">{new Date(auction.endsAt).toLocaleDateString('ar-EG')}</td>
                     <td className="py-2.5 pr-2">
                       <Badge variant="outline" className={`${st.cls} border text-[10px] px-2 py-0`}>{st.label}</Badge>
@@ -200,6 +236,7 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
             </tbody>
           </table>
         </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -232,6 +269,12 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
         {/* ── Top 5 Auctions ───────────────────────────────── */}
         <div className="admin-card p-5">
           <h3 className="mb-4 text-base font-bold text-zinc-100">المزادات الأكثر مزايدة</h3>
+          {topByBids.length === 0 ? (
+            <div className="py-12 text-center text-zinc-500 text-sm">
+              <Trophy className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
+              <p>لا توجد مزادات</p>
+            </div>
+          ) : (
           <div className="space-y-3">
             {topByBids.map((a, i) => (
               <motion.div
@@ -247,20 +290,27 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-zinc-200">{a.title}</p>
                   <div className="mt-1 flex items-center gap-3 text-[11px] text-zinc-500">
-                    <span>{fmt(a.simulatedBids)} مزايدة</span>
-                    <span>{fmt(a.simulatedCurrentBid)} ر.م</span>
+                    <span>{fmt(a.bidCount)} مزايدة</span>
+                    <span>{fmt(a.currentBid)} ر.م</span>
                   </div>
                 </div>
                 <Trophy className={`h-4 w-4 shrink-0 ${i === 0 ? 'text-[#D4AF37]' : 'text-zinc-700'}`} />
               </motion.div>
             ))}
           </div>
+          )}
         </div>
       </div>
 
       {/* ── Active Auctions Highlight ──────────────────────── */}
       <div>
         <h3 className="mb-4 text-base font-bold text-zinc-100">المزادات النشطة</h3>
+        {activeAuctions.length === 0 ? (
+          <div className="admin-card p-12 text-center text-zinc-500 text-sm">
+            <Flame className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
+            <p>لا توجد مزادات نشطة حالياً</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {activeAuctions.map((a, i) => {
             const cd = getCountdown(a.endsAt)
@@ -279,7 +329,7 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
                     <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 border text-[10px] px-2 py-0">نشط</Badge>
                   </div>
                   <p className="mb-3 line-clamp-2 text-sm font-semibold text-zinc-100">{a.title}</p>
-                  <p className="mb-3 text-lg font-bold text-[#D4AF37]">{fmt(a.simulatedCurrentBid)} <span className="text-xs text-zinc-500">ر.م</span></p>
+                  <p className="mb-3 text-lg font-bold text-[#D4AF37]">{fmt(a.currentBid)} <span className="text-xs text-zinc-500">ر.م</span></p>
                   {/* Countdown display */}
                   <div className="flex gap-2">
                     {[
@@ -293,12 +343,13 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
                       </div>
                     ))}
                   </div>
-                  <p className="mt-2 text-[11px] text-zinc-600">{fmt(a.simulatedBids)} مزايدة</p>
+                  <p className="mt-2 text-[11px] text-zinc-600">{fmt(a.bidCount)} مزايدة</p>
                 </div>
               </motion.div>
             )
           })}
         </div>
+        )}
       </div>
 
       {/* ── View Dialog ────────────────────────────────────── */}
@@ -310,7 +361,7 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
           {viewAuction && (
             <div className="space-y-3 text-sm">
               <p className="font-semibold text-zinc-100">{viewAuction.title}</p>
-              <p className="text-xs leading-relaxed text-zinc-400">{viewAuction.description}</p>
+              {viewAuction.description && <p className="text-xs leading-relaxed text-zinc-400">{viewAuction.description}</p>}
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-white/[0.03] p-3">
                   <p className="text-[11px] text-zinc-500">سعر البداية</p>
@@ -318,11 +369,11 @@ export default function AuctionsPanel({ onNavigate }: AuctionsPanelProps) {
                 </div>
                 <div className="rounded-lg bg-white/[0.03] p-3">
                   <p className="text-[11px] text-zinc-500">أعلى مزايدة</p>
-                  <p className="font-bold text-[#D4AF37]">{fmt(viewAuction.simulatedCurrentBid)} ر.م</p>
+                  <p className="font-bold text-[#D4AF37]">{fmt(viewAuction.currentBid)} ر.م</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.03] p-3">
                   <p className="text-[11px] text-zinc-500">عدد المزايدات</p>
-                  <p className="font-bold text-zinc-200">{fmt(viewAuction.simulatedBids)}</p>
+                  <p className="font-bold text-zinc-200">{fmt(viewAuction.bidCount)}</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.03] p-3">
                   <p className="text-[11px] text-zinc-500">ينتهي في</p>

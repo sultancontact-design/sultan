@@ -38,7 +38,6 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useSultanStore } from '@/lib/store'
-import { listings as seedListings, categories, cities } from '@/lib/seed-data'
 
 /* ------------------------------------------------------------------ */
 /*  Types & Helpers                                                     */
@@ -52,7 +51,6 @@ interface Listing {
   profile: { displayName: string; city: string; trustScore: number }
 }
 
-const catMap = Object.fromEntries(categories.map((c) => [c.id, c.nameAr]))
 const PIE_COLORS = ['#34d399', '#F0D060', '#ef4444']
 const GRADIENTS = [
   'from-amber-700/50 to-amber-500/20',
@@ -68,12 +66,6 @@ const STATUS_CFG: Record<string, { label: string; cls: string; icon: React.Eleme
   banned:  { label: 'محظور', cls: 'bg-red-500/15 text-red-400 border-red-500/30', icon: ShieldBan },
 }
 
-const qScore = (l: Listing) =>
-  (l.images ? 25 : 0) +
-  ((l.description?.length ?? 0) > 30 ? 25 : 0) +
-  (l.price > 0 ? 25 : 0) +
-  (l.categoryId && catMap[l.categoryId] ? 25 : 0)
-
 const qLabel = (s: number) =>
   s >= 75
     ? { t: 'جيد', c: 'text-emerald-400' }
@@ -81,20 +73,56 @@ const qLabel = (s: number) =>
       ? { t: 'متوسط', c: 'text-yellow-400' }
       : { t: 'ضعيف', c: 'text-red-400' }
 
-const qBreakdown = (l: Listing) => [
-  { label: 'الصور', v: l.images ? 25 : 0 },
-  { label: 'الوصف', v: (l.description?.length ?? 0) > 30 ? 25 : 0 },
-  { label: 'السعر', v: l.price > 0 ? 25 : 0 },
-  { label: 'القسم', v: l.categoryId && catMap[l.categoryId] ? 25 : 0 },
-]
-
 /* ------------------------------------------------------------------ */
 /*  Component                                                           */
 /* ------------------------------------------------------------------ */
 export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: string) => void }) {
-  const [data, setData] = useState<Listing[]>(
-    () => seedListings.map((l) => ({ ...l, profile: { ...l.profile } })) as Listing[]
+  const storeListings = useSultanStore((s) => s.listings)
+  const apiCategories = useSultanStore((s) => s.apiCategories)
+  const isDataLoaded = useSultanStore((s) => s.isDataLoaded)
+
+  const catMap = useMemo(
+    () => Object.fromEntries((apiCategories || []).map((c: any) => [c.id, c.nameAr])),
+    [apiCategories]
   )
+
+  const uniqueCities = useMemo(() => {
+    const set = new Set<string>()
+    ;(storeListings || []).forEach((l: any) => { if (l.city) set.add(l.city) })
+    return Array.from(set).sort()
+  }, [storeListings])
+
+  const qScore = (l: Listing) =>
+    (l.images ? 25 : 0) +
+    ((l.description?.length ?? 0) > 30 ? 25 : 0) +
+    (l.price > 0 ? 25 : 0) +
+    (l.categoryId && catMap[l.categoryId] ? 25 : 0)
+
+  const qBreakdown = (l: Listing) => [
+    { label: 'الصور', v: l.images ? 25 : 0 },
+    { label: 'الوصف', v: (l.description?.length ?? 0) > 30 ? 25 : 0 },
+    { label: 'السعر', v: l.price > 0 ? 25 : 0 },
+    { label: 'القسم', v: l.categoryId && catMap[l.categoryId] ? 25 : 0 },
+  ]
+
+  const [data, setData] = useState<Listing[]>([])
+
+  // Sync store listings into local state (keeps local mutations working)
+  useMemo(() => {
+    if (isDataLoaded && storeListings && storeListings.length > 0) {
+      setData((prev) => {
+        // Only reset if store has new/changed data
+        if (prev.length === 0 || prev.length !== storeListings.length) {
+          return storeListings.map((l: any) => ({
+            ...l,
+            status: l.status || 'active',
+            profile: l.profile ? { displayName: l.profile.displayName || '', city: l.profile.city || '', trustScore: l.profile.trustScore || 0 } : { displayName: '', city: '', trustScore: 0 },
+          })) as Listing[]
+        }
+        return prev
+      })
+    }
+  }, [isDataLoaded, storeListings])
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -185,7 +213,7 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([name, count]) => ({ name, count }))
-  }, [data])
+  }, [data, catMap])
 
   const pieData = useMemo(
     () => [
@@ -373,6 +401,24 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
   return (
     <TooltipProvider delayDuration={300}>
     <div className="space-y-5 p-4">
+      {/* ── Loading / Empty State ── */}
+      {!isDataLoaded ? (
+        <div className="admin-card p-16 text-center">
+          <div className="mx-auto w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 animate-pulse">
+            <Package className="size-6 text-white/30" />
+          </div>
+          <p className="text-muted-foreground text-sm">جارٍ تحميل الإعلانات...</p>
+        </div>
+      ) : data.length === 0 ? (
+        <div className="admin-card p-16 text-center">
+          <div className="mx-auto w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4">
+            <Package className="size-6 text-white/30" />
+          </div>
+          <p className="text-muted-foreground text-sm">لا توجد إعلانات بعد</p>
+          <p className="text-muted-foreground/60 text-xs mt-1">ستظهر الإعلانات الجديدة هنا</p>
+        </div>
+      ) : (
+      <>
       {/* ── Header ── */}
       <div className="flex items-center gap-3">
         <div className="sultan-gradient rounded-xl p-2.5">
@@ -541,7 +587,7 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">جميع الأقسام</SelectItem>
-                    {categories.map((c) => (
+                    {(apiCategories || []).map((c: any) => (
                       <SelectItem key={c.id} value={c.id}>{c.nameAr}</SelectItem>
                     ))}
                   </SelectContent>
@@ -552,8 +598,8 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">جميع المدن</SelectItem>
-                    {cities.map((c) => (
-                      <SelectItem key={c.id} value={c.nameAr}>{c.nameAr}</SelectItem>
+                    {uniqueCities.map((city) => (
+                      <SelectItem key={city} value={city}>{city}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -1047,6 +1093,8 @@ export default function ListingsPanel({ onNavigate }: { onNavigate?: (panel: str
           )}
         </DialogContent>
       </Dialog>
+      </>
+      )}
     </div>
     </TooltipProvider>
   )

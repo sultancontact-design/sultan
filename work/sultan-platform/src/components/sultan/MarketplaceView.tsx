@@ -1,7 +1,6 @@
 'use client';
 import { useSultanStore } from '@/lib/store';
-import { t } from '@/lib/i18n';
-import { categories, listings, cities } from '@/lib/seed-data';
+import { cities } from '@/lib/seed-data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,19 +8,41 @@ import { Grid3X3, List, SlidersHorizontal, X, Heart, Eye, MapPin, ArrowRight } f
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 
+// Gradient fallbacks for images (used when no real image URLs)
+const gradients = [
+  'from-slate-700/60 to-slate-500/30',
+  'from-amber-700/50 to-amber-500/20',
+  'from-emerald-700/40 to-emerald-500/20',
+  'from-violet-700/50 to-violet-500/20',
+  'from-rose-700/40 to-rose-500/20',
+  'from-sky-700/40 to-sky-500/20',
+  'from-orange-700/50 to-orange-500/20',
+  'from-teal-700/40 to-teal-500/20',
+];
+
+function getGradient(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return gradients[Math.abs(hash) % gradients.length];
+}
+
 export default function MarketplaceView() {
   const {
     currentView, locale, selectedCategory, setSelectedCategory, selectedCity, setSelectedCity,
     condition, setCondition, sortBy, setSortBy, searchQuery, priceRange,
     setPriceRange, clearFilters, selectListing, viewParams, goBack,
+    listings, filteredListings, apiCategories,
   } = useSultanStore();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [liked, setLiked] = useState<Set<string>>(new Set());
   const [visibleCount, setVisibleCount] = useState(20);
 
-  const viewCategories = currentView === 'motors' ? [categories.find(c => c.id === 'c-motors')!]
-    : currentView === 'realestate' ? [categories.find(c => c.id === 'c-realestate')!]
-    : categories.filter(c => !['c-marketplace', 'c-zawaj', 'c-social', 'c-news', 'c-charity'].includes(c.id));
+  // Use API categories or fall back to empty
+  const viewCategories = apiCategories.length > 0
+    ? (currentView === 'motors' ? apiCategories.filter(c => c.id === 'c-motors')
+      : currentView === 'realestate' ? apiCategories.filter(c => c.id === 'c-realestate')
+      : apiCategories.filter(c => !['c-marketplace', 'c-zawaj', 'c-social', 'c-news', 'c-charity', 'c-auctions'].includes(c.id)))
+    : [];
 
   const activeCategory = currentView === 'motors' ? 'c-motors' : currentView === 'realestate' ? 'c-realestate' : selectedCategory;
 
@@ -29,18 +50,18 @@ export default function MarketplaceView() {
     let result = [...listings];
     if (activeCategory) result = result.filter(l => l.categoryId === activeCategory);
     if (selectedCity) result = result.filter(l => l.city === selectedCity);
-    if (searchQuery) result = result.filter(l => l.title.includes(searchQuery) || l.description.includes(searchQuery));
+    if (searchQuery) result = result.filter(l => l.title.includes(searchQuery) || (l.description && l.description.includes(searchQuery)));
     if (condition && condition !== 'all') result = result.filter(l => l.condition === condition);
     if (priceRange[0] > 0) result = result.filter(l => l.price >= priceRange[0]);
-    if (priceRange[1] < 10000000) result = result.filter(l => l.price <= priceRange[1]);
+    if (priceRange[1] < 999999999) result = result.filter(l => l.price <= priceRange[1]);
     switch (sortBy) {
       case 'price_asc': result.sort((a, b) => a.price - b.price); break;
       case 'price_desc': result.sort((a, b) => b.price - a.price); break;
-      case 'popular': result.sort((a, b) => b.viewsCount - a.viewsCount); break;
+      case 'popular': result.sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0)); break;
       default: result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return result;
-  }, [activeCategory, selectedCity, searchQuery, condition, priceRange, sortBy]);
+  }, [listings, activeCategory, selectedCity, searchQuery, condition, priceRange, sortBy]);
 
   const visible = filtered.slice(0, visibleCount);
   const viewTitles: Record<string, string> = {
@@ -127,65 +148,73 @@ export default function MarketplaceView() {
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {visible.map((listing, i) => (
-            <motion.div key={listing.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}
-              whileHover={{ y: -3 }}
-              onClick={() => selectListing(listing)}
-              className="rounded-xl bg-card border border-border/50 overflow-hidden cursor-pointer group hover:border-sultan/30 transition-all"
-            >
-              <div className={`aspect-[4/3] bg-gradient-to-br ${listing.images} relative`}>
-                {listing.isUrgent && <Badge className="absolute top-2 start-2 bg-red-500 text-white text-[10px]">عاجل</Badge>}
-                {listing.isFeatured && <Badge className="absolute top-2 end-2 bg-sultan text-royal text-[10px]">مميز</Badge>}
-                <button onClick={(e) => toggleLike(listing.id, e)} className="absolute bottom-2 end-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors">
-                  <Heart className={`h-4 w-4 ${liked.has(listing.id) ? 'fill-red-500 text-red-500' : 'text-white'}`} />
-                </button>
-              </div>
-              <div className="p-3">
-                <div className="flex items-start justify-between">
-                  <p className="text-sultan font-bold">{listing.price.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">درهم</span></p>
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <Eye className="h-3 w-3" />{listing.viewsCount}
+          {visible.map((listing, i) => {
+            const grad = getGradient(listing.id);
+            return (
+              <motion.div key={listing.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}
+                whileHover={{ y: -3 }}
+                onClick={() => selectListing(listing)}
+                className="rounded-xl bg-card border border-border/50 overflow-hidden cursor-pointer group hover:border-sultan/30 transition-all"
+              >
+                <div className={`aspect-[4/3] bg-gradient-to-br ${grad} relative`}>
+                  {listing.isUrgent && <Badge className="absolute top-2 start-2 bg-red-500 text-white text-[10px]">عاجل</Badge>}
+                  {listing.isFeatured && <Badge className="absolute top-2 end-2 bg-sultan text-royal text-[10px]">مميز</Badge>}
+                  <button onClick={(e) => toggleLike(listing.id, e)} className="absolute bottom-2 end-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors">
+                    <Heart className={`h-4 w-4 ${liked.has(listing.id) ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+                  </button>
+                </div>
+                <div className="p-3">
+                  <div className="flex items-start justify-between">
+                    <p className="text-sultan font-bold">{listing.price?.toLocaleString()} <span className="text-xs text-muted-foreground font-normal">درهم</span></p>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <Eye className="h-3 w-3" />{listing.viewsCount || 0}
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium mt-1 line-clamp-1 group-hover:text-sultan transition-colors">{listing.title}</p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{listing.city}</span>
+                    <Badge variant="outline" className="text-[9px]">{listing.condition === 'new' ? 'جديد' : listing.condition === 'used' ? 'مستعمل' : listing.condition === 'likeNew' ? 'كالجديد' : listing.condition}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-full bg-sultan/20 flex items-center justify-center">
+                        <span className="text-[8px] text-sultan font-bold">{(listing.profile?.displayName || '?').charAt(0)}</span>
+                      </div>
+                      <span className="text-[11px] truncate max-w-24">{listing.profile?.displayName || ''}</span>
+                    </div>
+                    {listing.profile?.isVerified && <Badge className="text-[8px] px-1 py-0 bg-sultan/10 text-sultan border-0">موثق</Badge>}
                   </div>
                 </div>
-                <p className="text-sm font-medium mt-1 line-clamp-1 group-hover:text-sultan transition-colors">{listing.title}</p>
-                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{listing.city}</span>
-                  <Badge variant="outline" className="text-[9px]">{listing.condition === 'new' ? 'جديد' : listing.condition === 'used' ? 'مستعمل' : 'كالجديد'}</Badge>
-                </div>
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-sultan/20 flex items-center justify-center"><span className="text-[8px] text-sultan font-bold">{listing.profile.displayName.charAt(0)}</span></div>
-                    <span className="text-[11px] truncate max-w-24">{listing.profile.displayName}</span>
-                  </div>
-                  {listing.profile.isVerified && <Badge className="text-[8px] px-1 py-0 bg-sultan/10 text-sultan border-0">موثق</Badge>}
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       ) : (
         <div className="space-y-3">
-          {visible.map((listing, i) => (
-            <motion.div key={listing.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}
-              onClick={() => selectListing(listing)}
-              className="flex gap-4 rounded-xl bg-card border border-border/50 p-3 cursor-pointer hover:border-sultan/30 transition-all group"
-            >
-              <div className={`w-28 h-28 sm:w-36 sm:h-28 rounded-lg bg-gradient-to-br ${listing.images} shrink-0 relative`}>
-                {listing.isUrgent && <Badge className="absolute top-1 start-1 bg-red-500 text-white text-[9px]">عاجل</Badge>}
-              </div>
-              <div className="flex-1 min-w-0 py-1">
-                <p className="text-sultan font-bold">{listing.price.toLocaleString()} درهم</p>
-                <h3 className="font-semibold text-sm mt-1 line-clamp-1 group-hover:text-sultan transition-colors">{listing.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{listing.description}</p>
-                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{listing.city}</span>
-                  <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{listing.viewsCount}</span>
-                  <Badge variant="outline" className="text-[9px]">{listing.condition === 'new' ? 'جديد' : 'مستعمل'}</Badge>
-                  {listing.negotiation && <Badge variant="outline" className="text-[9px]">قابل للتفاوض</Badge>}
+          {visible.map((listing, i) => {
+            const grad = getGradient(listing.id);
+            return (
+              <motion.div key={listing.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}
+                onClick={() => selectListing(listing)}
+                className="flex gap-4 rounded-xl bg-card border border-border/50 p-3 cursor-pointer hover:border-sultan/30 transition-all group"
+              >
+                <div className={`w-28 h-28 sm:w-36 sm:h-28 rounded-lg bg-gradient-to-br ${grad} shrink-0 relative`}>
+                  {listing.isUrgent && <Badge className="absolute top-1 start-1 bg-red-500 text-white text-[9px]">عاجل</Badge>}
                 </div>
-              </div>
-            </motion.div>
-          ))}
+                <div className="flex-1 min-w-0 py-1">
+                  <p className="text-sultan font-bold">{listing.price?.toLocaleString()} درهم</p>
+                  <h3 className="font-semibold text-sm mt-1 line-clamp-1 group-hover:text-sultan transition-colors">{listing.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{listing.description}</p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{listing.city}</span>
+                    <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{listing.viewsCount || 0}</span>
+                    <Badge variant="outline" className="text-[9px]">{listing.condition === 'new' ? 'جديد' : listing.condition === 'used' ? 'مستعمل' : listing.condition === 'likeNew' ? 'كالجديد' : listing.condition}</Badge>
+                    {listing.negotiation && <Badge variant="outline" className="text-[9px]">قابل للتفاوض</Badge>}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
