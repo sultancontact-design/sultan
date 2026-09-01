@@ -17,9 +17,16 @@ import ListingDetail from '@/components/sultan/ListingDetail';
 import PlaceholderView from '@/components/sultan/PlaceholderView';
 import SupportModal from '@/components/sultan/SupportModal';
 import PublishWizard from '@/components/sultan/PublishWizard';
+import { createClient } from '@supabase/supabase-js';
 
-// Fallback: import static seed data in case API is unavailable
+// Fallback: import static seed data in case Supabase is unavailable
 import { listings as fallbackListings } from '@/lib/seed-data';
+
+// Browser-side Supabase client
+const supabase = createClient(
+  'https://ltdbaylnuivqnlthduhu.supabase.co',
+  'sb_publishable_u20v6MgAdrjOxILqc14Tqw_cOMOMSlN'
+);
 
 export default function Page() {
   const { currentView, isRTL, locale, setListings } = useSultanStore();
@@ -30,13 +37,16 @@ export default function Page() {
     if (!initialized.current) {
       initialized.current = true;
 
-      // Fetch real listings from API (Supabase)
-      fetch('/api/listings?limit=100')
-        .then(res => res.json())
-        .then(data => {
-          if (data.listings && data.listings.length > 0) {
-            // Map API data to store format
-            const mapped = data.listings.map((l: any) => ({
+      // Fetch real listings directly from Supabase (bypasses API routes)
+      supabase
+        .from('Listing')
+        .select('*, profile:Profile(id, displayName, avatar, city, isVerified, trustScore), category:Category(id, nameAr, slug, icon)')
+        .eq('status', 'active')
+        .order('createdAt', { ascending: false })
+        .limit(100)
+        .then(({ data, error }) => {
+          if (data && data.length > 0 && !error) {
+            const mapped = data.map((l: any) => ({
               id: l.id,
               title: l.title,
               description: l.description,
@@ -65,16 +75,16 @@ export default function Page() {
               } : null,
             }));
             setListings(mapped);
-            console.log('[SULTAN] Loaded ' + mapped.length + ' listings from Supabase');
+            console.log('[SULTAN] Loaded ' + mapped.length + ' listings from Supabase (direct)');
           } else {
             // Fallback to static data
             setListings(fallbackListings);
-            console.log('[SULTAN] Using fallback static data');
+            console.log('[SULTAN] Using fallback data. API error:', error?.message || 'empty result');
           }
           setLoading(false);
         })
         .catch(err => {
-          console.error('[SULTAN] API fetch error, using fallback:', err);
+          console.error('[SULTAN] Supabase fetch error, using fallback:', err);
           setListings(fallbackListings);
           setLoading(false);
         });
@@ -140,7 +150,8 @@ export default function Page() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <TopNav />\n      <main className="flex-1">{renderView()}</main>
+      <TopNav />
+      <main className="flex-1">{renderView()}</main>
       <BottomNav />
       <SupportModal />
       <PublishWizard />
